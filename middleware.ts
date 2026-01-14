@@ -1,22 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "@/lib/auth";
 
 const LOCALES = new Set(["en", "hi"]);
 const LANG_COOKIE = "bohosaaz_lang";
 
 const PUBLIC_FILE = /\.[^/]+$/;
 
+type JwtRole = "USER" | "VENDOR" | "ADMIN";
+
+function base64UrlDecode(input: string): string {
+  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = normalized.length % 4 ? "=".repeat(4 - (normalized.length % 4)) : "";
+  return atob(normalized + pad);
+}
+
+function getJwtRoleFromToken(token: string): JwtRole | null {
+  // IMPORTANT: This does NOT verify signature.
+  // Middleware uses this only for UX redirects; API routes enforce auth properly.
+  const parts = token.split(".");
+  if (parts.length < 2) return null;
+  try {
+    const json = base64UrlDecode(parts[1] || "");
+    const payload: unknown = JSON.parse(json);
+    const role =
+      payload && typeof payload === "object" && "role" in payload
+        ? (payload as Record<string, unknown>).role
+        : null;
+    return role === "ADMIN" || role === "VENDOR" || role === "USER" ? role : null;
+  } catch {
+    return null;
+  }
+}
+
 function preferredLang(req: NextRequest) {
   const v = req.cookies.get(LANG_COOKIE)?.value;
   if (v && LOCALES.has(v)) return v;
   return "en";
-}
-
-function redirectTo403(req: NextRequest) {
-  const url = req.nextUrl.clone();
-  url.pathname = "/403";
-  url.search = "";
-  return NextResponse.redirect(url);
 }
 
 function redirectToHome(req: NextRequest) {
@@ -150,30 +168,27 @@ export function middleware(req: NextRequest) {
   const token = getTokenFromRequest(req);
   if (!token) return redirectToLogin(req);
 
-  try {
-    const payload = verifyToken(token);
+  const role = getJwtRoleFromToken(token);
+  if (!role) return redirectToLogin(req);
 
-    // Strict dashboard isolation: never allow a role into another dashboard.
-    if (isAdmin && payload.role !== "ADMIN") {
-      return redirectToHome(req);
-    }
-
-    if (isVendor && payload.role !== "VENDOR") {
-      return redirectToHome(req);
-    }
-
-    if (isAccount && payload.role !== "USER") {
-      // Allow vendors to access the vendor application flow inside account.
-      if (payload.role === "VENDOR" && p.startsWith("/account/vendor-apply")) {
-        return NextResponse.next();
-      }
-      return redirectToHome(req);
-    }
-
-    return NextResponse.next();
-  } catch {
-    return redirectToLogin(req);
+  // Strict dashboard isolation: never allow a role into another dashboard.
+  if (isAdmin && role !== "ADMIN") {
+    return redirectToHome(req);
   }
+
+  if (isVendor && role !== "VENDOR") {
+    return redirectToHome(req);
+  }
+
+  if (isAccount && role !== "USER") {
+    // Allow vendors to access the vendor application flow inside account.
+    if (role === "VENDOR" && p.startsWith("/account/vendor-apply")) {
+      return NextResponse.next();
+    }
+    return redirectToHome(req);
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
