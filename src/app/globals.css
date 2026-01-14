@@ -1,26 +1,224 @@
+/* Google Fonts (safe, CDN) */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600;700&family=Roboto+Mono:wght@500;600&display=swap");
+
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Gaatha-style storefront theme (warm cream + earthy brown) */
+  --bg: #fbf7ee;
+  --fg: #2f2622;
+
+  --card: #fffdf8;
+  --cardFg: #2f2622;
+
+  --muted: #f3ead9;
+  --mutedFg: #6a5a51;
+
+  --border: #e7dcc7;
+
+  --primary: #8a3d1e;
+  --primaryFg: #fffdf8;
+
+  --secondary: #e8dcc6;
+  --secondaryFg: #2f2622;
+
+  --accent: #c9a45a;
+  --accentFg: #2f2622;
+
+  --ring: #8a3d1e;
+  --radius: 18px;
+
+  --shadow: 0 10px 30px rgba(47, 38, 34, 0.08);
+
+  /* Premium elevation tokens (used by UI components) */
+  --bgGradient: var(--bg);
+  --shadowBtn: 0 8px 20px rgba(47, 38, 34, 0.10);
+  --shadowBtnHover: 0 12px 28px rgba(47, 38, 34, 0.14);
+  --shadowInputInset: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --shadowCardSoft: 0 18px 55px rgba(0, 0, 0, 0.06);
+
+  /* Typography */
+  --font-body: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+    "Apple Color Emoji", "Segoe UI Emoji";
+  --font-heading: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+
+  /* Numbers only (apply via .font-numeric on digit spans) */
+  --font-numeric: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+
+  /* Semantic */
+  --success: #2e5c4a;
+  --successFg: #fffdf8;
+  --warning: #b37633;
+  --warningFg: #2f2622;
+  --danger: #8a3d1e;
+  --dangerFg: #fffdf8;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-card: var(--card);
+  --color-card-foreground: var(--cardFg);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--mutedFg);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primaryFg);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondaryFg);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accentFg);
+  --color-ring: var(--ring);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--successFg);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warningFg);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--dangerFg);
+
+  --font-sans: var(--font-body);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
+/* Dark mode: can be enabled via prefers-color-scheme or by toggling .dark on <html>. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #171210;
+    --fg: #f6efe4;
+
+    --card: #201a16;
+    --cardFg: #f6efe4;
+
+    --muted: #261f1a;
+    --mutedFg: #c7b7ad;
+
+    --border: #3a2f29;
+
+    --primary: #d08b64;
+    --primaryFg: #171210;
+
+    --secondary: #2b231d;
+    --secondaryFg: #f6efe4;
+
+    --accent: #c9a45a;
+    --accentFg: #171210;
+
+    --ring: #d08b64;
+
+    /* Deep charcoal gradient + 3D elevation */
+    --bgGradient:
+      radial-gradient(1000px 700px at 15% -10%, rgba(208, 139, 100, 0.10), transparent 60%),
+      radial-gradient(900px 650px at 85% 0%, rgba(201, 164, 90, 0.08), transparent 55%),
+      linear-gradient(180deg, #14100f 0%, #171210 42%, #120f0e 100%);
+
+    --shadow: 0 26px 70px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    --shadowBtn: 0 12px 26px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    --shadowBtnHover:
+      0 18px 38px rgba(0, 0, 0, 0.62),
+      0 0 0 1px rgba(255, 255, 255, 0.08),
+      0 0 42px rgba(208, 139, 100, 0.18);
+    --shadowInputInset: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --shadowCardSoft: 0 24px 80px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05);
+
+    --success: #4a7d66;
+    --successFg: #171210;
+    --warning: #e0b47a;
+    --warningFg: #171210;
+    --danger: #d08b64;
+    --dangerFg: #171210;
   }
 }
 
+:root.dark {
+  --bg: #171210;
+  --fg: #f6efe4;
+
+  --card: #201a16;
+  --cardFg: #f6efe4;
+
+  --muted: #261f1a;
+  --mutedFg: #c7b7ad;
+
+  --border: #3a2f29;
+
+  --primary: #d08b64;
+  --primaryFg: #171210;
+
+  --secondary: #2b231d;
+  --secondaryFg: #f6efe4;
+
+  --accent: #c9a45a;
+  --accentFg: #171210;
+
+  --ring: #d08b64;
+
+  --bgGradient:
+    radial-gradient(1000px 700px at 15% -10%, rgba(208, 139, 100, 0.10), transparent 60%),
+    radial-gradient(900px 650px at 85% 0%, rgba(201, 164, 90, 0.08), transparent 55%),
+    linear-gradient(180deg, #14100f 0%, #171210 42%, #120f0e 100%);
+
+  --shadow: 0 26px 70px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadowBtn: 0 12px 26px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadowBtnHover:
+    0 18px 38px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 42px rgba(208, 139, 100, 0.18);
+  --shadowInputInset: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --shadowCardSoft: 0 24px 80px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05);
+
+  --success: #4a7d66;
+  --successFg: #171210;
+  --warning: #e0b47a;
+  --warningFg: #171210;
+  --danger: #d08b64;
+  --dangerFg: #171210;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bgGradient, var(--bg));
+  color: var(--fg);
+  font-family: var(--font-body);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  border-color: var(--border);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Utilities */
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+/* Used in many pages to prevent long IDs/emails from overflowing */
+.wrap-break-word {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.shadow-premium {
+  box-shadow: var(--shadow);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+}
+
+/* Digits-only premium typography */
+.font-numeric {
+  font-family: var(--font-numeric);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
