@@ -23,13 +23,6 @@ const EnvSchema = z
     JWT_SECRET: z.string().optional(),
     NEXT_PUBLIC_APP_URL: z.string().optional(),
 
-    // Cloudinary (optional globally; required by upload routes)
-    CLOUDINARY_URL: z.string().optional(),
-    CLOUDINARY_CLOUD_NAME: z.string().optional(),
-    CLOUDINARY_API_KEY: z.string().optional(),
-    CLOUDINARY_API_SECRET: z.string().optional(),
-    CLOUDINARY_FOLDER: z.string().optional(),
-
     // Upstash (optional in dev; required in production)
     UPSTASH_REDIS_REST_URL: z.string().optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
@@ -120,10 +113,6 @@ export function getEnv(): Env {
   // Dev-mode warnings for optional integrations (not fatal).
   if (!isProd) {
     const optionalKeys = [
-      "CLOUDINARY_URL",
-      "CLOUDINARY_CLOUD_NAME",
-      "CLOUDINARY_API_KEY",
-      "CLOUDINARY_API_SECRET",
       "UPSTASH_REDIS_REST_URL",
       "UPSTASH_REDIS_REST_TOKEN",
       "CRON_SECRET",
@@ -148,29 +137,6 @@ export const isProd = env.NODE_ENV === "production";
 export function getJwtSecret(): string {
   if (nonEmpty(env.JWT_SECRET)) return env.JWT_SECRET!.trim();
   throw new Error("JWT_SECRET missing");
-}
-
-export function hasCloudinary(): boolean {
-  const hasUrl = nonEmpty(env.CLOUDINARY_URL);
-  const hasParts =
-    nonEmpty(env.CLOUDINARY_CLOUD_NAME) && nonEmpty(env.CLOUDINARY_API_KEY) && nonEmpty(env.CLOUDINARY_API_SECRET);
-  return hasUrl || hasParts;
-}
-
-export function requireCloudinary() {
-  if (!hasCloudinary()) {
-    throw new Error(
-      "Cloudinary is not configured. Set CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME/CLOUDINARY_API_KEY/CLOUDINARY_API_SECRET"
-    );
-  }
-
-  return {
-    cloudinaryUrl: nonEmpty(env.CLOUDINARY_URL) ? env.CLOUDINARY_URL!.trim() : null,
-    cloudName: nonEmpty(env.CLOUDINARY_CLOUD_NAME) ? env.CLOUDINARY_CLOUD_NAME!.trim() : null,
-    apiKey: nonEmpty(env.CLOUDINARY_API_KEY) ? env.CLOUDINARY_API_KEY!.trim() : null,
-    apiSecret: nonEmpty(env.CLOUDINARY_API_SECRET) ? env.CLOUDINARY_API_SECRET!.trim() : null,
-    folder: nonEmpty(env.CLOUDINARY_FOLDER) ? env.CLOUDINARY_FOLDER!.trim() : null,
-  };
 }
 
 export function hasUpstash(): boolean {

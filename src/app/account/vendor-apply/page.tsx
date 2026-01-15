@@ -105,31 +105,21 @@ function StepPill({ label, status }: { label: string; status: string }) {
   );
 }
 
-async function uploadToCloudinary(file: File, purpose: "vendor_logo" | "vendor_kyc") {
-  const sigRes = await fetch("/api/upload/signature", {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ purpose }),
-  });
-  const sig = await sigRes.json().catch(() => ({}));
-  if (!sigRes.ok) throw new Error(sig?.error || "Unable to start upload");
-
+async function uploadToServer(file: File, purpose: "vendor_logo" | "vendor_kyc") {
   const form = new FormData();
   form.append("file", file);
-  form.append("api_key", String(sig.apiKey));
-  form.append("timestamp", String(sig.timestamp));
-  form.append("signature", String(sig.signature));
-  form.append("folder", String(sig.folder));
+  form.append("purpose", purpose);
 
-  const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`, {
+  const uploadRes = await fetch("/api/upload", {
     method: "POST",
+    credentials: "include",
     body: form,
   });
-  const uploaded = await uploadRes.json().catch(() => ({}));
-  if (!uploadRes.ok) throw new Error(uploaded?.error?.message || "Upload failed");
 
-  const url = String(uploaded?.secure_url || "");
+  const uploaded = await uploadRes.json().catch(() => ({}));
+  if (!uploadRes.ok) throw new Error(uploaded?.error || "Upload failed");
+
+  const url = String(uploaded?.url || "");
   if (!url) throw new Error("Upload failed");
   return url;
 }
@@ -293,7 +283,7 @@ export default function VendorApplyPage() {
     setBusyKey(key);
     try {
       if (file.size > 10 * 1024 * 1024) throw new Error("File must be ≤ 10MB");
-      const url = await uploadToCloudinary(file, purpose);
+      const url = await uploadToServer(file, purpose);
       setField(key, url);
       setMsg("✅ Uploaded");
     } catch (e) {
@@ -713,7 +703,7 @@ export default function VendorApplyPage() {
                 </div>
 
                 <div className="rounded-2xl border p-4">
-                  <div className="text-sm font-semibold">Documents (Cloudinary)</div>
+                  <div className="text-sm font-semibold">Documents</div>
                   <div className="mt-3 grid gap-3 md:grid-cols-2">
                     <div>
                       <label className="text-sm">PAN Image *</label>

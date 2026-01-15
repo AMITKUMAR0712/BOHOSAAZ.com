@@ -585,31 +585,23 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
     }
   }
 
-  // Cloudinary signed upload
-  async function uploadToCloudinary(file: File) {
-    const sigRes = await fetch("/api/upload/signature", {
-      method: "POST",
-      credentials: "include",
-    });
-    const sig = await sigRes.json().catch(() => ({}));
-    if (!sigRes.ok) throw new Error(sig?.error || "Signature failed");
-
+  async function uploadToServer(file: File) {
     const form = new FormData();
     form.append("file", file);
-    form.append("api_key", sig.apiKey);
-    form.append("timestamp", String(sig.timestamp));
-    form.append("signature", sig.signature);
-    form.append("folder", sig.folder);
+    form.append("purpose", "products");
 
-    const uploadRes = await fetch(
-      `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`,
-      { method: "POST", body: form }
-    );
+    const uploadRes = await fetch("/api/upload", {
+      method: "POST",
+      credentials: "include",
+      body: form,
+    });
 
     const uploaded = await uploadRes.json().catch(() => ({}));
-    if (!uploadRes.ok) throw new Error(uploaded?.error?.message || "Upload failed");
+    if (!uploadRes.ok) throw new Error(uploaded?.error || "Upload failed");
 
-    return uploaded.secure_url as string;
+    const url = String(uploaded?.url || "");
+    if (!url) throw new Error("Upload failed");
+    return url;
   }
 
   async function attachImage(productId: string, url: string) {
@@ -1059,7 +1051,7 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
 
                               setMsg(null);
                               try {
-                                const url = await uploadToCloudinary(file);
+                                const url = await uploadToServer(file);
                                 await attachImage(p.id, url);
                                 setMsg("✅ Image uploaded");
                                 await loadProducts();

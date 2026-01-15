@@ -94,32 +94,31 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Production canonicalization: HTTPS + www
+  // Production canonicalization (shared-hosting safe): HTTPS + optional www.
+  // Uses forwarded headers when present to avoid proxy/Passenger quirks.
   if (process.env.NODE_ENV === "production") {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     if (appUrl) {
       try {
         const desired = new URL(appUrl);
         const desiredHost = desired.host;
-        const host = req.headers.get("host") || req.nextUrl.host;
+
+        const xfHost = (req.headers.get("x-forwarded-host") || "").split(",")[0].trim();
+        const host = xfHost || req.headers.get("host") || req.nextUrl.host;
+
         const xfProto = (req.headers.get("x-forwarded-proto") || "").split(",")[0].trim().toLowerCase();
+        const proto = xfProto || req.nextUrl.protocol.replace(":", "");
 
         const wantWww = desiredHost.startsWith("www.");
-        const bareHost = wantWww ? desiredHost.slice(4) : desiredHost;
+        const desiredBareHost = wantWww ? desiredHost.slice(4) : desiredHost;
 
-        // Redirect non-www -> www when the app URL is www.
-        if (wantWww && host === bareHost) {
+        const needsWwwRedirect = wantWww && host === desiredBareHost;
+        const needsHttpsRedirect = proto && proto !== "https";
+
+        if (needsWwwRedirect || needsHttpsRedirect) {
           const url = req.nextUrl.clone();
           url.protocol = "https:";
-          url.host = desiredHost;
-          return NextResponse.redirect(url, 308);
-        }
-
-        // Redirect http -> https when behind a proxy that sets x-forwarded-proto.
-        if (xfProto && xfProto !== "https") {
-          const url = req.nextUrl.clone();
-          url.protocol = "https:";
-          url.host = host;
+          url.host = needsWwwRedirect ? desiredHost : host;
           return NextResponse.redirect(url, 308);
         }
       } catch {

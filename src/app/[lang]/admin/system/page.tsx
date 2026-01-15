@@ -12,10 +12,6 @@ export default async function AdminSystemPage() {
   const checks = [
     { key: "DATABASE_URL", ok: has(process.env.DATABASE_URL) },
     { key: "JWT_SECRET", ok: has(process.env.JWT_SECRET) },
-    { key: "CLOUDINARY_URL", ok: has(process.env.CLOUDINARY_URL) },
-    { key: "CLOUDINARY_CLOUD_NAME", ok: has(process.env.CLOUDINARY_CLOUD_NAME) },
-    { key: "CLOUDINARY_API_KEY", ok: has(process.env.CLOUDINARY_API_KEY) },
-    { key: "CLOUDINARY_API_SECRET", ok: has(process.env.CLOUDINARY_API_SECRET) },
     { key: "UPSTASH_REDIS_REST_URL", ok: has(process.env.UPSTASH_REDIS_REST_URL) },
     { key: "UPSTASH_REDIS_REST_TOKEN", ok: has(process.env.UPSTASH_REDIS_REST_TOKEN) },
     { key: "CRON_SECRET", ok: has(process.env.CRON_SECRET) },
