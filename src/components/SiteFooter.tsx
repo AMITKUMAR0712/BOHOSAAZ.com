@@ -131,6 +131,7 @@ export default function SiteFooter() {
                 <FooterLink currentPathname={pathname} href={`${lp}/seller`} label="Seller" />
                 <FooterLink currentPathname={pathname} href={`${lp}/terms`} label="Terms" />
                 <FooterLink currentPathname={pathname} href={`${lp}/privacy`} label="Privacy" />
+                <FooterLink currentPathname={pathname} href={`${lp}/return`} label="Return & Policy" />
               </FooterCol>
 
               {/* Social */}
@@ -201,6 +202,9 @@ export default function SiteFooter() {
             </Link>
             <Link href={`${lp}/privacy`} className="hover:text-foreground transition underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
               Privacy
+            </Link>
+            <Link href={`${lp}/return`} className="hover:text-foreground transition underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+              Return & Policy
             </Link>
           </div>
         </div>

@@ -9,6 +9,7 @@
     "start": "node server.js",
     "lint": "eslint",
     "seed": "prisma db seed",
+    "set-password": "tsx scripts/set-user-password.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "db:deploy": "prisma migrate deploy && prisma generate"
