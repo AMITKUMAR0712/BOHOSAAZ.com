@@ -25,7 +25,10 @@ import {
 
 export default function AdminSidebar({ lang }: { lang: string }) {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = React.useState(false);
+
   const items = [
+    // ... items stay the same ...
     { href: `/${lang}/admin`, label: "Dashboard" },
     { href: `/${lang}/admin/settings/site`, label: "Site Theme" },
     { href: `/${lang}/admin/settings`, label: "Settings" },
@@ -52,12 +55,10 @@ export default function AdminSidebar({ lang }: { lang: string }) {
 
   function iconForHref(href: string) {
     if (href.endsWith(`/admin`)) return <LayoutDashboard className="h-4 w-4" />;
-
     if (href.includes("/admin/settings/site")) return <Settings className="h-4 w-4" />;
     if (href.includes("/settings") || href.includes("/system")) return <Settings className="h-4 w-4" />;
     if (href.includes("/audit")) return <ClipboardList className="h-4 w-4" />;
     if (href.includes("/orders")) return <ShoppingCart className="h-4 w-4" />;
-
     if (href.includes("/products")) return <Package className="h-4 w-4" />;
     if (href.includes("/categories")) return <Tags className="h-4 w-4" />;
     if (href.includes("/users") || href.includes("/customers")) return <Users className="h-4 w-4" />;
@@ -68,41 +69,66 @@ export default function AdminSidebar({ lang }: { lang: string }) {
     if (href.includes("/support") || href.includes("/tickets") || href.includes("/user-tickets"))
       return <LifeBuoy className="h-4 w-4" />;
     if (href.includes("/contact")) return <Mail className="h-4 w-4" />;
-
     if (href.includes("/ads")) return <Megaphone className="h-4 w-4" />;
     if (href.includes("/coupons")) return <BadgePercent className="h-4 w-4" />;
     if (href.includes("/banners")) return <Image className="h-4 w-4" />;
     if (href.includes("/blog") || href.includes("/cms") || href.includes("/pages"))
       return <BookOpenText className="h-4 w-4" />;
-
     if (href.includes("/admin")) return <Shield className="h-4 w-4" />;
     return <Ticket className="h-4 w-4" />;
   }
 
   return (
-    <aside className="w-64 border-r border-border bg-card p-4">
-      <div className="text-sm font-semibold">Admin</div>
-      <nav className="mt-4 flex flex-col gap-2 text-sm">
-        {items.map((it) => (
-          <Link
-            key={it.href}
-            href={it.href}
-            className={
-              (pathname === it.href || pathname.startsWith(it.href + "/")
-                ? "bg-muted/60 text-foreground font-semibold"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/40") +
-              " rounded-(--radius) px-3 py-2 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            }
-          >
-            <span className="inline-flex items-center gap-2">
-              <span className="shrink-0" aria-hidden>
+    <>
+      {/* Mobile Toggle */}
+      <div className="fixed bottom-4 right-4 z-50 lg:hidden">
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center"
+        >
+          {isOpen ? <Shield className="h-6 w-6 rotate-45 transition-transform" /> : <Shield className="h-6 w-6" />}
+        </button>
+      </div>
+
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 w-64 border-r border-border bg-card transition-transform lg:static lg:translate-x-0",
+          isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+        )}
+      >
+        <div className="p-4 border-b border-border bg-muted/20">
+          <div className="text-sm font-bold tracking-widest uppercase text-muted-foreground">Admin Portal</div>
+        </div>
+        <nav className="flex flex-col gap-1 p-2 overflow-y-auto max-h-[calc(100vh-64px)] scrollbar-hide">
+          {items.map((it) => (
+            <Link
+              key={it.href}
+              href={it.href}
+              onClick={() => setIsOpen(false)}
+              className={cn(
+                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all",
+                pathname === it.href || pathname.startsWith(it.href + "/")
+                  ? "bg-primary text-primary-foreground shadow-md font-medium"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+              )}
+            >
+              <span className="shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
                 {iconForHref(it.href)}
               </span>
-              <span>{it.label}</span>
-            </span>
-          </Link>
-        ))}
-      </nav>
-    </aside>
+              <span className="truncate">{it.label}</span>
+            </Link>
+          ))}
+        </nav>
+      </aside>
+
+      {/* Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-background/80 backdrop-blur-sm lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+    </>
   );
 }

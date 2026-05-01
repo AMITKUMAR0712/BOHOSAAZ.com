@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -231,9 +231,13 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
     };
 
     window.addEventListener("bohosaaz-auth", onAuth as EventListener);
+    window.addEventListener("bohosaaz-cart", loadCart as EventListener);
+    window.addEventListener("bohosaaz-wishlist", loadWishlistCount as EventListener);
     window.addEventListener("storage", onStorage);
     return () => {
       window.removeEventListener("bohosaaz-auth", onAuth as EventListener);
+      window.removeEventListener("bohosaaz-cart", loadCart as EventListener);
+      window.removeEventListener("bohosaaz-wishlist", loadWishlistCount as EventListener);
       window.removeEventListener("storage", onStorage);
     };
   }, [isDashboardRoute]);

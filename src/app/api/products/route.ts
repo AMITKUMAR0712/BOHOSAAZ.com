@@ -183,16 +183,21 @@ export async function GET(req: NextRequest) {
         ? { price: "desc" }
         : { createdAt: "desc" };
 
-  const products = await prisma.product.findMany({
-    where: { AND: and },
-    take,
-    include: {
-      category: { select: { id: true, name: true, slug: true } },
-      vendor: { select: { id: true, shopName: true } },
-      images: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
-    },
-    orderBy: effectiveMode === "latest" ? { createdAt: "desc" } : orderBy,
-  });
+  try {
+    const products = await prisma.product.findMany({
+      where: { AND: and },
+      take,
+      include: {
+        category: { select: { id: true, name: true, slug: true } },
+        vendor: { select: { id: true, shopName: true } },
+        images: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
+      },
+      orderBy: effectiveMode === "latest" ? { createdAt: "desc" } : orderBy,
+    });
 
-  return Response.json({ products });
+    return Response.json({ products });
+  } catch (err) {
+    console.error("[api/products] GET failed:", err);
+    return Response.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

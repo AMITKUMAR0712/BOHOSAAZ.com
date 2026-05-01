@@ -83,6 +83,7 @@ export function WishlistButton({
         throw new Error(err);
       }
 
+      window.dispatchEvent(new Event("bohosaaz-wishlist"));
       setWished(next);
       toast({
         variant: "success",

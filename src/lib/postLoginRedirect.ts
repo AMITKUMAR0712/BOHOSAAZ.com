@@ -20,7 +20,14 @@ function isRoleAllowedNext(role: string | undefined, nextPath: string) {
   if (role === "ADMIN") return nextPath.startsWith("/admin");
   if (role === "VENDOR") return nextPath.startsWith("/vendor") || nextPath.startsWith("/account/vendor-apply");
   // USER
-  return nextPath.startsWith("/account") || nextPath === "/";
+  const isStorefront =
+    nextPath === "/" ||
+    nextPath.startsWith("/p/") ||
+    nextPath.startsWith("/c/") ||
+    nextPath.startsWith("/cart") ||
+    nextPath.startsWith("/checkout");
+
+  return nextPath.startsWith("/account") || isStorefront;
 }
 
 function detectLangFromPathname(pathname: string) {

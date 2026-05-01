@@ -18,7 +18,7 @@ export default function VendorSidebar({ lang }: { lang: string }) {
   ];
 
   return (
-    <div className="grid gap-2">
+    <div className="flex flex-col gap-2 sm:grid sm:grid-cols-2 md:flex md:flex-col lg:grid-cols-1">
       {items.map((it) => {
         const active = pathname === it.href || pathname.startsWith(it.href + "/");
         return (
@@ -27,8 +27,8 @@ export default function VendorSidebar({ lang }: { lang: string }) {
             href={it.href}
             className={
               active
-                ? "block rounded-(--radius) border border-border bg-muted/60 px-4 py-3 text-sm font-semibold text-foreground"
-                : "block rounded-(--radius) border border-border bg-card px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+                ? "block rounded-(--radius) border border-primary/50 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary shadow-sm"
+                : "block rounded-(--radius) border border-border bg-card px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all hover:shadow-sm"
             }
           >
             {it.label}

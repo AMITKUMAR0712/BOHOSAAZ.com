@@ -33,30 +33,33 @@ function getAuthPayload(req: NextRequest): JwtPayload | null {
 
 export async function GET(req: NextRequest) {
   const payload = getAuthPayload(req);
-  // Treat cart as readable for guests (empty cart) to avoid noisy 401s
-  // during initial page loads (e.g. header/cart badge).
   if (!payload) return Response.json({ order: null });
 
-  const order = await prisma.order.findFirst({
-    where: { userId: payload.sub, status: "PENDING" },
-    include: {
-      items: {
-        include: {
-          variant: true,
-          product: {
-            include: {
-              images: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
-              vendor: { select: { shopName: true } },
-              category: true,
+  try {
+    const order = await prisma.order.findFirst({
+      where: { userId: payload.sub, status: "PENDING" },
+      include: {
+        items: {
+          include: {
+            variant: true,
+            product: {
+              include: {
+                images: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
+                vendor: { select: { shopName: true } },
+                category: true,
+              },
             },
           },
         },
       },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+      orderBy: { createdAt: "desc" },
+    });
 
-  return Response.json({ order: order || null });
+    return Response.json({ order: order || null });
+  } catch (err) {
+    console.error("[api/cart] GET failed:", err);
+    return Response.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {

@@ -33,23 +33,28 @@ export async function requireUser() {
     return null;
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: payload.sub },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      phone: true,
-      role: true,
-      isBlocked: true,
-      vendor: { select: { id: true, status: true, shopName: true } },
-    },
-  });
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        role: true,
+        isBlocked: true,
+        vendor: { select: { id: true, status: true, shopName: true } },
+      },
+    });
 
-  if (!user) return null;
-  if (user.isBlocked) return null;
+    if (!user) return null;
+    if (user.isBlocked) return null;
 
-  return user;
+    return user;
+  } catch (err) {
+    console.error("[auth] requireUser failed:", err);
+    return null;
+  }
 }
 
 export async function requireAdmin() {

@@ -48,19 +48,20 @@ export async function GET(req: Request) {
 
     return Response.json({ ok: true, items });
   } catch (e: unknown) {
+    console.error("[api/wishlist] GET failed:", e);
     const code =
       e && typeof e === "object" && "code" in e && typeof (e as { code?: unknown }).code === "string"
         ? (e as { code: string }).code
         : undefined;
 
-    // Prisma P2021: table does not exist (migrations not applied)
+    // Prisma P2021: table does not exist
     if (code === "P2021") {
       if (productId) return Response.json({ wished: false });
       if (wantCount) return Response.json({ ok: true, count: 0 });
-      return Response.json({ ok: true, items: [], warning: "Wishlist is not available until database migrations are applied." });
+      return Response.json({ ok: true, items: [], warning: "Database tables missing." });
     }
 
-    throw e;
+    return Response.json({ error: "Internal server error", details: String(e) }, { status: 500 });
   }
 }
 

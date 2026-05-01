@@ -7,17 +7,6 @@ const LS_KEY = "bohosaaz_theme";
 
 type Theme = "light" | "dark";
 
-function isMobileDevice(): boolean {
-  if (typeof navigator === "undefined") return false;
-  const ua = navigator.userAgent || "";
-  return /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
-}
-
-function getSystemTheme(): Theme {
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
 function readStoredTheme(): Theme | null {
   try {
     const v = localStorage.getItem(LS_KEY);
@@ -35,33 +24,16 @@ function applyTheme(theme: Theme) {
 }
 
 export default function ThemeToggle({ className }: { className?: string }) {
-  const [theme, setTheme] = React.useState<Theme>("light");
+  const [theme, setTheme] = React.useState<Theme>("dark");
 
   React.useEffect(() => {
-    const initial = readStoredTheme() ?? (isMobileDevice() ? "light" : getSystemTheme());
+    const initial = readStoredTheme() ?? "dark";
     setTheme(initial);
     applyTheme(initial);
 
-    const mql = window.matchMedia?.("(prefers-color-scheme: dark)");
-    const onSystemChange = () => {
-      // Only follow system when user hasn't explicitly chosen a theme.
-      if (readStoredTheme() != null) return;
-      // Mobile defaults to light unless user chose.
-      if (isMobileDevice()) return;
-      const next = getSystemTheme();
-      setTheme(next);
-      applyTheme(next);
-    };
-
-    try {
-      mql?.addEventListener?.("change", onSystemChange);
-    } catch {
-      // ignore
-    }
-
     const onStorage = (e: StorageEvent) => {
       if (e.key !== LS_KEY) return;
-      const next = readStoredTheme() ?? (isMobileDevice() ? "light" : getSystemTheme());
+      const next = readStoredTheme() ?? "dark";
       setTheme(next);
       applyTheme(next);
     };

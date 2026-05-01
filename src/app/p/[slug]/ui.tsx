@@ -212,6 +212,7 @@ export default function PurchasePanel({
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(data?.error || "Add to cart failed");
                 setMsg("Added to cart.");
+                window.dispatchEvent(new Event("bohosaaz-cart"));
               } catch (e: unknown) {
                 const message = e instanceof Error ? e.message : "Error";
                 setMsg(message);

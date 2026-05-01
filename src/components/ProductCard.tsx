@@ -251,6 +251,7 @@ export function ProductCard({
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(data?.error || "Add to cart failed");
+                window.dispatchEvent(new Event("bohosaaz-cart"));
                 onAddedToCart?.();
               } finally {
                 setBusy(false);

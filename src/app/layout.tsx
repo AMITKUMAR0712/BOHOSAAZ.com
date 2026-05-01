@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script
           id="bohosaaz-theme-init"
           strategy="beforeInteractive"
-        >{`(function(){try{var k='bohosaaz_theme';var v=localStorage.getItem(k);var hasChoice=(v==='dark'||v==='light');var ua=(navigator&&navigator.userAgent)||'';var isMobile=/Mobi|Android|iPhone|iPad|iPod/i.test(ua);var prefersDark=!!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);var isDark=(v==='dark')||(!hasChoice&&!isMobile&&prefersDark);var r=document.documentElement;r.classList.toggle('dark',!!isDark);r.style.colorScheme=isDark?'dark':'light';}catch(e){}})();`}</Script>
+        >{`(function(){try{var k='bohosaaz_theme';var v=localStorage.getItem(k);var isDark=(v!=='light');var r=document.documentElement;r.classList.toggle('dark',isDark);r.style.colorScheme=isDark?'dark':'light';}catch(e){}})();`}</Script>
         <ToastProvider>
           <SonnerToaster />
           <SiteHeader />
