@@ -65,30 +65,33 @@ const EnvSchema = z
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "NEXT_PUBLIC_APP_URL is required" });
     }
 
-    // In production we fail-fast on operational integrations.
+    // In production, we warn instead of crashing on operational integrations.
     if (!shouldValidateStrictly) return;
 
-    if (!nonEmpty(v.UPSTASH_REDIS_REST_URL) || !nonEmpty(v.UPSTASH_REDIS_REST_TOKEN)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Upstash Redis is required in production (UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN)",
-      });
-    }
+    const optionalConfigs = [
+      {
+        check: () => nonEmpty(v.UPSTASH_REDIS_REST_URL) && nonEmpty(v.UPSTASH_REDIS_REST_TOKEN),
+        message: "⚠️ [env] Upstash Redis is not configured. Features like rate-limiting will be disabled.",
+      },
+      {
+        check: () => nonEmpty(v.CRON_SECRET),
+        message: "⚠️ [env] CRON_SECRET is not configured. Background jobs will be insecure.",
+      },
+      {
+        check: () => nonEmpty(v.COURIER_WEBHOOK_SECRET),
+        message: "⚠️ [env] COURIER_WEBHOOK_SECRET is not configured. Shipping updates will be disabled.",
+      },
+      {
+        check: () => nonEmpty(v.RAZORPAY_KEY_ID) && nonEmpty(v.RAZORPAY_KEY_SECRET) && nonEmpty(v.NEXT_PUBLIC_RAZORPAY_KEY_ID),
+        message: "⚠️ [env] Razorpay is not configured. Payments will be disabled.",
+      },
+    ];
 
-    if (!nonEmpty(v.CRON_SECRET)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "CRON_SECRET is required in production" });
-    }
-
-    if (!nonEmpty(v.COURIER_WEBHOOK_SECRET)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "COURIER_WEBHOOK_SECRET is required in production" });
-    }
-
-    if (!nonEmpty(v.RAZORPAY_KEY_ID) || !nonEmpty(v.RAZORPAY_KEY_SECRET) || !nonEmpty(v.NEXT_PUBLIC_RAZORPAY_KEY_ID)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Razorpay is required in production (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, NEXT_PUBLIC_RAZORPAY_KEY_ID)",
-      });
-    }
+    optionalConfigs.forEach((cfg) => {
+      if (!cfg.check()) {
+        console.warn(cfg.message);
+      }
+    });
   });
 
 export type Env = z.infer<typeof EnvSchema>;
