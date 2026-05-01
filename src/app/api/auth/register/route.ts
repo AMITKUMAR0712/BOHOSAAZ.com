@@ -26,26 +26,32 @@ export async function POST(req: NextRequest) {
 
   const { name, email, password } = parsed.data;
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    return NextResponse.json({ error: "Email already exists" }, { status: 409 });
+  try {
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return NextResponse.json({ error: "Email already exists" }, { status: 409 });
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: { name, email, password: hash, role: "USER" },
+      select: { id: true, email: true, role: true, name: true },
+    });
+
+    const token = signToken({ sub: user.id, email: user.email, role: user.role });
+
+    const res = NextResponse.json({ user, token });
+    // simple cookie token (httpOnly)
+    res.cookies.set("token", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    });
+    return res;
+  } catch (e: unknown) {
+    const error = e instanceof Error ? e.message : "Internal server error";
+    console.error("REGISTER_ERROR:", e);
+    return NextResponse.json({ error, debug: String(e) }, { status: 500 });
   }
-
-  const hash = await bcrypt.hash(password, 10);
-  const user = await prisma.user.create({
-    data: { name, email, password: hash, role: "USER" },
-    select: { id: true, email: true, role: true, name: true },
-  });
-
-  const token = signToken({ sub: user.id, email: user.email, role: user.role });
-
-  const res = NextResponse.json({ user, token });
-  // simple cookie token (httpOnly)
-  res.cookies.set("token", token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-  });
-  return res;
 }

@@ -61,72 +61,54 @@ export async function GET(req: Request) {
       return Response.json({ ok: true, items: [], warning: "Database tables missing." });
     }
 
-    return Response.json({ error: "Internal server error", details: String(e) }, { status: 500 });
+    return Response.json({ error: "Internal server error", debug: String(e) }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
-  const user = await requireUser();
-  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
-
-  const body = await req.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) return Response.json({ error: "Invalid payload" }, { status: 400 });
-
-  const product = await prisma.product.findUnique({
-    where: { id: parsed.data.productId },
-    select: { id: true, isActive: true },
-  });
-  if (!product || !product.isActive) return Response.json({ error: "Product not found" }, { status: 404 });
-
   try {
+    const user = await requireUser();
+    if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+    const body = await req.json().catch(() => null);
+    const parsed = bodySchema.safeParse(body);
+    if (!parsed.success) return Response.json({ error: "Invalid payload" }, { status: 400 });
+
+    const product = await prisma.product.findUnique({
+      where: { id: parsed.data.productId },
+      select: { id: true, isActive: true },
+    });
+    if (!product || !product.isActive) return Response.json({ error: "Product not found" }, { status: 404 });
+
     await prisma.wishlistItem.upsert({
       where: { userId_productId: { userId: user.id, productId: product.id } },
       create: { userId: user.id, productId: product.id },
       update: {},
     });
-  } catch (e: unknown) {
-    const code =
-      e && typeof e === "object" && "code" in e && typeof (e as { code?: unknown }).code === "string"
-        ? (e as { code: string }).code
-        : undefined;
-    if (code === "P2021") {
-      return Response.json(
-        { error: "Wishlist is not available until database migrations are applied." },
-        { status: 503 },
-      );
-    }
-    throw e;
-  }
 
-  return Response.json({ ok: true });
+    return Response.json({ ok: true });
+  } catch (e: unknown) {
+    console.error("[api/wishlist] POST failed:", e);
+    return Response.json({ error: "Internal server error", debug: String(e) }, { status: 500 });
+  }
 }
 
 export async function DELETE(req: Request) {
-  const user = await requireUser();
-  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
-
-  const body = await req.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) return Response.json({ error: "Invalid payload" }, { status: 400 });
-
   try {
+    const user = await requireUser();
+    if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+    const body = await req.json().catch(() => null);
+    const parsed = bodySchema.safeParse(body);
+    if (!parsed.success) return Response.json({ error: "Invalid payload" }, { status: 400 });
+
     await prisma.wishlistItem.deleteMany({
       where: { userId: user.id, productId: parsed.data.productId },
     });
-  } catch (e: unknown) {
-    const code =
-      e && typeof e === "object" && "code" in e && typeof (e as { code?: unknown }).code === "string"
-        ? (e as { code: string }).code
-        : undefined;
-    if (code === "P2021") {
-      return Response.json(
-        { error: "Wishlist is not available until database migrations are applied." },
-        { status: 503 },
-      );
-    }
-    throw e;
-  }
 
-  return Response.json({ ok: true });
+    return Response.json({ ok: true });
+  } catch (e: unknown) {
+    console.error("[api/wishlist] DELETE failed:", e);
+    return Response.json({ error: "Internal server error", debug: String(e) }, { status: 500 });
+  }
 }
