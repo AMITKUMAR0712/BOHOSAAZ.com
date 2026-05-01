@@ -56,9 +56,9 @@ export async function GET(req: NextRequest) {
     });
 
     return Response.json({ order: order || null });
-  } catch (err) {
+  } catch (err: any) {
     console.error("[api/cart] GET failed:", err);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return Response.json({ error: "Internal server error", debug: err.message }, { status: 500 });
   }
 }
 
@@ -110,60 +110,71 @@ export async function POST(req: NextRequest) {
     ? Number(pickedVariant.salePrice ?? pickedVariant.price)
     : Number(product.salePrice ?? product.price);
 
-  const totals = await prisma.$transaction(async (tx) => {
-    let order = await tx.order.findFirst({
-      where: { userId: payload.sub, status: "PENDING" },
-      orderBy: { createdAt: "desc" },
-      select: { id: true },
-    });
-
-    if (!order) {
-      order = await tx.order.create({
-        data: { userId: payload.sub, status: "PENDING", subtotal: 0, total: 0 },
+  try {
+    const totals = await prisma.$transaction(async (tx) => {
+      let order = await tx.order.findFirst({
+        where: { userId: payload.sub, status: "PENDING" },
+        orderBy: { createdAt: "desc" },
         select: { id: true },
       });
-    }
 
-    const existing = await tx.orderItem.findFirst({
-      where: {
-        orderId: order.id,
-        productId,
-        variantId: pickedVariant ? pickedVariant.id : null,
-      },
-      select: { id: true, quantity: true },
-    });
+      if (!order) {
+        order = await tx.order.create({
+          data: { userId: payload.sub, status: "PENDING", subtotal: 0, total: 0 },
+          select: { id: true },
+        });
+      }
 
-    if (existing) {
-      const nextQty = Math.min(existing.quantity + finalQty, maxQty);
-      await tx.orderItem.update({
-        where: { id: existing.id },
-        data: {
-          quantity: nextQty,
-          price: unitPrice,
-          variantSku: pickedVariant?.sku ?? null,
-          variantSize: pickedVariant?.size ?? null,
-          variantColor: pickedVariant?.color ?? null,
-        },
-      });
-    } else {
-      await tx.orderItem.create({
-        data: {
+      const existing = await tx.orderItem.findFirst({
+        where: {
           orderId: order.id,
           productId,
-          variantId: pickedVariant?.id ?? null,
-          quantity: finalQty,
-          price: unitPrice,
-          variantSku: pickedVariant?.sku ?? null,
-          variantSize: pickedVariant?.size ?? null,
-          variantColor: pickedVariant?.color ?? null,
+          variantId: pickedVariant ? pickedVariant.id : null,
         },
+        select: { id: true, quantity: true },
       });
-    }
 
-    return recomputePendingOrderTotals(tx, order.id);
-  });
+      if (existing) {
+        const nextQty = Math.min(existing.quantity + finalQty, maxQty);
+        await tx.orderItem.update({
+          where: { id: existing.id },
+          data: {
+            quantity: nextQty,
+            price: unitPrice,
+            variantSku: pickedVariant?.sku ?? null,
+            variantSize: pickedVariant?.size ?? null,
+            variantColor: pickedVariant?.color ?? null,
+          },
+        });
+      } else {
+        await tx.orderItem.create({
+          data: {
+            orderId: order.id,
+            productId,
+            variantId: pickedVariant?.id ?? null,
+            quantity: finalQty,
+            price: unitPrice,
+            variantSku: pickedVariant?.sku ?? null,
+            variantSize: pickedVariant?.size ?? null,
+            variantColor: pickedVariant?.color ?? null,
+          },
+        });
+      }
 
-  return Response.json({ ok: true, total: totals.total, subtotal: totals.subtotal, discount: totals.discount, couponCode: totals.couponCode });
+      return recomputePendingOrderTotals(tx, order.id);
+    });
+
+    return Response.json({
+      ok: true,
+      total: totals.total,
+      subtotal: totals.subtotal,
+      discount: totals.discount,
+      couponCode: totals.couponCode,
+    });
+  } catch (e: any) {
+    console.error("[api/cart] POST failed:", e);
+    return Response.json({ error: "Internal server error", debug: e.message }, { status: 500 });
+  }
 }
 
 export async function PATCH(req: NextRequest) {
@@ -208,7 +219,11 @@ export async function PATCH(req: NextRequest) {
     return recomputePendingOrderTotals(tx, item.orderId);
   });
 
-  return Response.json({ ok: true, quantity: finalQty, total: totals.total, subtotal: totals.subtotal, discount: totals.discount, couponCode: totals.couponCode });
+    return Response.json({ ok: true, quantity: finalQty, total: totals.total, subtotal: totals.subtotal, discount: totals.discount, couponCode: totals.couponCode });
+  } catch (e: any) {
+    console.error("[api/cart] PATCH failed:", e);
+    return Response.json({ error: "Internal server error", debug: e.message }, { status: 500 });
+  }
 }
 
 export async function DELETE(req: NextRequest) {
@@ -237,19 +252,24 @@ export async function DELETE(req: NextRequest) {
     await prisma.orderItem.deleteMany({ where: { orderId: order.id } });
   }
 
-  const totals = await prisma.$transaction(async (tx) => {
-    // If the cart is empty, also clear coupon fields.
-    const remaining = await tx.orderItem.count({ where: { orderId: order.id } });
-    if (remaining <= 0) {
-      await tx.order.update({
-        where: { id: order.id },
-        data: { subtotal: 0, total: 0, couponId: null, couponCode: null, couponDiscount: 0 },
-      });
-      return { subtotal: 0, discount: 0, total: 0, couponCode: null as string | null };
-    }
+  try {
+    const totals = await prisma.$transaction(async (tx) => {
+      // If the cart is empty, also clear coupon fields.
+      const remaining = await tx.orderItem.count({ where: { orderId: order.id } });
+      if (remaining <= 0) {
+        await tx.order.update({
+          where: { id: order.id },
+          data: { subtotal: 0, total: 0, couponId: null, couponCode: null, couponDiscount: 0 },
+        });
+        return { subtotal: 0, discount: 0, total: 0, couponCode: null as string | null };
+      }
 
-    return recomputePendingOrderTotals(tx, order.id);
-  });
+      return recomputePendingOrderTotals(tx, order.id);
+    });
 
-  return Response.json({ ok: true, total: totals.total, subtotal: totals.subtotal, discount: totals.discount, couponCode: totals.couponCode });
+    return Response.json({ ok: true, total: totals.total, subtotal: totals.subtotal, discount: totals.discount, couponCode: totals.couponCode });
+  } catch (e: any) {
+    console.error("[api/cart] DELETE failed:", e);
+    return Response.json({ error: "Internal server error", debug: e.message }, { status: 500 });
+  }
 }
