@@ -41,11 +41,6 @@ export default function ThemeToggle({ className }: { className?: string }) {
     window.addEventListener("storage", onStorage);
 
     return () => {
-      try {
-        mql?.removeEventListener?.("change", onSystemChange);
-      } catch {
-        // ignore
-      }
       window.removeEventListener("storage", onStorage);
     };
   }, []);
