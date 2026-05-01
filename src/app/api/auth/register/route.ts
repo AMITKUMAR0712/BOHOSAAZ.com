@@ -40,16 +40,15 @@ export async function POST(req: NextRequest) {
 
     const token = signToken({ sub: user.id, email: user.email, role: user.role });
 
-    const res = NextResponse.json({ user, token });
-    // simple cookie token (httpOnly)
-    res.cookies.set("token", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-    });
-    return res;
-  } catch (e: unknown) {
+  const data = { user, token };
+  const res = new Response(JSON.stringify(data, (k, v) => typeof v === 'bigint' ? v.toString() : v), {
+    status: 201,
+    headers: { "Content-Type": "application/json" }
+  });
+
+  res.headers.append("Set-Cookie", `token=${token}; HttpOnly; Path=/; SameSite=Lax${process.env.NODE_ENV === "production" ? "; Secure" : ""}`);
+  return res;
+} catch (e: unknown) {
     const error = e instanceof Error ? e.message : "Internal server error";
     console.error("REGISTER_ERROR:", e);
     return NextResponse.json({ error, debug: String(e) }, { status: 500 });

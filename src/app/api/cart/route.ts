@@ -55,10 +55,16 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    return Response.json({ order: order || null });
+    const data = { order: order || null };
+    return new Response(JSON.stringify(data, (k, v) => typeof v === 'bigint' ? v.toString() : v), {
+      headers: { "Content-Type": "application/json" }
+    });
   } catch (err: any) {
     console.error("[api/cart] GET failed:", err);
-    return Response.json({ error: "Internal server error", debug: err.message }, { status: 500 });
+    return new Response(JSON.stringify({ error: "Internal server error", debug: err.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
   }
 }
 

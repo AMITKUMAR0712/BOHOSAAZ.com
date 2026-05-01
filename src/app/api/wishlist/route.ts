@@ -24,12 +24,18 @@ export async function GET(req: Request) {
         where: { userId_productId: { userId: user.id, productId } },
         select: { id: true },
       });
-      return Response.json({ wished: Boolean(item) });
+      const data = { wished: Boolean(item) };
+      return new Response(JSON.stringify(data, (k, v) => typeof v === 'bigint' ? v.toString() : v), {
+        headers: { "Content-Type": "application/json" }
+      });
     }
 
     if (wantCount) {
       const count = await prisma.wishlistItem.count({ where: { userId: user.id } });
-      return Response.json({ ok: true, count });
+      const data = { ok: true, count };
+      return new Response(JSON.stringify(data, (k, v) => typeof v === 'bigint' ? v.toString() : v), {
+        headers: { "Content-Type": "application/json" }
+      });
     }
 
     const items = await prisma.wishlistItem.findMany({
@@ -46,7 +52,10 @@ export async function GET(req: Request) {
       },
     });
 
-    return Response.json({ ok: true, items });
+    const data = { ok: true, items };
+    return new Response(JSON.stringify(data, (k, v) => typeof v === 'bigint' ? v.toString() : v), {
+      headers: { "Content-Type": "application/json" }
+    });
   } catch (e: unknown) {
     console.error("[api/wishlist] GET failed:", e);
     const code =

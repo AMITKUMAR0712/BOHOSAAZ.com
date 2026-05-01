@@ -8,20 +8,31 @@ export async function GET() {
     
     const tables = await prisma.$queryRawUnsafe(`SHOW TABLES`);
     
-    return Response.json({
+    // Explicitly stringify to handle BigInt safely
+    const data = {
       status: "online",
       latency: `${end - start}ms`,
       db: result,
       tables: tables,
       env: process.env.NODE_ENV,
       cwd: process.cwd(),
+      node: process.version,
+    };
+
+    return new Response(JSON.stringify(data, (key, value) =>
+      typeof value === 'bigint' ? value.toString() : value
+    ), {
+      headers: { "Content-Type": "application/json" }
     });
   } catch (e: any) {
-    return Response.json({
+    return new Response(JSON.stringify({
       status: "error",
       error: e.message,
       stack: e.stack,
       code: e.code,
-    }, { status: 500 });
+    }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
   }
 }
