@@ -187,39 +187,47 @@ export async function PATCH(req: NextRequest) {
 
   const { itemId, quantity } = parsed.data;
 
-  const item = await prisma.orderItem.findUnique({
-    where: { id: itemId },
-    include: { order: true, product: true, variant: true },
-  });
-  if (!item) return Response.json({ error: "Item not found" }, { status: 404 });
-  if (item.order.userId !== payload.sub || String(item.order.status) !== "PENDING") {
-    return Response.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  const maxQty = item.variant ? Math.max(0, item.variant.stock) : Math.max(0, item.product.stock);
-  if (maxQty <= 0) return Response.json({ error: "Out of stock" }, { status: 400 });
-  const finalQty = Math.min(quantity, maxQty);
-
-  const unitPrice = item.variant
-    ? Number(item.variant.salePrice ?? item.variant.price)
-    : Number(item.product.salePrice ?? item.product.price);
-
-  const totals = await prisma.$transaction(async (tx) => {
-    await tx.orderItem.update({
+  try {
+    const item = await prisma.orderItem.findUnique({
       where: { id: itemId },
-      data: {
-        quantity: finalQty,
-        price: unitPrice,
-        variantSku: item.variant?.sku ?? null,
-        variantSize: item.variant?.size ?? null,
-        variantColor: item.variant?.color ?? null,
-      },
+      include: { order: true, product: true, variant: true },
+    });
+    if (!item) return Response.json({ error: "Item not found" }, { status: 404 });
+    if (item.order.userId !== payload.sub || String(item.order.status) !== "PENDING") {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const maxQty = item.variant ? Math.max(0, item.variant.stock) : Math.max(0, item.product.stock);
+    if (maxQty <= 0) return Response.json({ error: "Out of stock" }, { status: 400 });
+    const finalQty = Math.min(quantity, maxQty);
+
+    const unitPrice = item.variant
+      ? Number(item.variant.salePrice ?? item.variant.price)
+      : Number(item.product.salePrice ?? item.product.price);
+
+    const totals = await prisma.$transaction(async (tx) => {
+      await tx.orderItem.update({
+        where: { id: itemId },
+        data: {
+          quantity: finalQty,
+          price: unitPrice,
+          variantSku: item.variant?.sku ?? null,
+          variantSize: item.variant?.size ?? null,
+          variantColor: item.variant?.color ?? null,
+        },
+      });
+
+      return recomputePendingOrderTotals(tx, item.orderId);
     });
 
-    return recomputePendingOrderTotals(tx, item.orderId);
-  });
-
-    return Response.json({ ok: true, quantity: finalQty, total: totals.total, subtotal: totals.subtotal, discount: totals.discount, couponCode: totals.couponCode });
+    return Response.json({
+      ok: true,
+      quantity: finalQty,
+      total: totals.total,
+      subtotal: totals.subtotal,
+      discount: totals.discount,
+      couponCode: totals.couponCode,
+    });
   } catch (e: any) {
     console.error("[api/cart] PATCH failed:", e);
     return Response.json({ error: "Internal server error", debug: e.message }, { status: 500 });
