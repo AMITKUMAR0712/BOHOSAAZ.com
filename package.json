@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "postinstall": "node scripts/runtime/prisma-generate.js",
-    "build": "node scripts/runtime/prisma-generate.js && next build",
+    "build": "node scripts/runtime/prisma-generate.js && next build && node scripts/runtime/post-build.js",
     "start": "node server.js",
     "lint": "eslint",
     "seed": "prisma db seed",

@@ -284,6 +284,8 @@ model User {
   userTicketMessagesSent UserTicketMessage[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("user")
 }
 
 model Vendor {
@@ -330,6 +332,8 @@ model Vendor {
   returnRequests ReturnRequest[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+
+  @@map("vendor")
 }
 
 model VendorKyc {
@@ -361,6 +365,8 @@ model VendorKyc {
   updatedAt DateTime @updatedAt
 
   @@index([status])
+
+  @@map("vendorkyc")
 }
 
 model VendorBankAccount {
@@ -376,6 +382,8 @@ model VendorBankAccount {
   vendor   Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("vendorbankaccount")
 }
 
 model NewsletterSubscriber {
@@ -385,6 +393,8 @@ model NewsletterSubscriber {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("newslettersubscriber")
 }
 
 model WishlistItem {
@@ -399,6 +409,8 @@ model WishlistItem {
   @@unique([userId, productId])
   @@index([userId])
   @@index([productId])
+
+  @@map("wishlistitem")
 }
 
 model PasswordResetToken {
@@ -422,6 +434,8 @@ model PasswordResetToken {
   @@index([email])
   @@index([userId])
   @@index([otpExpiresAt])
+
+  @@map("passwordresettoken")
 }
 
 model WalletAccount {
@@ -446,6 +460,8 @@ model WalletAccount {
   updatedAt DateTime @updatedAt
 
   @@index([kind])
+
+  @@map("walletaccount")
 }
 
 model WalletTransaction {
@@ -489,6 +505,8 @@ model WalletTransaction {
   @@index([payoutId])
   @@index([razorpayOrderId])
   @@index([razorpayPaymentId])
+
+  @@map("wallettransaction")
 }
 
 model RazorpayTopup {
@@ -514,6 +532,8 @@ model RazorpayTopup {
   @@index([userId])
   @@index([walletId])
   @@index([status])
+
+  @@map("razorpaytopup")
 }
 
 model Payout {
@@ -542,6 +562,8 @@ model Payout {
 
   @@index([vendorId])
   @@index([status])
+
+  @@map("payout")
 }
 
 model CommissionPlan {
@@ -568,6 +590,8 @@ model CommissionPlan {
   @@index([scope])
   @@index([vendorId])
   @@index([categoryId])
+
+  @@map("commissionplan")
 }
 
 model CommissionHistory {
@@ -588,6 +612,8 @@ model CommissionHistory {
   createdAt DateTime @default(now())
 
   @@index([vendorId, createdAt])
+
+  @@map("commissionhistory")
 }
 
 model SupportTicket {
@@ -615,6 +641,8 @@ model SupportTicket {
 
   @@index([vendorId])
   @@index([status])
+
+  @@map("supportticket")
 }
 
 model SupportTicketMessage {
@@ -632,6 +660,8 @@ model SupportTicketMessage {
   createdAt DateTime @default(now())
 
   @@index([ticketId])
+
+  @@map("supportticketmessage")
 }
 
 model Category {
@@ -649,6 +679,8 @@ model Category {
   commissionPlans CommissionPlan[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
+
+  @@map("category")
 }
 
 model Ad {
@@ -677,6 +709,8 @@ model Ad {
   @@index([placement, isActive])
   @@index([placement, isActive, startsAt, endsAt])
   @@index([priority])
+
+  @@map("ad")
 }
 
 model AdEvent {
@@ -692,6 +726,8 @@ model AdEvent {
 
   @@index([adId, type, createdAt])
   @@index([type, createdAt])
+
+  @@map("adevent")
 }
 
 model Setting {
@@ -699,6 +735,8 @@ model Setting {
   value     Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("setting")
 }
 
 model Coupon {
@@ -729,6 +767,8 @@ model Coupon {
   @@index([appliesTo])
   @@index([categoryId])
   @@index([productId])
+
+  @@map("coupon")
 }
 
 model CouponRedemption {
@@ -748,6 +788,8 @@ model CouponRedemption {
   @@index([couponId])
   @@index([userId])
   @@unique([couponId, orderId])
+
+  @@map("couponredemption")
 }
 
 model ContentPage {
@@ -757,6 +799,8 @@ model ContentPage {
   body      String
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
+
+  @@map("contentpage")
 }
 
 model BlogPost {
@@ -774,6 +818,8 @@ model BlogPost {
 
   @@index([isPublished])
   @@index([publishedAt])
+
+  @@map("blogpost")
 }
 
 model ContactMessage {
@@ -793,6 +839,8 @@ model ContactMessage {
   @@index([status])
   @@index([createdAt])
   @@index([userId])
+
+  @@map("contactmessage")
 }
 
 model Brand {
@@ -809,6 +857,8 @@ model Brand {
 
   @@index([isActive])
   @@index([sortOrder])
+
+  @@map("brand")
 }
 
 model Banner {
@@ -832,6 +882,8 @@ model Banner {
   @@index([isActive])
   @@index([sortOrder])
   @@index([couponCode])
+
+  @@map("banner")
 }
 
 model CmsPage {
@@ -844,6 +896,8 @@ model CmsPage {
   updatedAt DateTime @updatedAt
 
   versions  CmsPageVersion[]
+
+  @@map("cmspage")
 }
 
 model CmsPageVersion {
@@ -858,6 +912,8 @@ model CmsPageVersion {
   page      CmsPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   @@index([pageId])
+
+  @@map("cmspageversion")
 }
 
 model NotificationTemplate {
@@ -870,6 +926,8 @@ model NotificationTemplate {
   isActive  Boolean            @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("notificationtemplate")
 }
 
 model NotificationBroadcast {
@@ -880,6 +938,8 @@ model NotificationBroadcast {
   meta      Json?
   createdBy String?
   createdAt DateTime @default(now())
+
+  @@map("notificationbroadcast")
 }
 
 model NotificationDelivery {
@@ -895,6 +955,8 @@ model NotificationDelivery {
   @@index([broadcastId])
   @@index([userId])
   @@index([vendorId])
+
+  @@map("notificationdelivery")
 }
 
 model WebhookLog {
@@ -909,6 +971,8 @@ model WebhookLog {
 
   @@index([provider])
   @@index([ok])
+
+  @@map("webhooklog")
 }
 
 model CronLog {
@@ -922,6 +986,8 @@ model CronLog {
 
   @@index([jobName])
   @@index([ok])
+
+  @@map("cronlog")
 }
 
 model Product {
@@ -988,6 +1054,8 @@ model Product {
   @@index([barcode])
   @@index([isActive])
   @@index([deletedAt])
+
+  @@map("product")
 }
 
 model ProductVariant {
@@ -1011,6 +1079,8 @@ model ProductVariant {
   @@index([productId])
   @@index([size])
   @@index([color])
+
+  @@map("productvariant")
 }
 
 model Tag {
@@ -1019,6 +1089,8 @@ model Tag {
   slug      String @unique
   products  ProductTag[]
   createdAt DateTime @default(now())
+
+  @@map("tag")
 }
 
 model ProductTag {
@@ -1030,6 +1102,8 @@ model ProductTag {
 
   @@id([productId, tagId])
   @@index([tagId])
+
+  @@map("producttag")
 }
 
 model ProductImage {
@@ -1042,6 +1116,8 @@ model ProductImage {
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
+
+  @@map("productimage")
 }
 
 model VendorOrder {
@@ -1067,6 +1143,8 @@ model VendorOrder {
   walletTxns WalletTransaction[]
   payoutRecord Payout?
   commissionHistory CommissionHistory?
+
+  @@map("vendororder")
 }
 
 model AuditLog {
@@ -1080,6 +1158,8 @@ model AuditLog {
   ip        String?
   userAgent String?
   createdAt DateTime @default(now())
+
+  @@map("auditlog")
 }
 
 
@@ -1123,6 +1203,8 @@ model Order {
   couponRedemptions CouponRedemption[]
 
   coupon Coupon? @relation(fields: [couponId], references: [id], onDelete: SetNull)
+
+  @@map("order")
 }
 
 model OrderPayment {
@@ -1144,6 +1226,8 @@ model OrderPayment {
   @@index([status])
   @@index([razorpayOrderId])
   @@index([razorpayPaymentId])
+
+  @@map("orderpayment")
 }
 
 model OrderItem {
@@ -1181,6 +1265,8 @@ model OrderItem {
   @@index([orderId])
   @@index([productId])
   @@index([variantId])
+
+  @@map("orderitem")
 }
 
 model ReturnRequest {
@@ -1220,6 +1306,8 @@ model ReturnRequest {
   @@index([userId])
   @@index([vendorId])
   @@index([status])
+
+  @@map("returnrequest")
 }
 
 model ReturnTrackingEvent {
@@ -1234,6 +1322,8 @@ model ReturnTrackingEvent {
   returnRequest ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
 
   @@index([returnRequestId, createdAt])
+
+  @@map("returntrackingevent")
 }
 
 model RefundRecord {
@@ -1263,6 +1353,8 @@ model RefundRecord {
   @@index([orderId])
   @@index([userId])
   @@index([status])
+
+  @@map("refundrecord")
 }
 
 model UserTicket {
@@ -1287,6 +1379,8 @@ model UserTicket {
   @@index([status])
   @@index([priority])
   @@index([category])
+
+  @@map("userticket")
 }
 
 model UserTicketMessage {
@@ -1303,4 +1397,6 @@ model UserTicketMessage {
 
   @@index([ticketId])
   @@index([senderId])
+
+  @@map("userticketmessage")
 }
