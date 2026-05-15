@@ -1,0 +1,30 @@
+import { prisma } from "@/lib/prisma";
+
+export async function POST(req: Request) {
+  const payload = await req.json();
+
+  // Example payload mapping
+  const tracking = payload.tracking_number;
+  const status = payload.status; // IN_TRANSIT | DELIVERED
+
+  const item = await prisma.orderItem.findFirst({
+    where: { trackingNumber: tracking },
+  });
+  if (!item) return Response.json({ ok: true });
+
+  if (status === "IN_TRANSIT") {
+    await prisma.orderItem.update({
+      where: { id: item.id },
+      data: { status: "SHIPPED", shippedAt: new Date() },
+    });
+  }
+
+  if (status === "DELIVERED") {
+    await prisma.orderItem.update({
+      where: { id: item.id },
+      data: { status: "DELIVERED", deliveredAt: new Date() },
+    });
+  }
+
+  return Response.json({ ok: true });
+}
