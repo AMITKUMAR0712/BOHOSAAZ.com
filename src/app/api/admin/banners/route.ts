@@ -10,16 +10,21 @@ const mediaUrlSchema = z
   .string()
   .trim()
   .min(1)
-  .refine((value) => value.startsWith("/uploads/") || z.string().url().safeParse(value).success, {
+  .refine((value) => (value.startsWith("/") && !value.startsWith("//")) || z.string().url().safeParse(value).success, {
     message: "Invalid media URL",
   });
 
+const optionalMediaUrlSchema = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? null : value),
+  mediaUrlSchema.optional().nullable()
+);
+
 const createSchema = z.object({
-  title: z.string().trim().min(1).max(200),
+  title: z.string().trim().max(200).optional().nullable(),
   highlightText: z.string().trim().max(200).optional().nullable(),
   subtitle: z.string().trim().max(400).optional().nullable(),
-  imageUrl: mediaUrlSchema,
-  videoUrl: mediaUrlSchema.optional().nullable(),
+  imageUrl: optionalMediaUrlSchema,
+  videoUrl: optionalMediaUrlSchema,
   ctaText: z.string().trim().max(80).optional().nullable(),
   ctaHref: z.string().trim().max(2048).optional().nullable(),
   isActive: z.boolean().optional().default(true),
@@ -34,6 +39,27 @@ const createSchema = z.object({
   startAt: z.string().datetime().optional().nullable(),
   endAt: z.string().datetime().optional().nullable(),
 });
+
+function isVideoUrl(url: string | null | undefined) {
+  const clean = (url ?? "").trim().toLowerCase().split("?")[0] ?? "";
+  return clean.endsWith(".mp4") || clean.endsWith(".webm") || clean.endsWith(".mov");
+}
+
+function normalizeBannerInput(data: z.infer<typeof createSchema>) {
+  let imageUrl = data.imageUrl?.trim() || "";
+  let videoUrl = data.videoUrl?.trim() || null;
+
+  if (imageUrl && isVideoUrl(imageUrl) && !videoUrl) {
+    videoUrl = imageUrl;
+    imageUrl = "";
+  }
+
+  return {
+    title: data.title?.trim() || (videoUrl ? "Bohosaaz video banner" : "Bohosaaz banner"),
+    imageUrl: imageUrl || "/logo-copy.jpeg",
+    videoUrl,
+  };
+}
 
 export async function GET() {
   const admin = await requireAdmin();
@@ -79,13 +105,15 @@ export async function POST(req: NextRequest) {
     if (!coupon) return jsonError("Invalid couponCode", 400);
   }
 
+  const normalized = normalizeBannerInput(parsed.data);
+
   const created = await prisma.banner.create({
     data: {
-      title: parsed.data.title,
+      title: normalized.title,
       highlightText: parsed.data.highlightText ?? null,
       subtitle: parsed.data.subtitle ?? null,
-      imageUrl: parsed.data.imageUrl,
-      videoUrl: parsed.data.videoUrl ?? null,
+      imageUrl: normalized.imageUrl,
+      videoUrl: normalized.videoUrl,
       ctaText: parsed.data.ctaText ?? null,
       ctaHref: parsed.data.ctaHref ?? null,
       isActive: parsed.data.isActive,

@@ -21,10 +21,10 @@ type BannerRow = {
 };
 
 type BannerPayload = {
-  title: string;
+  title: string | null;
   highlightText: string | null;
   subtitle: string | null;
-  imageUrl: string;
+  imageUrl: string | null;
   videoUrl: string | null;
   ctaText: string | null;
   ctaHref: string | null;
@@ -129,10 +129,10 @@ export default function BannersClient({
     }
 
     const payload: BannerPayload = {
-      title: title.trim(),
+      title: title.trim() === "" ? null : title.trim(),
       highlightText: highlightText.trim() === "" ? null : highlightText.trim(),
       subtitle: subtitle.trim() === "" ? null : subtitle.trim(),
-      imageUrl: imageUrl.trim(),
+      imageUrl: imageUrl.trim() === "" ? null : imageUrl.trim(),
       videoUrl: videoUrl.trim() === "" ? null : videoUrl.trim(),
       ctaText: ctaText.trim() === "" ? null : ctaText.trim(),
       ctaHref: ctaHref.trim() === "" ? null : ctaHref.trim(),
@@ -174,7 +174,7 @@ export default function BannersClient({
 
     try {
       const baseTitle = title.trim() || "Bohosaaz gifting story";
-      const fallbackImage = imageUrl.trim() || "/s1.jpg";
+      const fallbackImage = imageUrl.trim() || "/logo-copy.jpeg";
 
       for (let i = 0; i < selected.length; i++) {
         const file = selected[i];
@@ -281,8 +281,8 @@ export default function BannersClient({
 
         <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
           <label className="flex flex-col gap-1">
-            <span className="text-gray-600">Title</span>
-            <input className="rounded-lg border px-3 py-2" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <span className="text-gray-600">Title (optional)</span>
+            <input className="rounded-lg border px-3 py-2" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Auto: Bohosaaz banner" />
           </label>
 
           <label className="flex flex-col gap-1">
@@ -305,17 +305,17 @@ export default function BannersClient({
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-gray-600">Image URL</span>
+            <span className="text-gray-600">Image URL (optional)</span>
             <input
               className="rounded-lg border px-3 py-2"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://..."
+              placeholder="https://.../banner.webp or /uploads/..."
             />
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-gray-600">Upload image</span>
+            <span className="text-gray-600">Upload image from device</span>
             <input
               type="file"
               accept="image/*"
@@ -339,18 +339,18 @@ export default function BannersClient({
           </label>
 
           <label className="flex flex-col gap-1 md:col-span-2">
-            <span className="text-gray-600">Hero video URL (optional, MP4/WebM)</span>
+            <span className="text-gray-600">Video URL (optional, MP4/WebM)</span>
             <input
               className="rounded-lg border px-3 py-2"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
               placeholder="https://.../hero.mp4"
             />
-            <span className="text-xs text-gray-500">When set, this video plays in the homepage banner as a 5-second gifting story. Add multiple active banners to show multiple videos.</span>
+            <span className="text-xs text-gray-500">Paste video here. If a video is pasted in Image URL by mistake, the server will still treat it as video.</span>
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-gray-600">Upload hero video</span>
+            <span className="text-gray-600">Upload video from device</span>
             <input
               type="file"
               accept="video/mp4,video/webm"
@@ -371,7 +371,7 @@ export default function BannersClient({
                 }
               }}
             />
-            <span className="text-xs text-gray-500">Max 60MB. MP4/WebM recommended.</span>
+            <span className="text-xs text-gray-500">Max 60MB. MP4/WebM recommended. Upload sets the Video URL automatically.</span>
           </label>
 
           <label className="flex flex-col gap-1 md:col-span-2">

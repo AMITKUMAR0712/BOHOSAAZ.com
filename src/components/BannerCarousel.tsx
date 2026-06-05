@@ -27,6 +27,11 @@ export type HomeBanner = {
 type HomeThemeId = "studio" | "market" | "commerce" | "noir" | "atlas" | "heritage" | "mono";
 const SLIDE_MS = 5000;
 
+function isVideoUrl(url: string | null | undefined) {
+  const clean = (url ?? "").trim().toLowerCase().split("?")[0] ?? "";
+  return clean.endsWith(".mp4") || clean.endsWith(".webm") || clean.endsWith(".mov");
+}
+
 export function BannerCarousel({
   banners,
   homeTheme,
@@ -65,7 +70,9 @@ export function BannerCarousel({
 
   if (!safeBanners.length) return null;
 
-  const storyUrl = current?.videoUrl?.trim() || null;
+  const mediaFromImageUrl = current?.imageUrl && isVideoUrl(current.imageUrl) ? current.imageUrl.trim() : null;
+  const storyUrl = current?.videoUrl?.trim() || mediaFromImageUrl || null;
+  const posterUrl = current?.imageUrl && !isVideoUrl(current.imageUrl) ? current.imageUrl : null;
   const isAnimatedSvgStory = Boolean(storyUrl?.toLowerCase().split("?")[0]?.endsWith(".svg"));
   const mediaFailed = storyUrl ? Boolean(failedMedia[storyUrl]) : false;
   const mediaReady = storyUrl ? Boolean(readyMedia[storyUrl]) : false;
@@ -73,8 +80,8 @@ export function BannerCarousel({
   const chrome = (() => {
     if (homeTheme !== "commerce") {
       return {
-        shell: "relative overflow-hidden rounded-[34px] border border-border/80 bg-card/80 shadow-premium backdrop-blur-xl",
-        overlay: "absolute inset-0 bg-linear-to-r from-background/82 via-background/48 to-background/5",
+        shell: "relative overflow-hidden rounded-[34px] bg-card shadow-premium",
+        overlay: "pointer-events-none absolute inset-0 bg-linear-to-t from-black/10 via-transparent to-transparent",
         cta: "inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md hover:-translate-y-px active:translate-y-0 transition",
         nav: "rounded-full border border-border bg-background/70 px-3 py-2 text-sm backdrop-blur hover:bg-background/85 transition",
         dotOn: "bg-primary",
@@ -88,8 +95,8 @@ export function BannerCarousel({
 
     // Commerce: more retail/boxed, clearer chrome (Amazon-like vibe)
     return {
-      shell: "relative overflow-hidden rounded-2xl border-2 border-border bg-background shadow-sm",
-        overlay: "absolute inset-0 bg-linear-to-r from-background/86 via-background/58 to-transparent",
+      shell: "relative overflow-hidden rounded-2xl bg-background shadow-sm",
+        overlay: "pointer-events-none absolute inset-0 bg-linear-to-t from-black/8 via-transparent to-transparent",
       cta: "inline-flex h-11 items-center justify-center rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition",
       nav: "rounded-lg border border-border bg-background/85 px-3 py-2 text-sm backdrop-blur hover:bg-background transition",
       dotOn: "bg-foreground",
@@ -115,9 +122,9 @@ export function BannerCarousel({
         }}
       >
         <div className="relative min-h-[280px] w-full sm:aspect-16/7 sm:min-h-0">
-          {current?.imageUrl ? (
+          {posterUrl ? (
             <img
-              src={current.imageUrl}
+              src={posterUrl}
               alt={current?.title || "Banner"}
               className="absolute inset-0 h-full w-full object-cover"
               loading={storyUrl ? "eager" : "lazy"}
@@ -139,7 +146,7 @@ export function BannerCarousel({
             <video
               key={storyUrl}
               src={storyUrl}
-              poster={current.imageUrl || undefined}
+              poster={posterUrl || undefined}
               className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
                 mediaReady ? "opacity-100" : "opacity-0"
               }`}

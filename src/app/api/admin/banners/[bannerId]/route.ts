@@ -10,16 +10,21 @@ const mediaUrlSchema = z
   .string()
   .trim()
   .min(1)
-  .refine((value) => value.startsWith("/uploads/") || z.string().url().safeParse(value).success, {
+  .refine((value) => (value.startsWith("/") && !value.startsWith("//")) || z.string().url().safeParse(value).success, {
     message: "Invalid media URL",
   });
 
+const optionalMediaUrlSchema = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? null : value),
+  mediaUrlSchema.optional().nullable()
+);
+
 const patchSchema = z.object({
-  title: z.string().trim().min(1).max(200).optional(),
+  title: z.string().trim().max(200).optional().nullable(),
   highlightText: z.string().trim().max(200).optional().nullable(),
   subtitle: z.string().trim().max(400).optional().nullable(),
-  imageUrl: mediaUrlSchema.optional(),
-  videoUrl: mediaUrlSchema.optional().nullable(),
+  imageUrl: optionalMediaUrlSchema,
+  videoUrl: optionalMediaUrlSchema,
   ctaText: z.string().trim().max(80).optional().nullable(),
   ctaHref: z.string().trim().max(2048).optional().nullable(),
   isActive: z.boolean().optional(),
@@ -34,6 +39,11 @@ const patchSchema = z.object({
   startAt: z.string().datetime().optional().nullable(),
   endAt: z.string().datetime().optional().nullable(),
 });
+
+function isVideoUrl(url: string | null | undefined) {
+  const clean = (url ?? "").trim().toLowerCase().split("?")[0] ?? "";
+  return clean.endsWith(".mp4") || clean.endsWith(".webm") || clean.endsWith(".mov");
+}
 
 export async function PATCH(
   req: NextRequest,
@@ -57,15 +67,22 @@ export async function PATCH(
     if (!coupon) return jsonError("Invalid couponCode", 400);
   }
 
+  let nextImageUrl = parsed.data.imageUrl?.trim() || undefined;
+  let nextVideoUrl = parsed.data.videoUrl === undefined ? undefined : parsed.data.videoUrl?.trim() || null;
+  if (nextImageUrl && isVideoUrl(nextImageUrl) && nextVideoUrl === undefined) {
+    nextVideoUrl = nextImageUrl;
+    nextImageUrl = "/logo-copy.jpeg";
+  }
+
   const updated = await prisma.banner.update({
     where: { id: bannerId },
     data: {
-      title: parsed.data.title ?? undefined,
+      title: parsed.data.title?.trim() || undefined,
       highlightText:
         parsed.data.highlightText !== undefined ? parsed.data.highlightText : undefined,
       subtitle: parsed.data.subtitle !== undefined ? parsed.data.subtitle : undefined,
-      imageUrl: parsed.data.imageUrl ?? undefined,
-      videoUrl: parsed.data.videoUrl !== undefined ? parsed.data.videoUrl : undefined,
+      imageUrl: nextImageUrl,
+      videoUrl: nextVideoUrl,
       ctaText: parsed.data.ctaText !== undefined ? parsed.data.ctaText : undefined,
       ctaHref: parsed.data.ctaHref !== undefined ? parsed.data.ctaHref : undefined,
       isActive: parsed.data.isActive ?? undefined,
