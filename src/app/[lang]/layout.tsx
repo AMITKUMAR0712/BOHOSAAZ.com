@@ -1,5 +1,4 @@
 import { isLocale } from "@/lib/i18n";
-import { CouponCapture } from "@/components/CouponCapture";
 import { redirect } from "next/navigation";
 
 export default async function LangLayout({
@@ -16,7 +15,6 @@ export default async function LangLayout({
 
   return (
     <>
-      <CouponCapture />
       {children}
     </>
   );

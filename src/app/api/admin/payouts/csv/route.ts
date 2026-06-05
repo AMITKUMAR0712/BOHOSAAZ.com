@@ -17,7 +17,6 @@ export async function GET() {
   type PayoutAgg = {
     vendorId: string;
     shopName: string;
-    commission: number;
     gross: number;
     items: number;
   };
@@ -31,7 +30,6 @@ export async function GET() {
       map[v.id] = {
         vendorId: v.id,
         shopName: v.shopName,
-        commission: v.commission ?? 0,
         gross: 0,
         items: 0,
       };
@@ -40,13 +38,7 @@ export async function GET() {
     map[v.id].items += 1;
   }
 
-  const rows = Object.values(map).map((x) => {
-    const c = x.commission || 0;
-    const rate = c > 1 ? c / 100 : c;
-    const fee = +(x.gross * rate).toFixed(2);
-    const net = +(x.gross - fee).toFixed(2);
-    return { ...x, fee, net };
-  });
+  const rows = Object.values(map).map((x) => ({ ...x, net: +x.gross.toFixed(2) }));
 
   const csv = toCsv(rows as Array<Record<string, unknown>>);
   return csvResponse("payouts.csv", csv);

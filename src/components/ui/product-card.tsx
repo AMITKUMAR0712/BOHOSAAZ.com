@@ -34,8 +34,40 @@ export function ProductCard({
   className?: string;
 }) {
   const [busy, setBusy] = React.useState(false);
-  const imgs = Array.isArray(product.images) ? product.images : [];
-  const primary = imgs.find((x) => x.isPrimary)?.url || imgs[0]?.url || pickStockImage(product.slug || product.id);
+  const [imgIndex, setImgIndex] = React.useState(0);
+  const [isHovering, setIsHovering] = React.useState(false);
+  const orderedImages = React.useMemo(() => {
+    const imgs = Array.isArray(product.images) ? product.images : [];
+    const primaryUrl = imgs.find((x) => x.isPrimary)?.url || "";
+    const urls = imgs.map((x) => x.url).filter(Boolean);
+    const out: string[] = [];
+    const seen = new Set<string>();
+    if (primaryUrl) {
+      out.push(primaryUrl);
+      seen.add(primaryUrl);
+    }
+    for (const url of urls) {
+      if (seen.has(url)) continue;
+      out.push(url);
+      seen.add(url);
+    }
+    if (!out.length) out.push(pickStockImage(product.slug || product.id));
+    return out;
+  }, [product.images, product.id, product.slug]);
+  const canAutoScroll = orderedImages.length > 1;
+
+  React.useEffect(() => {
+    setImgIndex(0);
+  }, [product.id]);
+
+  React.useEffect(() => {
+    if (!canAutoScroll || isHovering) return;
+    const timer = window.setInterval(() => {
+      setImgIndex((prev) => (prev + 1) % orderedImages.length);
+    }, 2600);
+    return () => window.clearInterval(timer);
+  }, [canAutoScroll, isHovering, orderedImages.length]);
+
   const isNew = (() => {
     if (!product.createdAt) return true; // safe default for UI
     const d = new Date(product.createdAt);
@@ -47,19 +79,42 @@ export function ProductCard({
   return (
     <div
       className={cn(
-        "group rounded-(--radius) border border-border bg-card overflow-hidden transition will-change-transform hover:-translate-y-0.5 hover:shadow-premium",
+        "group overflow-hidden rounded-(--radius) border border-border bg-card transition duration-500 will-change-transform hover:-translate-y-1 hover:scale-[1.015] hover:shadow-premium",
         className,
       )}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
     >
       <div className="relative">
         <Link href={`${langPrefix}/p/${product.slug}`} className="block">
-          <div className="aspect-4/3 bg-muted overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={primary}
-              alt={product.title}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-            />
+          <div className="relative aspect-4/3 bg-muted overflow-hidden">
+            {orderedImages.map((imageUrl, index) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={`${imageUrl}-${index}`}
+                src={imageUrl}
+                alt={product.title}
+                className={cn(
+                  "absolute inset-0 h-full w-full object-cover transition-all duration-700 ease-out",
+                  index === imgIndex ? "opacity-100 scale-100" : "opacity-0 scale-[1.03]",
+                  "group-hover:scale-[1.08] group-hover:rotate-[0.25deg]",
+                )}
+              />
+            ))}
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-background/20 via-transparent to-white/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            {canAutoScroll ? (
+              <div className="absolute bottom-2 left-2 flex gap-1">
+                {orderedImages.slice(0, 5).map((_, dotIndex) => (
+                  <span
+                    key={dotIndex}
+                    className={cn(
+                      "h-1.5 rounded-full bg-background/80 transition-all duration-500",
+                      dotIndex === imgIndex ? "w-5 bg-primary" : "w-1.5",
+                    )}
+                  />
+                ))}
+              </div>
+            ) : null}
           </div>
 
           {isNew ? (
@@ -93,7 +148,7 @@ export function ProductCard({
         <div className="mt-4 flex items-center gap-2">
           <Button
             variant="soft"
-            className="flex-1 uppercase tracking-wide"
+            className="flex-1 font-semibold normal-case tracking-wide"
             disabled={busy}
             onClick={async () => {
               setBusy(true);
@@ -105,13 +160,18 @@ export function ProductCard({
                   body: JSON.stringify({ productId: product.id, qty: 1 }),
                 });
                 const data = await res.json().catch(() => ({}));
+                if (res.status === 401) {
+                  const next = `${window.location.pathname}${window.location.search}`;
+                  window.location.href = `${langPrefix}/login?next=${encodeURIComponent(next)}`;
+                  return;
+                }
                 if (!res.ok) throw new Error(data?.error || "Add to cart failed");
               } finally {
                 setBusy(false);
               }
             }}
           >
-            {busy ? "ADDING..." : "ADD TO CART"}
+            {busy ? "Adding..." : "Add to cart"}
           </Button>
 
           <button

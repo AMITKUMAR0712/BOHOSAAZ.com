@@ -23,6 +23,7 @@ export async function GET() {
       highlightText: true,
       subtitle: true,
       imageUrl: true,
+      videoUrl: true,
       ctaText: true,
       ctaHref: true,
       sortOrder: true,

@@ -28,6 +28,7 @@ const createSchema = z.object({
   name: z.string().trim().min(1).max(191),
   slug: z.string().trim().min(1).max(191).optional(),
   logoUrl: z.string().trim().url().optional().nullable(),
+  brandType: z.enum(["POPULAR", "LUXURY"]).optional().default("POPULAR"),
   isActive: z.boolean().optional().default(true),
   sortOrder: z.number().int().optional().default(0),
 });
@@ -43,6 +44,7 @@ export async function GET() {
       name: true,
       slug: true,
       logoUrl: true,
+      brandType: true,
       isActive: true,
       sortOrder: true,
       createdAt: true,
@@ -70,10 +72,11 @@ export async function POST(req: NextRequest) {
       name: parsed.data.name,
       slug,
       logoUrl: parsed.data.logoUrl ?? null,
+      brandType: parsed.data.brandType,
       isActive: parsed.data.isActive,
       sortOrder: parsed.data.sortOrder,
     },
-    select: { id: true, name: true, slug: true, isActive: true, sortOrder: true },
+    select: { id: true, name: true, slug: true, brandType: true, isActive: true, sortOrder: true },
   });
 
   await audit({
@@ -82,7 +85,7 @@ export async function POST(req: NextRequest) {
     action: "ADMIN_BRAND_CREATE",
     entity: "Brand",
     entityId: created.id,
-    meta: { name: created.name, slug: created.slug, isActive: created.isActive, sortOrder: created.sortOrder },
+    meta: { name: created.name, slug: created.slug, brandType: created.brandType, isActive: created.isActive, sortOrder: created.sortOrder },
     ip: getIpFromRequest(req),
     userAgent: getUserAgentFromRequest(req),
   });

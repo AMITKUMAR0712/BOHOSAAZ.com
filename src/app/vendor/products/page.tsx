@@ -20,6 +20,7 @@ type ProductListItem = {
   id: string;
   title: string;
   price: number;
+  salePrice: number | null;
   stock: number;
   status: "DRAFT" | "PENDING" | "PUBLISHED" | "REJECTED";
   isActive: boolean;
@@ -44,7 +45,7 @@ type ProductDetails = {
   slug?: string;
   description?: string | null;
   shortDescription?: string | null;
-  currency: "INR" | "USD";
+  currency: "INR";
   mrp?: number | null;
   price: number;
   salePrice: number | null;
@@ -142,16 +143,18 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
+  const [rowImageUrls, setRowImageUrls] = useState<Record<string, string>>({});
 
   // create form
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("");
-  const [currency, setCurrency] = useState<"INR" | "USD">("INR");
-  const [mrp, setMrp] = useState("");
+  const [currency, setCurrency] = useState<"INR">("INR");
   const [price, setPrice] = useState("999");
   const [salePrice, setSalePrice] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [stock, setStock] = useState("10");
   const [categoryId, setCategoryId] = useState("");
   const [brandId, setBrandId] = useState<string>("");
@@ -184,8 +187,7 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
   const [eSlug, setESlug] = useState("");
   const [eShortDescription, setEShortDescription] = useState("");
   const [eDescription, setEDescription] = useState("");
-  const [eCurrency, setECurrency] = useState<"INR" | "USD">("INR");
-  const [eMrp, setEMrp] = useState("");
+  const [eCurrency, setECurrency] = useState<"INR">("INR");
   const [ePrice, setEPrice] = useState("");
   const [eSalePrice, setESalePrice] = useState("");
   const [eStock, setEStock] = useState("");
@@ -219,6 +221,7 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
       raw.map((p: any) => ({
         ...p,
         price: Number(p?.price ?? 0),
+        salePrice: p?.salePrice == null ? null : Number(p.salePrice),
       })),
     );
   }
@@ -264,11 +267,6 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
   async function createProduct() {
     setMsg(null);
     try {
-      const parsedMrp = mrp.trim() ? Number(mrp) : null;
-      if (parsedMrp != null && (!Number.isFinite(parsedMrp) || parsedMrp <= 0)) {
-        throw new Error("Invalid MRP");
-      }
-
       const tagList = toTagList(tags);
 
       const vParsed = variantRowsToPayload(createVariants);
@@ -289,7 +287,6 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
           throw new Error("Invalid sale price");
         }
         if (sale != null && sale >= base) throw new Error("Sale price must be less than price");
-        if (parsedMrp != null && base > parsedMrp) throw new Error("Price must be less than or equal to MRP");
       }
 
       const dimensions =
@@ -311,7 +308,7 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
           shortDescription: shortDescription.trim() ? shortDescription.trim() : null,
           description: description.trim() ? description.trim() : null,
           currency,
-          mrp: parsedMrp,
+          mrp: null,
           ...(!hasVariants
             ? {
                 price: Number(price),
@@ -342,6 +339,18 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Create failed");
 
+      const createdProductId = String(data?.product?.id || "");
+      if (!createdProductId) throw new Error("Product created but image setup failed");
+
+      const pendingImageUrls = [
+        imageUrl.trim(),
+        ...(await Promise.all(imageFiles.map((file) => uploadToServer(file)))),
+      ].filter(Boolean);
+
+      for (const url of pendingImageUrls) {
+        await attachImage(createdProductId, url);
+      }
+
       setMsg("✅ Product created");
       setTitle("");
       setSlug("");
@@ -350,7 +359,8 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
       setBrandId("");
       setSalePrice("");
       setCurrency("INR");
-      setMrp("");
+      setImageUrl("");
+      setImageFiles([]);
       setSku("");
       setBarcode("");
       setMaterial("");
@@ -415,8 +425,7 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
       setESlug(p.slug ?? "");
       setEShortDescription(p.shortDescription ?? "");
       setEDescription(p.description ?? "");
-      setECurrency(p.currency ?? "INR");
-      setEMrp(p.mrp != null ? String(p.mrp) : "");
+      setECurrency("INR");
       setEPrice(String(p.price ?? ""));
       setESalePrice(p.salePrice != null ? String(p.salePrice) : "");
       setEStock(String(p.stock ?? ""));
@@ -466,11 +475,6 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
     if (!editProductId) return;
     setMsg(null);
     try {
-      const parsedMrp = eMrp.trim() ? Number(eMrp) : null;
-      if (parsedMrp != null && (!Number.isFinite(parsedMrp) || parsedMrp <= 0)) {
-        throw new Error("Invalid MRP");
-      }
-
       const tagList = toTagList(eTags);
       const dims =
         eDimL || eDimW || eDimH
@@ -497,7 +501,6 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
           throw new Error("Invalid sale price");
         }
         if (sale != null && sale >= base) throw new Error("Sale price must be less than price");
-        if (parsedMrp != null && base > parsedMrp) throw new Error("Price must be less than or equal to MRP");
       }
 
       const res = await fetch(`/api/vendor/products/${editProductId}`, {
@@ -510,7 +513,7 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
           shortDescription: eShortDescription.trim() ? eShortDescription.trim() : null,
           description: eDescription.trim() ? eDescription.trim() : null,
           currency: eCurrency,
-          mrp: parsedMrp,
+          mrp: null,
           ...(!includeVariants
             ? {
                 price: Number(ePrice),
@@ -643,12 +646,12 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
 
   return (
     <div className="p-6 md:p-10">
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className={`mx-auto ${mode === "create" ? "max-w-7xl" : "max-w-6xl"} space-y-6`}>
         <Card>
           <CardHeader>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <CardTitle>{mode === "create" ? "Add Product" : "Vendor Products"}</CardTitle>
+                <CardTitle>{mode === "create" ? "Create Product" : "All Products"}</CardTitle>
                 <CardDescription>
                   {mode === "create" ? "Create a new product." : "Create / manage your products."}
                 </CardDescription>
@@ -673,7 +676,8 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
               </div>
             ) : null}
 
-            <div className="grid gap-4 md:grid-cols-2">
+            {mode === "create" ? (
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Create product</CardTitle>
@@ -738,15 +742,12 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
 
                   <div className="grid gap-1">
                     <div className="text-xs text-muted-foreground">Currency</div>
-                    <Select value={currency} onChange={(e) => setCurrency(e.target.value as "INR" | "USD")}
-                    >
-                      <option value="INR">INR</option>
-                      <option value="USD">USD</option>
-                    </Select>
+                    <div className="rounded-(--radius) border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
+                      INR only
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <Input placeholder="MRP (optional)" inputMode="numeric" value={mrp} onChange={(e) => setMrp(e.target.value)} />
                     <Input placeholder={`Price (${currency})`} inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} />
                     <Input placeholder={`Sale price (${currency}, optional)`} inputMode="numeric" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} />
                     <Input
@@ -761,6 +762,30 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
                       onChange={(e) => setSku(e.target.value)}
                     />
                     <Input placeholder="Barcode (optional)" value={barcode} onChange={(e) => setBarcode(e.target.value)} />
+                  </div>
+
+                  <div className="rounded-2xl border border-border bg-muted/20 p-4">
+                    <div className="text-sm font-semibold">Product images</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      Upload from your computer or paste an image URL. Images are saved with the product.
+                    </div>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <Input
+                        placeholder="https://... or /uploads/..."
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="rounded-(--radius) border border-border bg-card px-3 py-2 text-sm text-muted-foreground"
+                        onChange={(e) => setImageFiles(Array.from(e.target.files || []))}
+                      />
+                    </div>
+                    {imageFiles.length ? (
+                      <div className="mt-2 text-xs text-muted-foreground">{imageFiles.length} local image(s) selected</div>
+                    ) : null}
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -965,6 +990,7 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
                 </CardContent>
               </Card>
             </div>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -986,6 +1012,7 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
                     <TR className="hover:bg-transparent">
                       <TH className="w-[35%]">Title</TH>
                       <TH>Price</TH>
+                      <TH>Sale Price</TH>
                       <TH>Stock</TH>
                       <TH>Approval</TH>
                       <TH>Visibility</TH>
@@ -1035,6 +1062,7 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
                         </TD>
 
                       <TD>₹{p.price}</TD>
+                      <TD>{p.salePrice != null ? `₹${p.salePrice}` : "-"}</TD>
                       <TD>{p.stock}</TD>
                       <TD>
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
@@ -1075,6 +1103,33 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
                               }
                             }}
                           />
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Image URL"
+                              value={rowImageUrls[p.id] || ""}
+                              onChange={(e) => setRowImageUrls((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                const url = (rowImageUrls[p.id] || "").trim();
+                                if (!url) return;
+                                setMsg(null);
+                                try {
+                                  await attachImage(p.id, url);
+                                  setRowImageUrls((prev) => ({ ...prev, [p.id]: "" }));
+                                  setMsg("✅ Image URL added");
+                                  await loadProducts();
+                                } catch (err) {
+                                  const message = err instanceof Error ? err.message : "Save image failed";
+                                  setMsg(`❌ ${message}`);
+                                }
+                              }}
+                            >
+                              Add URL
+                            </Button>
+                          </div>
 
                           <div className="flex flex-wrap gap-2">
                             <Button variant="danger" size="sm" onClick={() => delProduct(p.id)}>
@@ -1166,14 +1221,12 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
 
               <div className="grid gap-1">
                 <div className="text-xs text-muted-foreground">Currency</div>
-                <Select value={eCurrency} onChange={(e) => setECurrency(e.target.value as "INR" | "USD")}>
-                  <option value="INR">INR</option>
-                  <option value="USD">USD</option>
-                </Select>
+                <div className="rounded-(--radius) border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
+                  INR only
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Input placeholder="MRP (optional)" inputMode="numeric" value={eMrp} onChange={(e) => setEMrp(e.target.value)} />
                 <Input placeholder={`Price (${eCurrency})`} inputMode="numeric" value={ePrice} onChange={(e) => setEPrice(e.target.value)} />
                 <Input placeholder={`Sale price (${eCurrency}, optional)`} inputMode="numeric" value={eSalePrice} onChange={(e) => setESalePrice(e.target.value)} />
                 <Input

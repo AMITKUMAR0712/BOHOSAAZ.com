@@ -53,7 +53,7 @@ export default async function AdminFinancePage() {
   const payoutStatsRaw = await db.payout.groupBy({
     by: ["status"],
     _count: { _all: true },
-    _sum: { amountPaise: true, commissionPaise: true },
+    _sum: { amountPaise: true },
   });
 
   const payoutStats = (payoutStatsRaw as Array<Record<string, unknown>>).map((r) => {
@@ -63,13 +63,11 @@ export default async function AdminFinancePage() {
 
     const count = typeof countObj?._all === "number" ? countObj._all : Number(countObj?._all ?? 0);
     const amountPaise = (sumObj?.amountPaise as bigint | null | undefined) ?? BigInt(0);
-    const commissionPaise = (sumObj?.commissionPaise as bigint | null | undefined) ?? BigInt(0);
 
     return {
       status,
       count,
       amountPaise: amountPaise.toString(),
-      commissionPaise: commissionPaise.toString(),
     };
   });
 
@@ -94,8 +92,7 @@ export default async function AdminFinancePage() {
             <div className="grid grid-cols-12 gap-2 bg-gray-50 p-3 text-sm font-semibold">
               <div className="col-span-4">Payout status</div>
               <div className="col-span-2">Count</div>
-              <div className="col-span-3">Amount</div>
-              <div className="col-span-3">Commission</div>
+              <div className="col-span-6">Amount</div>
             </div>
 
             {payoutStats.length === 0 ? <div className="p-4 text-sm text-gray-600">No payout stats yet.</div> : null}
@@ -104,8 +101,7 @@ export default async function AdminFinancePage() {
               <div key={s.status} className="grid grid-cols-12 gap-2 p-3 text-sm border-t">
                 <div className="col-span-4 font-semibold">{s.status}</div>
                 <div className="col-span-2">{s.count}</div>
-                <div className="col-span-3">₹{formatRupeesFromPaise(s.amountPaise)}</div>
-                <div className="col-span-3">₹{formatRupeesFromPaise(s.commissionPaise)}</div>
+                <div className="col-span-6">₹{formatRupeesFromPaise(s.amountPaise)}</div>
               </div>
             ))}
           </div>

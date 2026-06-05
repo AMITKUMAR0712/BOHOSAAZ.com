@@ -2,12 +2,16 @@
 
 import { useEffect, useState } from "react";
 import ExportDropdown from "@/components/ExportDropdown";
+import { useCurrency } from "@/lib/currency-context";
+import { formatMoney } from "@/lib/money";
+import { getPriceInCurrency } from "@/lib/currency-utils";
 
 type OrderItem = {
   id: string;
   quantity: number;
   price: number;
   status: string;
+  currency?: "INR" | "USD";
   product: {
     title: string;
     images?: Array<{ url: string }>;
@@ -27,6 +31,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export default function MyOrdersPage() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
+  const { currency: selectedCurrency } = useCurrency();
 
   async function load() {
     const res = await fetch("/api/account/orders", { credentials: "include" });
@@ -100,7 +105,11 @@ export default function MyOrdersPage() {
                     <div className="flex-1">
                       <div className="font-semibold">{it.product.title}</div>
                       <div className="text-xs text-gray-600">
-                        Qty: {it.quantity} • ₹{it.price}
+                        Qty: {it.quantity} •{" "}
+                        {formatMoney(
+                          selectedCurrency,
+                          getPriceInCurrency(Number(it.price || 0), it.currency === "USD" ? "USD" : "INR", selectedCurrency),
+                        )}
                       </div>
 
                       <div className="mt-1 text-xs">

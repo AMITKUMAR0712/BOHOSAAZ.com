@@ -28,6 +28,7 @@ const patchSchema = z.object({
   name: z.string().trim().min(1).max(191).optional(),
   slug: z.string().trim().min(1).max(191).optional(),
   logoUrl: z.string().trim().url().optional().nullable(),
+  brandType: z.enum(["POPULAR", "LUXURY"]).optional(),
   isActive: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
 });
@@ -61,6 +62,7 @@ export async function PATCH(
       name: b.name ?? undefined,
       slug: nextSlug ?? undefined,
       logoUrl: b.logoUrl !== undefined ? b.logoUrl : undefined,
+      brandType: b.brandType ?? undefined,
       isActive: b.isActive ?? undefined,
       sortOrder: b.sortOrder ?? undefined,
     },
@@ -69,6 +71,7 @@ export async function PATCH(
       name: true,
       slug: true,
       logoUrl: true,
+      brandType: true,
       isActive: true,
       sortOrder: true,
       updatedAt: true,
@@ -81,7 +84,7 @@ export async function PATCH(
     action: "ADMIN_BRAND_UPDATE",
     entity: "Brand",
     entityId: updated.id,
-    meta: { name: updated.name, slug: updated.slug, isActive: updated.isActive, sortOrder: updated.sortOrder },
+    meta: { name: updated.name, slug: updated.slug, brandType: updated.brandType, isActive: updated.isActive, sortOrder: updated.sortOrder },
     ip: getIpFromRequest(req),
     userAgent: getUserAgentFromRequest(req),
   });

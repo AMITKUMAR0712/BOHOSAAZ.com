@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { isLocale } from "@/lib/i18n";
+import { PasswordInput } from "@/components/PasswordInput";
 
 type Step = "email" | "otp" | "reset" | "done";
 
@@ -210,24 +211,22 @@ export default function ForgotPasswordClient() {
           <form onSubmit={submitReset} className="mt-6 space-y-3">
             <div>
               <label className="text-sm">New password</label>
-              <input
+              <PasswordInput
                 className="mt-1 w-full rounded-lg border px-3 py-2"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="New password"
-                type="password"
                 required
               />
             </div>
 
             <div>
               <label className="text-sm">Confirm password</label>
-              <input
+              <PasswordInput
                 className="mt-1 w-full rounded-lg border px-3 py-2"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 placeholder="Confirm password"
-                type="password"
                 required
               />
             </div>

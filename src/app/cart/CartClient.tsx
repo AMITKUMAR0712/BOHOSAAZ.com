@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { QtyStepper } from "@/components/ui/qty-stepper";
@@ -38,54 +37,37 @@ type Order = {
   total: number;
   couponCode?: string | null;
   couponDiscount?: number;
+  currency?: "INR" | "USD";
   items: CartItem[];
 };
 
 export default function CartClient({ langPrefix }: { langPrefix?: string }) {
   const lp = langPrefix || "";
   const { toast } = useToast();
-  const { currency: userCurrency } = useCurrency();
-
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
   const [busyItemId, setBusyItemId] = useState<string | null>(null);
-  const [couponInput, setCouponInput] = useState("");
-  const [couponBusy, setCouponBusy] = useState(false);
+  const { currency: selectedCurrency } = useCurrency();
 
   const itemCount = useMemo(() => {
     const items = order?.items || [];
     return items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0);
   }, [order?.items]);
 
-  const orderCurrency = useMemo<"INR" | "USD" | "MIXED" | null>(() => {
-    const items = order?.items || [];
-    const currencies = new Set(items.map((it) => it.product.currency));
-    if (currencies.size === 0) return null;
-    if (currencies.size === 1) return Array.from(currencies)[0] as "INR" | "USD";
-    return "MIXED";
-  }, [order?.items]);
+  const orderCurrency = order?.currency === "USD" ? "USD" : "INR";
+  const displayCurrency = selectedCurrency;
+  const displayAmount = (value: number) => getPriceInCurrency(Number(value || 0), orderCurrency, displayCurrency);
 
   const displaySubtotal = useMemo(() => {
     if (!order) return 0;
-    return order.items.reduce((sum, it) => sum + getPriceInCurrency(it.price * it.quantity, it.product.currency, userCurrency), 0);
-  }, [order, userCurrency]);
-
-  const displayCouponDiscount = useMemo(() => {
-    if (!order) return 0;
-    if (orderCurrency && orderCurrency !== "MIXED") {
-      return getPriceInCurrency(Number(order.couponDiscount || 0), orderCurrency, userCurrency);
-    }
-    return Number(order.couponDiscount || 0);
-  }, [order, orderCurrency, userCurrency]);
+    return order.subtotal ?? order.items.reduce((sum, it) => sum + it.price * it.quantity, 0);
+  }, [order]);
 
   const displayTotal = useMemo(() => {
     if (!order) return 0;
-    if (orderCurrency && orderCurrency !== "MIXED") {
-      return getPriceInCurrency(order.total, orderCurrency, userCurrency);
-    }
     return order.total;
-  }, [order, orderCurrency, userCurrency]);
+  }, [order]);
 
   async function load() {
     setLoading(true);
@@ -99,12 +81,32 @@ export default function CartClient({ langPrefix }: { langPrefix?: string }) {
       return;
     }
     setOrder(data.order);
-    setCouponInput(String(data?.order?.couponCode || ""));
     setLoading(false);
   }
 
   useEffect(() => {
     load();
+    const onCart = () => void load();
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === "bohosaaz_cart_ts") void load();
+    };
+    window.addEventListener("bohosaaz-cart", onCart);
+    window.addEventListener("storage", onStorage);
+    let es: EventSource | null = null;
+    if ("EventSource" in window) {
+      es = new EventSource("/api/live?role=user", { withCredentials: true });
+      es.addEventListener("metrics", onCart);
+      es.onerror = () => {
+        es?.close();
+        es = null;
+      };
+    }
+    return () => {
+      window.removeEventListener("bohosaaz-cart", onCart);
+      window.removeEventListener("storage", onStorage);
+      es?.removeEventListener("metrics", onCart);
+      es?.close();
+    };
   }, []);
 
   async function updateQty(itemId: string, quantity: number) {
@@ -125,6 +127,8 @@ export default function CartClient({ langPrefix }: { langPrefix?: string }) {
         return;
       }
       await load();
+      window.dispatchEvent(new Event("bohosaaz-cart"));
+      localStorage.setItem("bohosaaz_cart_ts", String(Date.now()));
     } finally {
       setBusyItemId(null);
     }
@@ -144,39 +148,18 @@ export default function CartClient({ langPrefix }: { langPrefix?: string }) {
         return;
       }
       await load();
+      window.dispatchEvent(new Event("bohosaaz-cart"));
+      localStorage.setItem("bohosaaz_cart_ts", String(Date.now()));
       toast({ variant: "success", title: "Removed", message: "Item removed from cart." });
     } finally {
       setBusyItemId(null);
     }
   }
 
-  async function applyCoupon(code: string) {
-    setMsg(null);
-    setCouponBusy(true);
-    try {
-      const res = await fetch("/api/checkout/apply-coupon", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const error = data?.error || "Coupon could not be applied";
-        setMsg(error);
-        toast({ variant: "danger", title: "Coupon", message: error });
-        return;
-      }
-      toast({ variant: "success", title: "Coupon", message: data?.code ? `Applied ${data.code}` : "Removed" });
-      await load();
-    } finally {
-      setCouponBusy(false);
-    }
-  }
-
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 md:py-10">
-      <div className="flex items-end justify-between gap-4">
+    <div className="site-container mobile-bottom-safe py-5 md:py-10">
+      <div className="rounded-[24px] border border-border/70 bg-card/65 p-4 shadow-[0_18px_60px_rgba(47,38,34,0.06)] backdrop-blur-xl md:rounded-[34px] md:p-7">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Cart</div>
           <h1 className="mt-2 font-heading text-3xl md:text-4xl tracking-tight text-foreground">Your Cart</h1>
@@ -185,6 +168,7 @@ export default function CartClient({ langPrefix }: { langPrefix?: string }) {
         <Link className="text-sm text-muted-foreground hover:text-foreground transition" href={lp || "/"}>
           ← Continue shopping
         </Link>
+      </div>
       </div>
 
       {msg ? (
@@ -198,7 +182,7 @@ export default function CartClient({ langPrefix }: { langPrefix?: string }) {
           <Skeleton className="h-24" />
         </div>
       ) : !order || order.items.length === 0 ? (
-        <Card className="mt-6 overflow-hidden">
+        <Card className="mt-6 overflow-hidden bg-card/85 shadow-premium">
           <div className="p-8">
             <div className="font-heading text-2xl">Your cart is empty</div>
             <div className="mt-2 text-sm text-muted-foreground">Browse products and add something you love.</div>
@@ -210,9 +194,9 @@ export default function CartClient({ langPrefix }: { langPrefix?: string }) {
           </div>
         </Card>
       ) : (
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="mt-5 grid grid-cols-1 gap-5 lg:mt-8 lg:grid-cols-3 lg:gap-6">
           <div className="lg:col-span-2">
-            <Card className="overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+            <Card className="overflow-hidden bg-card/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
               <div className="border-b border-border bg-muted/25 px-5 py-4">
                 <div className="font-heading text-lg text-foreground">Items</div>
                 <div className="mt-1 text-sm text-muted-foreground">{itemCount} item(s)</div>
@@ -228,9 +212,9 @@ export default function CartClient({ langPrefix }: { langPrefix?: string }) {
                   const disabled = busyItemId === it.id;
 
                   return (
-                    <div key={it.id} className="p-5 grid grid-cols-1 sm:grid-cols-[96px_1fr] gap-4">
+                    <div key={it.id} className="grid grid-cols-[84px_1fr] gap-3 p-4 sm:grid-cols-[96px_1fr] sm:gap-4 sm:p-5">
                       <Link href={`${lp}/p/${it.product.slug}` || `/p/${it.product.slug}`} className="shrink-0">
-                        <div className="h-24 w-24 rounded-(--radius) border border-border bg-muted overflow-hidden flex items-center justify-center">
+                        <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[18px] border border-border bg-muted sm:h-24 sm:w-24 sm:rounded-(--radius)">
                           {img ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={img} alt={it.product.title} className="h-full w-full object-cover" />
@@ -241,11 +225,11 @@ export default function CartClient({ langPrefix }: { langPrefix?: string }) {
                       </Link>
 
                       <div className="min-w-0">
-                        <div className="flex items-start justify-between gap-4">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                           <div className="min-w-0">
                             <Link
                               href={`${lp}/p/${it.product.slug}` || `/p/${it.product.slug}`}
-                              className="font-heading text-lg text-foreground hover:underline underline-offset-4 line-clamp-2"
+                              className="font-heading text-base text-foreground hover:underline underline-offset-4 line-clamp-2 sm:text-lg"
                             >
                               {it.product.title}
                             </Link>
@@ -257,23 +241,23 @@ export default function CartClient({ langPrefix }: { langPrefix?: string }) {
                             ) : null}
                           </div>
 
-                          <div className="text-right shrink-0">
+                          <div className="shrink-0 sm:text-right">
                             <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Total</div>
                             <div className="mt-1">
-                              <Price value={getPriceInCurrency(it.price * it.quantity, it.product.currency, userCurrency)} currency={userCurrency} size="md" />
+                              <Price value={displayAmount(it.price * it.quantity)} currency={displayCurrency} size="md" />
                             </div>
                           </div>
                         </div>
 
-                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                        <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
                           <div className="rounded-(--radius) border border-border bg-background px-3 py-2">
                             <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Unit</div>
                             <div className="mt-1">
-                              <Price value={getPriceInCurrency(it.price, it.product.currency, userCurrency)} currency={userCurrency} size="sm" />
+                              <Price value={displayAmount(it.price)} currency={displayCurrency} size="sm" />
                             </div>
                           </div>
 
-                          <div className="rounded-(--radius) border border-border bg-background px-3 py-2 flex items-center gap-3">
+                          <div className="flex items-center justify-between gap-3 rounded-(--radius) border border-border bg-background px-3 py-2 sm:justify-start">
                             <div>
                               <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Qty</div>
                               <div className="mt-1 text-xs text-muted-foreground">Stock {stockMax}</div>
@@ -291,7 +275,7 @@ export default function CartClient({ langPrefix }: { langPrefix?: string }) {
                             variant="outline"
                             disabled={disabled}
                             onClick={() => removeItem(it.id)}
-                            className="h-11"
+                            className="h-11 w-full sm:w-auto"
                           >
                             Remove
                           </Button>
@@ -304,69 +288,29 @@ export default function CartClient({ langPrefix }: { langPrefix?: string }) {
             </Card>
           </div>
 
-          <div className="lg:sticky lg:top-24 h-fit">
-            <Card className="overflow-hidden shadow-premium">
+          <div className="h-fit lg:sticky lg:top-24">
+            <Card className="overflow-hidden bg-card/90 shadow-premium">
               <div className="border-b border-border bg-muted/25 px-5 py-4">
                 <div className="font-heading text-lg text-foreground">Summary</div>
                 <div className="mt-1 text-sm text-muted-foreground">Secure checkout • COD available</div>
               </div>
 
               <div className="p-5">
-                <div className="grid gap-3">
-                  <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Coupon</div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value)}
-                      placeholder="Enter coupon code"
-                      disabled={couponBusy}
-                    />
-                    <Button
-                      variant="outline"
-                      className="h-11"
-                      disabled={couponBusy}
-                      onClick={() => applyCoupon(couponInput)}
-                    >
-                      Apply
-                    </Button>
-                  </div>
-                  {order.couponCode ? (
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Applied: {order.couponCode}</span>
-                      <button
-                        className="underline underline-offset-4 hover:text-foreground transition"
-                        disabled={couponBusy}
-                        onClick={() => applyCoupon("")}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="mt-5 h-px bg-border" />
-
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <span>Items</span>
                   <span>{itemCount}</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <Price value={displaySubtotal} currency={userCurrency} size="sm" className="text-foreground" />
+                  <Price value={displayAmount(displaySubtotal)} currency={displayCurrency} size="sm" className="text-foreground" />
                 </div>
-                {Number(order.couponDiscount || 0) > 0 ? (
-                  <div className="mt-2 flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Discount</span>
-                    <Price value={-displayCouponDiscount} currency={userCurrency} size="sm" className="text-foreground" />
-                  </div>
-                ) : null}
                 <div className="mt-3 flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Total</span>
-                  <Price value={displayTotal} currency={userCurrency} size="lg" />
+                  <Price value={displayAmount(displayTotal)} currency={displayCurrency} size="lg" />
                 </div>
 
                 <Link className="mt-5 block" href={`${lp}/checkout` || "/checkout"}>
-                  <Button className="w-full h-11 uppercase tracking-[0.12em]">Checkout</Button>
+                  <Button className="h-12 w-full uppercase tracking-[0.12em]">Checkout</Button>
                 </Link>
 
                 <div className="mt-4 text-xs text-muted-foreground">

@@ -41,6 +41,20 @@ function toDateTimeLocalValue(iso: string | null) {
   )}`;
 }
 
+function formatDateTime(iso: string | null) {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleString("en-IN", {
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
 export default function CouponsClient({
   initialCoupons,
 }: {
@@ -68,7 +82,7 @@ export default function CouponsClient({
   const [isActive, setIsActive] = useState(true);
 
   const filtered = useMemo(() => {
-    const now = Date.now();
+    const now = new Date().getTime();
     const query = q.trim().toUpperCase();
     return coupons
       .filter((c) => (query ? c.code.toUpperCase().includes(query) : true))
@@ -385,7 +399,7 @@ export default function CouponsClient({
           <div key={c.id} className="grid grid-cols-12 gap-2 p-3 text-sm border-t">
             <div className="col-span-3">
               <div className="font-semibold">{c.code}</div>
-              <div className="text-xs text-gray-600">Updated: {new Date(c.updatedAt).toLocaleString()}</div>
+              <div className="text-xs text-gray-600">Updated: {formatDateTime(c.updatedAt)}</div>
             </div>
             <div className="text-gray-700">{c.type}</div>
             <div>
@@ -394,8 +408,8 @@ export default function CouponsClient({
             <div className="col-span-2 text-xs text-gray-700">
               <div>Min: {c.minOrderAmount === null ? "-" : `₹${c.minOrderAmount.toFixed(2)}`}</div>
               <div>Max: {c.maxDiscountAmount === null ? "-" : `₹${c.maxDiscountAmount.toFixed(2)}`}</div>
-              <div>Start: {c.startAt ? new Date(c.startAt).toLocaleString() : "-"}</div>
-              <div>End: {c.endAt ? new Date(c.endAt).toLocaleString() : "-"}</div>
+              <div>Start: {formatDateTime(c.startAt)}</div>
+              <div>End: {formatDateTime(c.endAt)}</div>
             </div>
             <div className="col-span-2 text-xs text-gray-700">
               <div>Used: {c.usedCount}</div>

@@ -18,7 +18,6 @@ export function MobileDrawer({
   open,
   onClose,
   langPrefix,
-  sellerHref,
   cartSummary,
   me,
   onLogout,
@@ -26,7 +25,6 @@ export function MobileDrawer({
   open: boolean;
   onClose: () => void;
   langPrefix: string;
-  sellerHref: string;
   cartSummary: string;
   me: DrawerMe;
   onLogout: () => Promise<void>;
@@ -149,9 +147,6 @@ export function MobileDrawer({
           <Link className="rounded-(--radius) px-3 py-2 text-sm hover:bg-muted/60 transition" href={`${langPrefix}/contact`}>
             Contact Us
           </Link>
-          <Link className="rounded-(--radius) px-3 py-2 text-sm hover:bg-muted/60 transition" href={sellerHref}>
-            Seller
-          </Link>
           <Link className="rounded-(--radius) px-3 py-2 text-sm hover:bg-muted/60 transition" href={`${langPrefix}?q=discover%20craft`}>
             Discover Craft
           </Link>
@@ -171,17 +166,11 @@ export function MobileDrawer({
               { label: "Shawl / Stole", q: "shawl" },
               { label: "Wall Art", q: "wall art" },
               { label: "Indian Handicrafts", q: "handicrafts" },
-              { label: "Latest Products", q: "", sort: "latest" },
-              { label: "Special Offer", q: "", sort: "offer" },
             ].map((c) => (
               <Link
                 key={c.label}
                 className="rounded-(--radius) px-3 py-2 text-sm hover:bg-muted/60 transition"
-                href={
-                  c.sort
-                    ? `${langPrefix}?sort=${encodeURIComponent(c.sort)}`
-                    : `${langPrefix}?q=${encodeURIComponent(c.q)}`
-                }
+                href={`${langPrefix}?q=${encodeURIComponent(c.q)}`}
               >
                 {c.label}
               </Link>

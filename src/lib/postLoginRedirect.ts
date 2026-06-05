@@ -7,10 +7,11 @@ type MeResponse = {
   };
 } | null;
 
-function roleHome(role: string | undefined, langPrefix: string) {
+function roleHome(role: string | undefined, langPrefix: string, vendorStatus?: string | null) {
   if (role === "ADMIN") return `${langPrefix}/admin/dashboard`;
-  if (role === "VENDOR") return `${langPrefix}/vendor/dashboard`;
-  return `${langPrefix}/account`;
+  if (role === "VENDOR") return vendorStatus === "APPROVED" ? `${langPrefix}/vendor/dashboard` : `${langPrefix}/seller`;
+  if (role === "USER") return `${langPrefix}/account`;
+  return langPrefix;
 }
 
 function isRoleAllowedNext(role: string | undefined, nextPath: string) {
@@ -29,7 +30,8 @@ function isRoleAllowedNext(role: string | undefined, nextPath: string) {
     nextPath.startsWith("/p/") ||
     nextPath.startsWith("/c/") ||
     nextPath.startsWith("/cart") ||
-    nextPath.startsWith("/checkout");
+    nextPath.startsWith("/checkout") ||
+    nextPath.startsWith("/seller");
 
   return nextPath.startsWith("/account") || isStorefront;
 }
@@ -65,6 +67,7 @@ function normalizeNext(nextPath: string, lang: string) {
     "/checkout",
     "/login",
     "/register",
+    "/seller",
     "/about",
     "/contact",
     "/terms",
@@ -99,12 +102,7 @@ export async function resolvePostLoginRedirect(opts?: { next?: string | null }) 
   }
 
   const role = me?.user?.role;
-  const vendorStatus = me?.user?.vendor?.status || null;
-
-  const normalizedRoleHome = (() => {
-    if (role === "VENDOR" && vendorStatus !== "APPROVED") return `${lp}/account/vendor-status`;
-    return roleHome(role, lp);
-  })();
+  const normalizedRoleHome = roleHome(role, lp, me?.user?.vendor?.status);
 
   if (nextPath) {
     const normalized = normalizeNext(nextPath, lang);
@@ -114,6 +112,6 @@ export async function resolvePostLoginRedirect(opts?: { next?: string | null }) 
     }
   }
 
-  // Always land on the correct role dashboard.
+  // Default to storefront home when no valid `next` param is provided.
   return normalizedRoleHome;
 }

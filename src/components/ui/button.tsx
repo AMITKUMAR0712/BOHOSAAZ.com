@@ -10,22 +10,22 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const base =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius)] text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-60 active:translate-y-px";
+  "inline-flex min-h-11 touch-manipulation items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius)] text-sm font-semibold tracking-[-0.01em] transition-all duration-200 outline-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-60 active:translate-y-px";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-primary text-primary-foreground hover:brightness-95 shadow-[var(--shadowBtn)] hover:shadow-[var(--shadowBtnHover)]",
+    "bg-primary text-primary-foreground shadow-(--shadowBtn) hover:-translate-y-px hover:brightness-95 hover:shadow-(--shadowBtnHover)",
   outline:
-    "border border-primary/60 bg-transparent text-foreground hover:bg-muted/40 hover:text-foreground",
-  soft: "bg-secondary text-secondary-foreground hover:bg-muted/40 border border-border",
-  ghost: "bg-transparent text-foreground hover:bg-muted/40",
-  danger: "bg-danger text-danger-foreground hover:brightness-95",
+    "bg-card/55 text-foreground shadow-sm backdrop-blur hover:-translate-y-px hover:bg-muted/45 hover:text-foreground",
+  soft: "bg-secondary/80 text-secondary-foreground shadow-sm backdrop-blur hover:-translate-y-px hover:bg-muted/55",
+  ghost: "bg-transparent text-foreground hover:bg-muted/45 hover:shadow-sm",
+  danger: "bg-danger text-danger-foreground shadow-(--shadowBtn) hover:-translate-y-px hover:brightness-95 hover:shadow-(--shadowBtnHover)",
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-9 px-3 text-xs",
-  md: "h-10 px-4",
-  lg: "h-11 px-5 text-base",
+  sm: "h-10 px-3 text-xs sm:h-9",
+  md: "h-11 px-4 sm:px-5",
+  lg: "h-12 px-5 text-sm sm:px-7 sm:text-base",
 };
 
 export function Button({

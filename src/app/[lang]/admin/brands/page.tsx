@@ -20,6 +20,7 @@ export default async function AdminBrandsPage({
       name: true,
       slug: true,
       logoUrl: true,
+      brandType: true,
       isActive: true,
       sortOrder: true,
       createdAt: true,
@@ -30,6 +31,7 @@ export default async function AdminBrandsPage({
   const rows = rowsRaw.map((b) => ({
     ...b,
     logoUrl: b.logoUrl ?? null,
+    brandType: b.brandType === "LUXURY" ? "LUXURY" as const : "POPULAR" as const,
     createdAt: b.createdAt.toISOString(),
     updatedAt: b.updatedAt.toISOString(),
   }));

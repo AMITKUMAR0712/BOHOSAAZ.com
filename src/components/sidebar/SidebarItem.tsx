@@ -36,9 +36,9 @@ export function SidebarItem({
       href={href}
       onClick={onNavigate}
       className={cn(
-        "group flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+        "group flex min-h-11 items-center justify-between gap-3 rounded-2xl px-3 py-2.5 text-sm transition-colors",
         "hover:bg-muted/60",
-        isActive ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground",
+        isActive ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
       )}
       aria-current={isActive ? "page" : undefined}
     >

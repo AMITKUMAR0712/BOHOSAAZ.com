@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +27,9 @@ export type ProductRow = {
   stock: number;
   status: "DRAFT" | "PENDING" | "PUBLISHED" | "REJECTED";
   isActive: boolean;
+  forceCodOnly: boolean;
+  isFeatured: boolean;
+  isTrending: boolean;
   createdAt: string;
   vendor: { id: string; shopName: string; status: string };
   category: { id: string; name: string };
@@ -55,7 +58,7 @@ type ProductDetails = {
   slug?: string;
   description?: string | null;
   shortDescription?: string | null;
-  currency: "INR" | "USD";
+  currency: "INR";
   mrp?: number | null;
   price: number;
   salePrice: number | null;
@@ -63,6 +66,9 @@ type ProductDetails = {
   sku: string | null;
   barcode?: string | null;
   isActive: boolean;
+  forceCodOnly: boolean;
+  isFeatured: boolean;
+  isTrending: boolean;
   categoryId: string;
   brandId: string | null;
   material: string | null;
@@ -154,6 +160,9 @@ export default function ProductsClient({
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(false);
+  const [codOnlyFilter, setCodOnlyFilter] = useState(false);
+  const [selectedVendorId, setSelectedVendorId] = useState("");
+  const [rowImageUrls, setRowImageUrls] = useState<Record<string, string>>({});
 
   // create form
   const [title, setTitle] = useState("");
@@ -162,10 +171,11 @@ export default function ProductsClient({
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [brandId, setBrandId] = useState<string>("");
-  const [currency, setCurrency] = useState<"INR" | "USD">("INR");
-  const [mrp, setMrp] = useState("");
+  const [currency, setCurrency] = useState<"INR">("INR");
   const [price, setPrice] = useState("999");
   const [salePrice, setSalePrice] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [stock, setStock] = useState("10");
   const [sku, setSku] = useState("");
   const [barcode, setBarcode] = useState("");
@@ -184,6 +194,9 @@ export default function ProductsClient({
   const [dimW, setDimW] = useState("");
   const [dimH, setDimH] = useState("");
   const [tags, setTags] = useState("");
+  const [forceCodOnly, setForceCodOnly] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [isTrending, setIsTrending] = useState(false);
   const [createVariants, setCreateVariants] = useState<VariantRow[]>([]);
 
   // edit modal
@@ -197,8 +210,7 @@ export default function ProductsClient({
   const [eDescription, setEDescription] = useState("");
   const [eCategoryId, setECategoryId] = useState("");
   const [eBrandId, setEBrandId] = useState<string>("");
-  const [eCurrency, setECurrency] = useState<"INR" | "USD">("INR");
-  const [eMrp, setEMrp] = useState("");
+  const [eCurrency, setECurrency] = useState<"INR">("INR");
   const [ePrice, setEPrice] = useState("");
   const [eSalePrice, setESalePrice] = useState("");
   const [eStock, setEStock] = useState("");
@@ -219,6 +231,9 @@ export default function ProductsClient({
   const [eDimW, setEDimW] = useState("");
   const [eDimH, setEDimH] = useState("");
   const [eTags, setETags] = useState("");
+  const [eForceCodOnly, setEForceCodOnly] = useState(false);
+  const [eIsFeatured, setEIsFeatured] = useState(false);
+  const [eIsTrending, setEIsTrending] = useState(false);
   const [editVariants, setEditVariants] = useState<VariantRow[]>([]);
 
   function addVariantRow(setter: (updater: (prev: VariantRow[]) => VariantRow[]) => void) {
@@ -324,15 +339,47 @@ export default function ProductsClient({
       return;
     }
     const raw = (data.data?.products || []) as ProductRowApi[];
-    setProducts(
-      raw.map<ProductRow>((p) => ({
-        ...p,
-        price: Number(p.price ?? 0),
-        salePrice: p.salePrice == null ? null : Number(p.salePrice),
-      })),
-    );
+    const loaded = raw.map<ProductRow>((p) => ({
+      ...p,
+      price: Number(p.price ?? 0),
+      salePrice: p.salePrice == null ? null : Number(p.salePrice),
+    }));
+    setProducts(loaded);
     setLoading(false);
   }
+
+  const vendorSummaries = useMemo(() => {
+    const vendors = new Map<
+      string,
+      { id: string; name: string; status: string; total: number; active: number; published: number }
+    >();
+
+    for (const product of products) {
+      const current = vendors.get(product.vendor.id) ?? {
+        id: product.vendor.id,
+        name: product.vendor.shopName || "Unnamed vendor",
+        status: product.vendor.status || "-",
+        total: 0,
+        active: 0,
+        published: 0,
+      };
+
+      current.total += 1;
+      if (product.isActive) current.active += 1;
+      if (product.status === "PUBLISHED") current.published += 1;
+      vendors.set(product.vendor.id, current);
+    }
+
+    return Array.from(vendors.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [products]);
+
+  const selectedVendor = vendorSummaries.find((vendor) => vendor.id === selectedVendorId);
+  const vendorFilteredProducts = selectedVendorId
+    ? products.filter((product) => product.vendor.id === selectedVendorId)
+    : products;
+  const visibleProducts = codOnlyFilter
+    ? vendorFilteredProducts.filter((p) => p.forceCodOnly)
+    : vendorFilteredProducts;
 
   async function setActive(productId: string, isActive: boolean) {
     const res = await fetch(`/api/admin/products/${productId}/active`, {
@@ -347,6 +394,21 @@ export default function ProductsClient({
       return;
     }
     setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, isActive } : p)));
+  }
+
+  async function setHomeSection(productId: string, patch: Pick<ProductRow, "isFeatured" | "isTrending">) {
+    const res = await fetch(`/api/admin/products/${productId}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) {
+      toast.error(data?.error || "Update failed");
+      return;
+    }
+    setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, ...patch } : p)));
   }
 
   async function updateProductStatus(productId: string, status: string) {
@@ -367,11 +429,6 @@ export default function ProductsClient({
 
   async function createProduct() {
     try {
-      const parsedMrp = mrp.trim() ? Number(mrp) : null;
-      if (parsedMrp != null && (!Number.isFinite(parsedMrp) || parsedMrp <= 0)) {
-        throw new Error("Invalid MRP");
-      }
-
       const vParsed = variantRowsToPayload(createVariants);
       if (!vParsed.ok) throw new Error(vParsed.error);
       const variants = vParsed.variants;
@@ -388,17 +445,16 @@ export default function ProductsClient({
           throw new Error("Invalid sale price");
         }
         if (sale != null && sale >= base) throw new Error("Sale price must be less than price");
-        if (parsedMrp != null && base > parsedMrp) throw new Error("Price must be less than or equal to MRP");
       }
 
       const tagList = toTagList(tags);
       const dimensions =
         dimL || dimW || dimH
           ? {
-              ...(dimL ? { length: Number(dimL) } : {}),
-              ...(dimW ? { width: Number(dimW) } : {}),
-              ...(dimH ? { height: Number(dimH) } : {}),
-            }
+            ...(dimL ? { length: Number(dimL) } : {}),
+            ...(dimW ? { width: Number(dimW) } : {}),
+            ...(dimH ? { height: Number(dimH) } : {}),
+          }
           : null;
 
       const res = await fetch("/api/admin/products", {
@@ -413,14 +469,14 @@ export default function ProductsClient({
           categoryId,
           brandId: brandId ? brandId : null,
           currency,
-          mrp: parsedMrp,
+          mrp: null,
           ...(!hasVariants
             ? {
-                price: Number(price),
-                salePrice: salePrice.trim() ? Number(salePrice) : null,
-                stock: Number(stock),
-                sku: sku.trim() ? sku.trim() : null,
-              }
+              price: Number(price),
+              salePrice: salePrice.trim() ? Number(salePrice) : null,
+              stock: Number(stock),
+              sku: sku.trim() ? sku.trim() : null,
+            }
             : {}),
           barcode: barcode.trim() ? barcode.trim() : null,
           material: material.trim() ? material.trim() : null,
@@ -438,10 +494,25 @@ export default function ProductsClient({
           tags: tagList,
           ...(hasVariants ? { variants } : {}),
           isActive: true,
+          forceCodOnly,
+          isFeatured,
+          isTrending,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok) throw new Error(data?.error || "Create failed");
+
+      const createdProductId = String(data?.data?.product?.id || "");
+      if (!createdProductId) throw new Error("Product created but image setup failed");
+
+      const pendingImageUrls = [
+        imageUrl.trim(),
+        ...(await Promise.all(imageFiles.map((file) => uploadToServer(file)))),
+      ].filter(Boolean);
+
+      for (const url of pendingImageUrls) {
+        await attachImage(createdProductId, url);
+      }
 
       toast.success("Product created");
       setTitle("");
@@ -451,7 +522,8 @@ export default function ProductsClient({
       setBrandId("");
       setSalePrice("");
       setCurrency("INR");
-      setMrp("");
+      setImageUrl("");
+      setImageFiles([]);
       setSku("");
       setBarcode("");
       setMaterial("");
@@ -469,6 +541,9 @@ export default function ProductsClient({
       setDimW("");
       setDimH("");
       setTags("");
+      setForceCodOnly(false);
+      setIsFeatured(false);
+      setIsTrending(false);
       setCreateVariants([]);
       await reload();
     } catch (e) {
@@ -495,8 +570,7 @@ export default function ProductsClient({
       setEDescription(p.description ?? "");
       setECategoryId(p.categoryId);
       setEBrandId(p.brandId ?? "");
-      setECurrency(p.currency ?? "INR");
-      setEMrp(p.mrp != null ? String(p.mrp) : "");
+      setECurrency("INR");
       setEPrice(String(p.price ?? ""));
       setESalePrice(p.salePrice != null ? String(p.salePrice) : "");
       setEStock(String(p.stock ?? ""));
@@ -513,6 +587,9 @@ export default function ProductsClient({
       setEMetaKeywords(p.metaKeywords ?? "");
       setESizeOptions(p.sizeOptions ?? "");
       setEColorOptions(p.colorOptions ?? "");
+      setEForceCodOnly(p.forceCodOnly ?? false);
+      setEIsFeatured(p.isFeatured ?? false);
+      setEIsTrending(p.isTrending ?? false);
 
       const dims = p.dimensions;
       setEDimL(dims?.length != null ? String(dims.length) : "");
@@ -543,11 +620,6 @@ export default function ProductsClient({
   async function saveEdit() {
     if (!editProductId) return;
     try {
-      const parsedMrp = eMrp.trim() ? Number(eMrp) : null;
-      if (parsedMrp != null && (!Number.isFinite(parsedMrp) || parsedMrp <= 0)) {
-        throw new Error("Invalid MRP");
-      }
-
       const vParsed = variantRowsToPayload(editVariants);
       if (!vParsed.ok) throw new Error(vParsed.error);
       const variants = vParsed.variants;
@@ -561,17 +633,16 @@ export default function ProductsClient({
           throw new Error("Invalid sale price");
         }
         if (sale != null && sale >= base) throw new Error("Sale price must be less than price");
-        if (parsedMrp != null && base > parsedMrp) throw new Error("Price must be less than or equal to MRP");
       }
 
       const tagList = toTagList(eTags);
       const dims =
         eDimL || eDimW || eDimH
           ? {
-              ...(eDimL ? { length: Number(eDimL) } : {}),
-              ...(eDimW ? { width: Number(eDimW) } : {}),
-              ...(eDimH ? { height: Number(eDimH) } : {}),
-            }
+            ...(eDimL ? { length: Number(eDimL) } : {}),
+            ...(eDimW ? { width: Number(eDimW) } : {}),
+            ...(eDimH ? { height: Number(eDimH) } : {}),
+          }
           : null;
 
       const res = await fetch(`/api/admin/products/${editProductId}`, {
@@ -586,14 +657,14 @@ export default function ProductsClient({
           categoryId: eCategoryId,
           brandId: eBrandId ? eBrandId : null,
           currency: eCurrency,
-          mrp: parsedMrp,
+          mrp: null,
           ...(!includeVariants
             ? {
-                price: Number(ePrice),
-                salePrice: eSalePrice.trim() ? Number(eSalePrice) : null,
-                stock: Number(eStock),
-                sku: eSku.trim() ? eSku.trim() : null,
-              }
+              price: Number(ePrice),
+              salePrice: eSalePrice.trim() ? Number(eSalePrice) : null,
+              stock: Number(eStock),
+              sku: eSku.trim() ? eSku.trim() : null,
+            }
             : {}),
           barcode: eBarcode.trim() ? eBarcode.trim() : null,
           material: eMaterial.trim() ? eMaterial.trim() : null,
@@ -610,6 +681,9 @@ export default function ProductsClient({
           colorOptions: eColorOptions.trim() ? eColorOptions.trim() : null,
           tags: tagList,
           ...(includeVariants ? { variants } : {}),
+          forceCodOnly: eForceCodOnly,
+          isFeatured: eIsFeatured,
+          isTrending: eIsTrending,
         }),
       });
 
@@ -674,7 +748,7 @@ export default function ProductsClient({
 
   return (
     <div className="p-6 md:p-10">
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className={`mx-auto ${mode === "create" ? "max-w-7xl" : "max-w-6xl"} space-y-6`}>
         <Card>
           <CardHeader>
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -698,7 +772,8 @@ export default function ProductsClient({
               </div>
             </div>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {mode === "create" ? (
+            <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Create product</CardTitle>
@@ -753,19 +828,12 @@ export default function ProductsClient({
 
                   <div className="grid gap-1">
                     <div className="text-xs text-muted-foreground">Currency</div>
-                    <Select value={currency} onChange={(e) => setCurrency(e.target.value as "INR" | "USD")}>
-                      <option value="INR">INR</option>
-                      <option value="USD">USD</option>
-                    </Select>
+                    <div className="rounded-(--radius) border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
+                      INR only
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <Input
-                      placeholder={`MRP (${currency}, optional)`}
-                      inputMode="numeric"
-                      value={mrp}
-                      onChange={(e) => setMrp(e.target.value)}
-                    />
                     <Input placeholder={`Price (${currency})`} inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} />
                     <Input
                       placeholder={`Sale price (${currency}, optional)`}
@@ -776,6 +844,30 @@ export default function ProductsClient({
                     <Input placeholder="Stock" inputMode="numeric" value={stock} onChange={(e) => setStock(e.target.value)} />
                     <Input placeholder="SKU (optional)" value={sku} onChange={(e) => setSku(e.target.value)} />
                     <Input placeholder="Barcode (optional)" value={barcode} onChange={(e) => setBarcode(e.target.value)} />
+                  </div>
+
+                  <div className="rounded-2xl border border-border bg-muted/20 p-4">
+                    <div className="text-sm font-semibold">Product images</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      Add local images or paste an image URL. The first image becomes primary automatically.
+                    </div>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <Input
+                        placeholder="https://... or /uploads/..."
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="rounded-(--radius) border border-border bg-card px-3 py-2 text-sm text-muted-foreground"
+                        onChange={(e) => setImageFiles(Array.from(e.target.files || []))}
+                      />
+                    </div>
+                    {imageFiles.length ? (
+                      <div className="mt-2 text-xs text-muted-foreground">{imageFiles.length} local image(s) selected</div>
+                    ) : null}
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -812,6 +904,28 @@ export default function ProductsClient({
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <Input placeholder="Size options (comma separated, optional)" value={sizeOptions} onChange={(e) => setSizeOptions(e.target.value)} />
                     <Input placeholder="Color options (comma separated, optional)" value={colorOptions} onChange={(e) => setColorOptions(e.target.value)} />
+                  </div>
+
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" className="h-4 w-4 rounded-[calc(var(--radius)-2px)] border border-border" checked={forceCodOnly} onChange={(e) => setForceCodOnly(e.target.checked)} />
+                    <span className="text-sm text-muted-foreground">COD available (customers can choose COD at checkout)</span>
+                  </label>
+
+                  <div className="rounded-2xl border border-border bg-muted/20 p-4">
+                    <div className="text-sm font-semibold">Homepage sections</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      Only admin-selected products appear under these homepage headings.
+                    </div>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      <label className="flex items-center gap-2">
+                        <input type="checkbox" className="h-4 w-4 rounded-[calc(var(--radius)-2px)] border border-border" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} />
+                        <span className="text-sm text-muted-foreground">Show in Featured Products</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input type="checkbox" className="h-4 w-4 rounded-[calc(var(--radius)-2px)] border border-border" checked={isTrending} onChange={(e) => setIsTrending(e.target.checked)} />
+                        <span className="text-sm text-muted-foreground">Show in Trending Products</span>
+                      </label>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-2">
@@ -886,6 +1000,7 @@ export default function ProductsClient({
                 </CardContent>
               </Card>
             </div>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -893,116 +1008,247 @@ export default function ProductsClient({
           <Card>
             <CardHeader>
               <CardTitle className="text-base">All products</CardTitle>
-              <CardDescription>Enable/disable, upload images, set primary, delete, or edit.</CardDescription>
+              <CardDescription>Select one vendor to see all products inside that vendor.</CardDescription>
             </CardHeader>
             <CardContent>
-            {loading ? (
-              <div className="text-sm text-muted-foreground">Loading...</div>
-            ) : products.length === 0 ? (
-              <div className="text-sm text-muted-foreground">No products yet</div>
-            ) : (
-              <Table>
-                <THead>
-                  <TR className="hover:bg-transparent">
-                    <TH className="w-[44%]">Product</TH>
-                    <TH>Price</TH>
-                    <TH>Stock</TH>
-                    <TH>Approval</TH>
-                    <TH>Visibility</TH>
-                    <TH className="w-[28%]">Actions</TH>
-                  </TR>
-                </THead>
-                <tbody>
-                  {products.map((p) => (
-                    <TR key={p.id}>
-                      <TD>
-                        <div className="font-semibold">{p.title}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {p.category?.name || "-"} · {p.vendor?.shopName || "-"} ({p.vendor?.status || "-"})
-                        </div>
+              <div className="mb-4 rounded-2xl border border-border bg-muted/20 p-4">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold">Vendor products</div>
+                    <div className="text-xs text-muted-foreground">
+                      {selectedVendor
+                        ? `${selectedVendor.name}: ${vendorFilteredProducts.length} product${vendorFilteredProducts.length === 1 ? "" : "s"}`
+                        : "Showing products from all vendors"}
+                    </div>
+                  </div>
+                  <div className="w-full sm:w-72">
+                    <div className="mb-1 text-xs text-muted-foreground">Choose vendor</div>
+                    <Select value={selectedVendorId} onChange={(event) => setSelectedVendorId(event.target.value)}>
+                      <option value="">All vendors</option>
+                      {vendorSummaries.map((vendor) => (
+                        <option key={vendor.id} value={vendor.id}>
+                          {vendor.name} ({vendor.total})
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                </div>
 
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {(p.images || []).map((img) => (
-                            <div key={img.id} className="relative">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={img.url} alt="product" className="h-14 w-14 rounded-(--radius) border border-border object-cover" />
-                              <div className="mt-1 flex gap-1">
-                                <button className="text-[10px] rounded-(--radius) border border-border px-2 py-0.5 hover:bg-muted/60 transition-colors" onClick={() => setPrimary(p.id, img.id)}>
-                                  Primary
-                                </button>
-                                <button className="text-[10px] rounded-(--radius) border border-border px-2 py-0.5 hover:bg-muted/60 transition-colors" onClick={() => removeImage(p.id, img.id)}>
-                                  Del
-                                </button>
-                              </div>
-                              {img.isPrimary && (
-                                <div className="absolute -top-2 -right-2 text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-                                  Primary
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </TD>
-
-                      <TD>₹{p.price}</TD>
-                      <TD>{p.stock}</TD>
-                      <TD>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                          p.status === "PUBLISHED" ? "bg-green-100 text-green-800" :
-                          p.status === "REJECTED" ? "bg-red-100 text-red-800" :
-                          p.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
-                          "bg-gray-100 text-gray-800"
-                        }`}>
-                          {p.status}
-                        </span>
-                      </TD>
-                      <TD className={p.isActive ? "text-success font-semibold text-xs" : "text-muted-foreground text-xs"}>
-                        {p.isActive ? "ACTIVE" : "DISABLED"}
-                      </TD>
-
-                      <TD>
-                        <div className="flex flex-col gap-2">
-                          <div className="text-xs text-muted-foreground">Upload image</div>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="text-xs text-muted-foreground"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              await uploadForProduct(p.id, file);
-                              e.target.value = "";
-                            }}
-                          />
-
-                          <div className="flex flex-wrap gap-2">
-                            {p.status === "PENDING" && (
-                              <>
-                                <Button variant="primary" size="sm" onClick={() => updateProductStatus(p.id, "PUBLISHED")}>
-                                  Approve
-                                </Button>
-                                <Button variant="danger" size="sm" onClick={() => updateProductStatus(p.id, "REJECTED")}>
-                                  Reject
-                                </Button>
-                              </>
-                            )}
-                            <Button variant="danger" size="sm" onClick={() => deleteProduct(p.id)}>
-                              Delete
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => setActive(p.id, !p.isActive)}>
-                              {p.isActive ? "Disable" : "Enable"}
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => openEdit(p.id)}>
-                              Edit
-                            </Button>
+                {vendorSummaries.length ? (
+                  <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {vendorSummaries.map((vendor) => (
+                      <button
+                        key={vendor.id}
+                        type="button"
+                        onClick={() => setSelectedVendorId(vendor.id)}
+                        className={`rounded-2xl border p-4 text-left transition-colors ${
+                          selectedVendorId === vendor.id
+                            ? "border-primary bg-primary/10"
+                            : "border-border bg-card hover:bg-muted/50"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="font-semibold">{vendor.name}</div>
+                            <div className="mt-1 text-xs text-muted-foreground">{vendor.status}</div>
+                          </div>
+                          <div className="rounded-full bg-background px-2 py-0.5 text-xs font-semibold">
+                            {vendor.total}
                           </div>
                         </div>
-                      </TD>
+                        <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                          <div>Published: {vendor.published}</div>
+                          <div>Active: {vendor.active}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap gap-2">
+                  {selectedVendorId ? (
+                    <Button variant="outline" size="sm" onClick={() => setSelectedVendorId("")}>
+                      Show all vendors
+                    </Button>
+                  ) : null}
+                  <Button variant={codOnlyFilter ? "soft" : "outline"} size="sm" onClick={() => setCodOnlyFilter((value) => !value)}>
+                    {codOnlyFilter ? "Show all products" : "Show COD products"}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
+                    Refresh
+                  </Button>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {visibleProducts.length} product{visibleProducts.length === 1 ? "" : "s"}
+                </div>
+              </div>
+              {loading ? (
+                <div className="text-sm text-muted-foreground">Loading...</div>
+              ) : visibleProducts.length === 0 ? (
+                <div className="text-sm text-muted-foreground">
+                  {codOnlyFilter ? "No COD-only products found" : "No products found for this vendor"}
+                </div>
+              ) : (
+                <Table>
+                  <THead>
+                    <TR className="hover:bg-transparent">
+                      <TH className="w-[44%]">Product</TH>
+                      <TH>Price</TH>
+                      <TH>Sale Price</TH>
+                      <TH>Stock</TH>
+                      <TH>Approval</TH>
+                      <TH>Visibility</TH>
+                      <TH className="w-[28%]">Actions</TH>
                     </TR>
-                  ))}
-                </tbody>
-              </Table>
-            )}
+                  </THead>
+                  <tbody>
+                    {visibleProducts.map((p) => (
+                      <TR key={p.id}>
+                        <TD>
+                          <div className="font-semibold">{p.title}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {p.category?.name || "-"} · {p.vendor?.shopName || "-"} ({p.vendor?.status || "-"})
+                          </div>
+
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {p.forceCodOnly ? (
+                              <span className="rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[10px] font-semibold">
+                                COD available
+                              </span>
+                            ) : null}
+                            {p.isFeatured ? (
+                              <span className="rounded-full bg-purple-100 text-purple-800 px-2 py-0.5 text-[10px] font-semibold">
+                                Featured
+                              </span>
+                            ) : null}
+                            {p.isTrending ? (
+                              <span className="rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 text-[10px] font-semibold">
+                                Trending
+                              </span>
+                            ) : null}
+                            {(p.images || []).map((img) => (
+                              <div key={img.id} className="relative">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={img.url} alt="product" className="h-14 w-14 rounded-(--radius) border border-border object-cover" />
+                                <div className="mt-1 flex gap-1">
+                                  <button className="text-[10px] rounded-(--radius) border border-border px-2 py-0.5 hover:bg-muted/60 transition-colors" onClick={() => setPrimary(p.id, img.id)}>
+                                    Primary
+                                  </button>
+                                  <button className="text-[10px] rounded-(--radius) border border-border px-2 py-0.5 hover:bg-muted/60 transition-colors" onClick={() => removeImage(p.id, img.id)}>
+                                    Del
+                                  </button>
+                                </div>
+                                {img.isPrimary && (
+                                  <div className="absolute -top-2 -right-2 text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                                    Primary
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </TD>
+
+                        <TD>₹{p.price}</TD>
+                        <TD>{p.salePrice != null ? `₹${p.salePrice}` : "-"}</TD>
+                        <TD>{p.stock}</TD>
+                        <TD>
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${p.status === "PUBLISHED" ? "bg-green-100 text-green-800" :
+                              p.status === "REJECTED" ? "bg-red-100 text-red-800" :
+                                p.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
+                                  "bg-gray-100 text-gray-800"
+                            }`}>
+                            {p.status}
+                          </span>
+                        </TD>
+                        <TD className={p.isActive ? "text-success font-semibold text-xs" : "text-muted-foreground text-xs"}>
+                          {p.isActive ? "ACTIVE" : "DISABLED"}
+                        </TD>
+
+                        <TD>
+                          <div className="flex flex-col gap-2">
+                            <div className="text-xs text-muted-foreground">Upload image</div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="text-xs text-muted-foreground"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                await uploadForProduct(p.id, file);
+                                e.target.value = "";
+                              }}
+                            />
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Image URL"
+                                value={rowImageUrls[p.id] || ""}
+                                onChange={(e) => setRowImageUrls((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={async () => {
+                                  const url = (rowImageUrls[p.id] || "").trim();
+                                  if (!url) return;
+                                  try {
+                                    await attachImage(p.id, url);
+                                    setRowImageUrls((prev) => ({ ...prev, [p.id]: "" }));
+                                    toast.success("Image URL added");
+                                    await reload();
+                                  } catch (e) {
+                                    const message = e instanceof Error ? e.message : "Save image failed";
+                                    toast.error(message);
+                                  }
+                                }}
+                              >
+                                Add URL
+                              </Button>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                              {p.status === "PENDING" && (
+                                <>
+                                  <Button variant="primary" size="sm" onClick={() => updateProductStatus(p.id, "PUBLISHED")}>
+                                    Approve
+                                  </Button>
+                                  <Button variant="danger" size="sm" onClick={() => updateProductStatus(p.id, "REJECTED")}>
+                                    Reject
+                                  </Button>
+                                </>
+                              )}
+                              <Button variant="danger" size="sm" onClick={() => deleteProduct(p.id)}>
+                                Delete
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={() => setActive(p.id, !p.isActive)}>
+                                {p.isActive ? "Disable" : "Enable"}
+                              </Button>
+                              <Button
+                                variant={p.isFeatured ? "soft" : "outline"}
+                                size="sm"
+                                onClick={() => setHomeSection(p.id, { isFeatured: !p.isFeatured, isTrending: p.isTrending })}
+                              >
+                                {p.isFeatured ? "Remove Featured" : "Mark Featured"}
+                              </Button>
+                              <Button
+                                variant={p.isTrending ? "soft" : "outline"}
+                                size="sm"
+                                onClick={() => setHomeSection(p.id, { isFeatured: p.isFeatured, isTrending: !p.isTrending })}
+                              >
+                                {p.isTrending ? "Remove Trending" : "Mark Trending"}
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={() => openEdit(p.id)}>
+                                Edit
+                              </Button>
+                            </div>
+                          </div>
+                        </TD>
+                      </TR>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         ) : null}
@@ -1076,19 +1322,12 @@ export default function ProductsClient({
 
               <div className="grid gap-1">
                 <div className="text-xs text-muted-foreground">Currency</div>
-                <Select value={eCurrency} onChange={(e) => setECurrency(e.target.value as "INR" | "USD")}>
-                  <option value="INR">INR</option>
-                  <option value="USD">USD</option>
-                </Select>
+                <div className="rounded-(--radius) border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
+                  INR only
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Input
-                  placeholder={`MRP (${eCurrency}, optional)`}
-                  inputMode="numeric"
-                  value={eMrp}
-                  onChange={(e) => setEMrp(e.target.value)}
-                />
                 <Input placeholder={`Price (${eCurrency})`} inputMode="numeric" value={ePrice} onChange={(e) => setEPrice(e.target.value)} />
                 <Input
                   placeholder={`Sale price (${eCurrency}, optional)`}
@@ -1135,6 +1374,28 @@ export default function ProductsClient({
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Input placeholder="Size options (comma separated, optional)" value={eSizeOptions} onChange={(e) => setESizeOptions(e.target.value)} />
                 <Input placeholder="Color options (comma separated, optional)" value={eColorOptions} onChange={(e) => setEColorOptions(e.target.value)} />
+              </div>
+
+              <label className="flex items-center gap-2">
+                <input type="checkbox" className="h-4 w-4 rounded-[calc(var(--radius)-2px)] border border-border" checked={eForceCodOnly} onChange={(e) => setEForceCodOnly(e.target.checked)} />
+                <span className="text-sm text-muted-foreground">Force COD Only (customers cannot use card payment)</span>
+              </label>
+
+              <div className="rounded-2xl border border-border bg-muted/20 p-4">
+                <div className="text-sm font-semibold">Homepage sections</div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  Only admin-selected products appear under these homepage headings.
+                </div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" className="h-4 w-4 rounded-[calc(var(--radius)-2px)] border border-border" checked={eIsFeatured} onChange={(e) => setEIsFeatured(e.target.checked)} />
+                    <span className="text-sm text-muted-foreground">Show in Featured Products</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" className="h-4 w-4 rounded-[calc(var(--radius)-2px)] border border-border" checked={eIsTrending} onChange={(e) => setEIsTrending(e.target.checked)} />
+                    <span className="text-sm text-muted-foreground">Show in Trending Products</span>
+                  </label>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-2">

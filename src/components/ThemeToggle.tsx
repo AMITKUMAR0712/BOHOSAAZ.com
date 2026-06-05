@@ -4,6 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/cn";
 
 const LS_KEY = "bohosaaz_theme";
+const THEME_EVENT = "bohosaaz-theme";
 
 type Theme = "light" | "dark";
 
@@ -24,23 +25,29 @@ function applyTheme(theme: Theme) {
 }
 
 export default function ThemeToggle({ className }: { className?: string }) {
-  const [theme, setTheme] = React.useState<Theme>("dark");
+  const [theme, setTheme] = React.useState<Theme>("light");
 
   React.useEffect(() => {
-    const initial = readStoredTheme() ?? "dark";
+    const initial = readStoredTheme() ?? "light";
     setTheme(initial);
     applyTheme(initial);
 
-    const onStorage = (e: StorageEvent) => {
-      if (e.key !== LS_KEY) return;
-      const next = readStoredTheme() ?? "dark";
+    const syncTheme = () => {
+      const next = readStoredTheme() ?? "light";
       setTheme(next);
       applyTheme(next);
     };
 
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== LS_KEY) return;
+      syncTheme();
+    };
+
+    window.addEventListener(THEME_EVENT, syncTheme);
     window.addEventListener("storage", onStorage);
 
     return () => {
+      window.removeEventListener(THEME_EVENT, syncTheme);
       window.removeEventListener("storage", onStorage);
     };
   }, []);
@@ -61,6 +68,7 @@ export default function ThemeToggle({ className }: { className?: string }) {
         applyTheme(next);
         try {
           localStorage.setItem(LS_KEY, next);
+          window.dispatchEvent(new Event(THEME_EVENT));
         } catch {
           // ignore
         }

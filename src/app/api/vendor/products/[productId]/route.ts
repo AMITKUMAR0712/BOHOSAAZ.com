@@ -57,7 +57,7 @@ const patchSchema = z.object({
   description: z.string().optional().nullable(),
   shortDescription: z.string().optional().nullable(),
   // pricing
-  currency: z.enum(["INR", "USD"]).optional(),
+  currency: z.literal("INR").optional(),
   mrp: z.number().positive().optional().nullable(),
   price: z.number().positive().optional(),
   salePrice: z.number().positive().optional().nullable(),
@@ -150,8 +150,10 @@ export async function PATCH(
   if (!parsed.success) return Response.json({ error: "Invalid payload" }, { status: 400 });
   const b = parsed.data;
 
-  const nextPrice = b.price !== undefined ? b.price : product.price;
-  const nextSale = b.salePrice !== undefined ? (b.salePrice ?? null) : product.salePrice;
+  const markup = 1.10;
+  
+  const nextPrice = b.price !== undefined ? +(b.price * markup).toFixed(2) : product.price;
+  const nextSale = b.salePrice !== undefined ? (b.salePrice ? +(b.salePrice * markup).toFixed(2) : null) : product.salePrice;
   const nextMrp = b.mrp !== undefined ? (b.mrp ?? null) : product.mrp;
 
   if (nextSale != null && nextPrice != null && nextSale > nextPrice) {
@@ -234,10 +236,10 @@ export async function PATCH(
         slug: nextSlug ?? undefined,
         description: b.description ?? undefined,
         shortDescription: b.shortDescription !== undefined ? (b.shortDescription ?? null) : undefined,
-        currency: b.currency ?? undefined,
+        currency: "INR",
         mrp: b.mrp !== undefined ? (b.mrp ?? null) : undefined,
-        price: b.price ?? undefined,
-        salePrice: b.salePrice !== undefined ? (b.salePrice ?? null) : undefined,
+        price: nextPrice ?? undefined,
+        salePrice: nextSale !== undefined ? (nextSale ?? null) : undefined,
         stock: b.stock ?? undefined,
         sku: b.sku !== undefined ? (b.sku === null ? null : String(b.sku)) : undefined,
         barcode: b.barcode !== undefined ? (b.barcode ?? null) : undefined,
@@ -317,8 +319,8 @@ export async function PATCH(
                 size: v.size,
                 color: v.color ?? null,
                 sku: v.sku,
-                price: v.price,
-                salePrice: v.salePrice ?? null,
+                price: +(v.price * markup).toFixed(2),
+                salePrice: v.salePrice ? +(v.salePrice * markup).toFixed(2) : null,
                 stock: v.stock,
                 isActive: v.isActive,
               },
@@ -330,8 +332,8 @@ export async function PATCH(
                 size: v.size,
                 color: v.color ?? null,
                 sku: v.sku,
-                price: v.price,
-                salePrice: v.salePrice ?? null,
+                price: +(v.price * markup).toFixed(2),
+                salePrice: v.salePrice ? +(v.salePrice * markup).toFixed(2) : null,
                 stock: v.stock,
                 isActive: v.isActive,
               },

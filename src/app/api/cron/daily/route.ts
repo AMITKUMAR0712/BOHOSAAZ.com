@@ -39,7 +39,7 @@ export async function GET(req: Request) {
       });
 
       const payoutPaise = rupeesToPaise(vo.payout);
-      const commissionPaise = rupeesToPaise(vo.commission);
+      const commissionPaise = BigInt(0);
 
       const payout = await (tx as unknown as {
         payout: {

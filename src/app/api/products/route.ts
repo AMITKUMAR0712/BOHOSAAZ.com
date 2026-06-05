@@ -4,18 +4,22 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 
 const querySchema = z.object({
-  mode: z.enum(["trending", "latest", "offers"]).optional(),
+  mode: z.enum(["featured", "trending", "latest", "offers"]).optional(),
   limit: z.coerce.number().int().min(1).max(60).optional(),
   q: z.string().trim().min(1).optional(),
   vendorId: z.string().trim().min(1).optional(),
   category: z.string().trim().min(1).optional(),
+  occasion: z.string().trim().min(1).optional(),
+  recipient: z.string().trim().min(1).optional(),
+  availability: z.string().trim().min(1).optional(),
+  budget: z.string().trim().min(1).optional(),
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().nonnegative().optional(),
   size: z.string().trim().min(1).optional(),
   color: z.string().trim().min(1).optional(),
   inStock: z.string().trim().optional(),
   discountOnly: z.string().trim().optional(),
-  sort: z.enum(["latest", "price_asc", "price_desc", "offer"]).optional(),
+  sort: z.enum(["featured", "best_selling", "trending", "new_arrivals", "latest", "price_asc", "price_desc", "offer", "customer_favorites", "highest_rated"]).optional(),
 });
 
 function toBool(v: string | undefined): boolean {
@@ -34,6 +38,35 @@ function offersWhere(): Prisma.ProductWhereInput {
   };
 }
 
+function giftFilterWhere(term: string): Prisma.ProductWhereInput {
+  const label = term
+    .replace(/^(occasion|recipient|availability)-/i, "")
+    .replace(/[_-]+/g, " ")
+    .trim();
+  const slugValue = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const slugCandidates = Array.from(
+    new Set([
+      term,
+      slugValue,
+      `occasion-${slugValue}`,
+      `recipient-${slugValue}`,
+      `availability-${slugValue}`,
+    ].filter(Boolean)),
+  );
+  const text = label || term.replace(/[_-]+/g, " ");
+
+  return {
+    OR: [
+      { tags: { some: { tag: { slug: { in: slugCandidates } } } } },
+      { tags: { some: { tag: { name: { contains: text } } } } },
+      { title: { contains: text } },
+      { shortDescription: { contains: text } },
+      { description: { contains: text } },
+      { category: { name: { contains: text } } },
+    ],
+  };
+}
+
 export async function GET(req: NextRequest) {
   const parsed = querySchema.safeParse(Object.fromEntries(req.nextUrl.searchParams));
   if (!parsed.success) {
@@ -42,18 +75,48 @@ export async function GET(req: NextRequest) {
 
   const requestedMode = parsed.data.mode;
   const requestedSort = parsed.data.sort;
-  const effectiveMode: "trending" | "latest" | "offers" | undefined =
-    requestedMode ?? (requestedSort === "offer" ? "offers" : undefined);
+  const effectiveMode: "featured" | "trending" | "latest" | "offers" | undefined =
+    requestedMode ??
+    (requestedSort === "featured"
+      ? "featured"
+      : requestedSort === "offer"
+        ? "offers"
+        : requestedSort === "trending" || requestedSort === "best_selling" || requestedSort === "customer_favorites"
+          ? "trending"
+          : requestedSort === "new_arrivals"
+            ? "latest"
+            : undefined);
 
-  const { limit, q, vendorId, category, minPrice, maxPrice, size, color } = parsed.data;
+  const { limit, q, vendorId, category, size, color } = parsed.data;
+  const selectedBudget = (() => {
+    const raw = parsed.data.budget;
+    if (!raw) return undefined;
+    const match = raw.match(/^(\d*)-(\d*)$/);
+    if (!match) return undefined;
+    const min = match[1] ? Number(match[1]) : undefined;
+    const max = match[2] ? Number(match[2]) : undefined;
+    if ((min != null && !Number.isFinite(min)) || (max != null && !Number.isFinite(max))) return undefined;
+    return { min, max };
+  })();
+  const minPrice = selectedBudget?.min ?? parsed.data.minPrice;
+  const maxPrice = selectedBudget?.max ?? parsed.data.maxPrice;
   const inStock = toBool(parsed.data.inStock);
   const discountOnly = toBool(parsed.data.discountOnly);
-  const sort = requestedSort === "offer" ? undefined : requestedSort;
+  const sort =
+    requestedSort === "offer" ||
+    requestedSort === "trending" ||
+    requestedSort === "best_selling" ||
+    requestedSort === "customer_favorites" ||
+    requestedSort === "new_arrivals" ||
+    requestedSort === "featured" ||
+    requestedSort === "highest_rated"
+      ? undefined
+      : requestedSort;
   const take = limit ?? 48;
 
-  const variantFilters = {
-    ...(size ? { size } : {}),
-    ...(color ? { color } : {}),
+  const variantFilters: Prisma.ProductVariantWhereInput = {
+    ...(size ? { size: { contains: size } } : {}),
+    ...(color ? { color: { contains: color } } : {}),
     ...(inStock ? { stock: { gt: 0 } } : {}),
   };
 
@@ -79,7 +142,7 @@ export async function GET(req: NextRequest) {
       }
     : undefined;
 
-  const and: Prisma.ProductWhereInput[] = [{ isActive: true }];
+  const and: Prisma.ProductWhereInput[] = [{ isActive: true, deletedAt: null }];
 
   if (q) {
     and.push({
@@ -89,6 +152,32 @@ export async function GET(req: NextRequest) {
         { description: { contains: q } },
       ],
     });
+  }
+
+  const availabilityTagFilter =
+    parsed.data.availability &&
+    parsed.data.availability !== "in_stock" &&
+    parsed.data.availability !== "new_arrivals" &&
+    parsed.data.availability !== "discounted"
+      ? parsed.data.availability
+      : undefined;
+  const giftFilters = [
+    parsed.data.occasion,
+    parsed.data.recipient,
+    availabilityTagFilter,
+  ].filter((v): v is string => Boolean(v));
+
+  for (const term of giftFilters) {
+    and.push(giftFilterWhere(term));
+  }
+
+  if (parsed.data.availability === "new_arrivals") {
+    const since = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
+    and.push({ createdAt: { gte: since } });
+  }
+
+  if (parsed.data.availability === "discounted") {
+    and.push({ salePrice: { not: null } });
   }
 
   if (vendorId) {
@@ -101,13 +190,18 @@ export async function GET(req: NextRequest) {
 
   if (hasVariantFilter || variantPriceFilter) {
     and.push({
-      variants: {
-        some: {
-          isActive: true,
-          ...variantFilters,
-          ...(variantPriceFilter ?? {}),
+      OR: [
+        {
+          variants: {
+            some: {
+              isActive: true,
+              ...variantFilters,
+              ...(variantPriceFilter ?? {}),
+            },
+          },
         },
-      },
+        ...(color && !size && !variantPriceFilter && !inStock ? [{ colorOptions: { contains: color } }] : []),
+      ],
     });
   } else if (productPriceFilter) {
     and.push(productPriceFilter);
@@ -130,50 +224,27 @@ export async function GET(req: NextRequest) {
     and.push(offersWhere());
   }
 
-  // Trending is derived from recent orders (fallback to newest)
+  if (effectiveMode === "featured") {
+    and.push({ isFeatured: true });
+  }
+
   if (effectiveMode === "trending") {
-    const since = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
-    const grouped = await prisma.orderItem.groupBy({
-      by: ["productId"],
-      where: {
-        createdAt: { gte: since },
-        order: { status: { not: "PENDING" } },
-        product: { isActive: true },
-      },
-      _sum: { quantity: true },
-      orderBy: { _sum: { quantity: "desc" } },
-      take,
-    });
+    and.push({ isTrending: true });
+  }
 
-    const ids = grouped.map((g) => g.productId);
-    if (ids.length === 0) {
-      const products = await prisma.product.findMany({
-        where: { AND: and },
-        take,
-        include: {
-          category: { select: { id: true, name: true, slug: true } },
-          vendor: { select: { id: true, shopName: true } },
-          images: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
-        },
-        orderBy: { createdAt: "desc" },
-      });
-
-      return Response.json({ products });
-    }
-
+  if (effectiveMode === "featured" || effectiveMode === "trending") {
     const products = await prisma.product.findMany({
-      where: { AND: [...and, { id: { in: ids } }] },
+      where: { AND: and },
       take,
       include: {
         category: { select: { id: true, name: true, slug: true } },
         vendor: { select: { id: true, shopName: true } },
         images: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
       },
+      orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
     });
 
-    const byId = new Map(products.map((p) => [p.id, p]));
-    const ordered = ids.map((id) => byId.get(id)).filter(Boolean);
-    return Response.json({ products: ordered });
+    return Response.json({ products });
   }
 
   const orderBy: Prisma.ProductOrderByWithRelationInput =

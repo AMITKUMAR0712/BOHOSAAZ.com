@@ -16,6 +16,7 @@ export default function BackToTop({ className }: { className?: string }) {
   return (
     <button
       type="button"
+      data-floating="true"
       aria-label="Back to top"
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       className={cn(

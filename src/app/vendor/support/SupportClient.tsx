@@ -133,9 +133,8 @@ export default function SupportClient({ userId }: { userId: string }) {
             tickets.map((t) => (
               <Card
                 key={t.id}
-                className={`cursor-pointer transition-colors hover:border-primary/50 ${
-                  selectedTicket?.id === t.id ? "border-primary ring-1 ring-primary" : ""
-                }`}
+                className={`cursor-pointer transition-colors hover:border-primary/50 ${selectedTicket?.id === t.id ? "border-primary ring-1 ring-primary" : ""
+                  }`}
                 onClick={() => {
                   setSelectedTicket(t);
                   loadMessages(t.id);
@@ -144,9 +143,8 @@ export default function SupportClient({ userId }: { userId: string }) {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold uppercase text-primary">{t.category}</span>
-                    <span className={`text-[10px] font-bold uppercase ${
-                      t.status === "OPEN" ? "text-green-600" : "text-gray-500"
-                    }`}>
+                    <span className={`text-[10px] font-bold uppercase ${t.status === "OPEN" ? "text-green-600" : "text-gray-500"
+                      }`}>
                       {t.status}
                     </span>
                   </div>
@@ -176,7 +174,7 @@ export default function SupportClient({ userId }: { userId: string }) {
                 <div>
                   <label className="text-sm font-medium">Category</label>
                   <Select value={category} onChange={(e) => setCategory(e.target.value)}>
-                      <option value="ORDER_ISSUE">Order Issue</option>
+                    <option value="ORDER_ISSUE">Order Issue</option>
                     <option value="PRODUCT_ISSUE">Product Listing</option>
                     <option value="PAYOUT_ISSUE">Payment/Payout</option>
                     <option value="RETURNS_ISSUE">Returns Issue</option>
@@ -222,11 +220,10 @@ export default function SupportClient({ userId }: { userId: string }) {
                       className={`flex ${m.senderRole === "VENDOR" ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-[80%] rounded-lg px-4 py-2 text-sm ${
-                          m.senderRole === "VENDOR"
+                        className={`max-w-[80%] rounded-lg px-4 py-2 text-sm ${m.senderRole === "VENDOR"
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted text-foreground"
-                        }`}
+                          }`}
                       >
                         <div className="mb-1 text-[10px] opacity-70">
                           {m.senderRole === "ADMIN" ? "BOHOSAAZ Admin" : "You"} • {new Date(m.createdAt).toLocaleTimeString()}

@@ -68,10 +68,11 @@ export default function WhatsAppFloat({ className }: { className?: string }) {
   const displayHref = href ?? "https://wa.me/";
 
   return (
-    <div className={cn("fixed bottom-5 right-5 z-50", className)}>
+    <div className={cn("fixed bottom-24 right-4 z-50 md:bottom-5 md:right-5", className)}>
       <div className="group relative">
         <Link
           href={displayHref}
+          data-floating="true"
           target="_blank"
           rel="noopener noreferrer"
           aria-label={isConfigured ? "Chat on WhatsApp" : "WhatsApp (not configured)"}

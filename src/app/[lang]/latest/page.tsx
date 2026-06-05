@@ -4,8 +4,16 @@ import { isLocale } from "@/lib/i18n";
 import { ProductCard, type ProductCardProduct } from "@/components/ProductCard";
 
 export const metadata: Metadata = {
-  title: "Latest Products | Bohosaaz",
-  description: "Discover the latest handcrafted arrivals on Bohosaaz.",
+  title: "New Gift Products in Noida & Delhi NCR | Bohosaaz",
+  description:
+    "Discover new gift products in Noida, Greater Noida, New Delhi and Delhi NCR. Shop curated birthday gifts, anniversary gifts, corporate gifts and premium gift ideas on Bohosaaz.",
+  keywords: [
+    "new gift products in Noida",
+    "latest gifts Delhi NCR",
+    "online gifts Greater Noida",
+    "birthday gifts New Delhi",
+    "premium gift products Bohosaaz",
+  ],
 };
 
 export default async function LatestPage({
@@ -52,22 +60,22 @@ export default async function LatestPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 md:py-12">
-      <div className="rounded-4xl border border-border bg-card/70 backdrop-blur-xl p-6 md:p-10 shadow-premium">
-        <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Latest</div>
+      <div className="rounded-[36px] border border-border/80 bg-card/80 p-6 shadow-premium backdrop-blur-xl md:p-10">
+        <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Products</div>
         <h1 className="mt-3 font-heading text-4xl md:text-5xl tracking-tight">New arrivals</h1>
         <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-2xl">
           Fresh drops from our artisan community — curated for premium taste.
         </p>
       </div>
 
-      <div className="mt-8 grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-5 grid auto-rows-fr grid-cols-2 gap-3 sm:mt-8 sm:gap-5 lg:grid-cols-3">
         {cards.map((p) => (
           <ProductCard key={p.id} langPrefix={`/${lang}`} product={p} />
         ))}
       </div>
 
       {cards.length === 0 ? (
-        <div className="mt-10 rounded-(--radius) border border-border bg-card p-6 text-sm text-muted-foreground">
+        <div className="mt-10 rounded-3xl border border-border bg-card/80 p-6 text-sm text-muted-foreground shadow-sm">
           No products found.
         </div>
       ) : null}

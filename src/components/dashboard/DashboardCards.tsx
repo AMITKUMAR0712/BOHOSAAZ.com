@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Store } from "lucide-react";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { useLiveMetrics } from "@/lib/useLiveMetrics";
 import { formatInr } from "@/lib/money";
@@ -48,7 +47,7 @@ function OrdersIcon() {
   );
 }
 
-function WalletIcon() {
+function PayoutIcon() {
   return (
     <IconBox>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -118,8 +117,6 @@ export function DashboardCards({ role, basePath }: Props) {
         <KpiCard label="Cart Items" value={d?.cartItemsCount ?? 0} href={`${basePath}/cart`} icon={<CartIcon />} updatedText={updatedText} loading={loading} />
         <KpiCard label="Pending Orders" value={d?.pendingOrdersCount ?? 0} href={`${basePath}/account/orders`} icon={<OrdersIcon />} updatedText={updatedText} loading={loading} />
         <KpiCard label="Delivered Orders" value={d?.deliveredOrdersCount ?? 0} href={`${basePath}/account/orders`} icon={<OrdersIcon />} updatedText={updatedText} loading={loading} />
-        <KpiCard label="Wallet Balance" value={formatInr(d?.walletBalanceRupees ?? 0)} href={`${basePath}/account/wallet`} icon={<WalletIcon />} updatedText={updatedText} loading={loading} />
-        <KpiCard label="Vendor Application" value={d?.vendorApplicationStatus ?? "NOT_APPLIED"} href={`${basePath}/account/vendor-status`} icon={<Store />} updatedText={updatedText} loading={loading} />
         <KpiCard label="Active Returns / Refunds" value={d?.activeReturnsCount ?? 0} href={`${basePath}/account/returns`} icon={<ReturnIcon />} updatedText={updatedText} loading={loading} />
         <KpiCard label="Open Support Tickets" value={d?.openSupportTicketsCount ?? 0} href={`${basePath}/account/support`} icon={<TicketIcon />} updatedText={updatedText} loading={loading} />
       </div>
@@ -132,9 +129,8 @@ export function DashboardCards({ role, basePath }: Props) {
       <div className={grid}>
         <KpiCard label="Total Earnings (lifetime)" value={formatInr(d?.totalEarningsRupees ?? 0)} href={`${basePath}/vendor/payouts`} icon={<MoneyIcon />} updatedText={updatedText} loading={loading} />
         <KpiCard label="Earnings This Month" value={formatInr(d?.earningsThisMonthRupees ?? 0)} href={`${basePath}/vendor/payouts`} icon={<MoneyIcon />} updatedText={updatedText} loading={loading} />
-        <KpiCard label="Pending Payout" value={formatInr(d?.pendingPayoutRupees ?? 0)} href={`${basePath}/vendor/payouts`} icon={<WalletIcon />} updatedText={updatedText} loading={loading} />
-        <KpiCard label="Settled Payout" value={formatInr(d?.settledPayoutRupees ?? 0)} href={`${basePath}/vendor/payouts`} icon={<WalletIcon />} updatedText={updatedText} loading={loading} />
-        <KpiCard label="Commission Paid" value={formatInr(d?.commissionPaidRupees ?? 0)} href={`${basePath}/vendor/payouts`} icon={<MoneyIcon />} updatedText={updatedText} loading={loading} />
+        <KpiCard label="Pending Payout" value={formatInr(d?.pendingPayoutRupees ?? 0)} href={`${basePath}/vendor/payouts`} icon={<PayoutIcon />} updatedText={updatedText} loading={loading} />
+        <KpiCard label="Settled Payout" value={formatInr(d?.settledPayoutRupees ?? 0)} href={`${basePath}/vendor/payouts`} icon={<PayoutIcon />} updatedText={updatedText} loading={loading} />
         <KpiCard label="Total Orders" value={d?.totalOrdersCount ?? 0} href={`${basePath}/vendor/orders`} icon={<OrdersIcon />} updatedText={updatedText} loading={loading} />
         <KpiCard label="Total Returns" value={d?.totalReturnsCount ?? 0} href={`${basePath}/vendor/returns`} icon={<ReturnIcon />} updatedText={updatedText} loading={loading} />
       </div>
@@ -143,14 +139,12 @@ export function DashboardCards({ role, basePath }: Props) {
 
   const d = data as AdminDashboardMetrics | null;
   const gmv = `${formatInr(d?.gmvTodayRupees ?? 0)} / ${formatInr(d?.gmv7dRupees ?? 0)}`;
-  const commission = `${formatInr(d?.commissionTodayRupees ?? 0)} / ${formatInr(d?.commission7dRupees ?? 0)}`;
 
   return (
     <div className={grid}>
       <KpiCard label="Total GMV (today / 7d)" value={gmv} href={`${basePath}/admin/finance`} icon={<MoneyIcon />} updatedText={updatedText} loading={loading} />
-      <KpiCard label="Commission Earned (today / 7d)" value={commission} href={`${basePath}/admin/finance`} icon={<MoneyIcon />} updatedText={updatedText} loading={loading} />
       <KpiCard label="Pending Vendor Approvals" value={d?.pendingVendorApprovalsCount ?? 0} href={`${basePath}/admin/vendors`} icon={<OrdersIcon />} updatedText={updatedText} loading={loading} />
-      <KpiCard label="Pending Payout Settlements" value={d?.pendingPayoutSettlementsCount ?? 0} href={`${basePath}/admin/payouts`} icon={<WalletIcon />} updatedText={updatedText} loading={loading} />
+      <KpiCard label="Pending Payout Settlements" value={d?.pendingPayoutSettlementsCount ?? 0} href={`${basePath}/admin/payouts`} icon={<PayoutIcon />} updatedText={updatedText} loading={loading} />
       <KpiCard label="Open Tickets" value={d?.openTicketsCount ?? 0} href={`${basePath}/admin/support`} icon={<TicketIcon />} updatedText={updatedText} loading={loading} />
       <KpiCard label="Returns Pending Approval" value={d?.returnsPendingApprovalCount ?? 0} href={`${basePath}/admin/returns`} icon={<ReturnIcon />} updatedText={updatedText} loading={loading} />
     </div>

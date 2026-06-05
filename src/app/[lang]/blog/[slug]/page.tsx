@@ -49,24 +49,29 @@ export default async function BlogPostPage({
   if (post.publishedAt && post.publishedAt > new Date()) notFound();
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 md:py-12">
-      <div className="rounded-4xl border border-border bg-card/70 backdrop-blur-xl p-6 md:p-10 shadow-premium">
-        <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Blog</div>
-        <h1 className="mt-3 font-heading text-3xl md:text-5xl tracking-tight">{post.title}</h1>
-        <p className="mt-4 text-sm md:text-base text-muted-foreground">{post.excerpt}</p>
+    <div className="relative mx-auto max-w-4xl px-4 py-8 md:py-12">
+      <div className="pointer-events-none absolute -left-24 top-20 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
+      <div className="pointer-events-none absolute -right-24 top-72 h-80 w-80 rounded-full bg-amber-500/10 blur-3xl" />
+      <div className="relative overflow-hidden rounded-[44px] border border-border/80 bg-card/75 p-6 shadow-premium backdrop-blur-xl md:p-10">
+        <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative inline-flex rounded-full border border-border bg-background/70 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+          Gift Journal
+        </div>
+        <h1 className="relative mt-4 font-heading text-3xl tracking-tight text-foreground md:text-5xl">{post.title}</h1>
+        <p className="relative mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">{post.excerpt}</p>
 
         {post.coverImageUrl ? (
           <img
             src={post.coverImageUrl}
             alt={post.title}
-            className="mt-6 h-56 md:h-80 w-full rounded-3xl object-cover border border-border"
+            className="relative mt-8 h-60 w-full rounded-[30px] border border-border object-cover shadow-[0_20px_60px_rgba(47,38,34,0.10)] md:h-96"
           />
         ) : null}
       </div>
 
-      <div className="mt-8 rounded-4xl border border-border bg-card/80 backdrop-blur-xl p-6 md:p-8">
+      <div className="relative mt-8 rounded-[36px] border border-border/80 bg-card/85 p-6 shadow-[0_18px_60px_rgba(47,38,34,0.06)] backdrop-blur-xl md:p-8">
         <div className="prose prose-sm max-w-none dark:prose-invert">
-          <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+          <div className="whitespace-pre-wrap text-sm leading-7 text-foreground md:text-base">
             {post.body}
           </div>
         </div>

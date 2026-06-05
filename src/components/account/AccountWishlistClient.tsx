@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { PriceBlock } from "@/components/PriceBlock";
 import { useCurrency } from "@/lib/currency-context";
-import { getPriceInCurrency } from "@/lib/currency-utils";
+import { getCustomerUnitPrice } from "@/lib/customer-pricing";
 
 export type WishlistRow = {
   id: string;
@@ -111,8 +111,18 @@ export default function AccountWishlistClient({
 
               <div className="mt-2">
                 <PriceBlock
-                  price={getPriceInCurrency(row.product.price, row.product.currency, userCurrency)}
-                  salePrice={row.product.salePrice ? getPriceInCurrency(row.product.salePrice, row.product.currency, userCurrency) : null}
+                  price={getCustomerUnitPrice({
+                    basePrice: row.product.price,
+                    productCurrency: row.product.currency,
+                    displayCurrency: userCurrency,
+                    isVendorProduct: Boolean(row.product.vendorName),
+                  })}
+                  salePrice={row.product.salePrice ? getCustomerUnitPrice({
+                    basePrice: row.product.salePrice,
+                    productCurrency: row.product.currency,
+                    displayCurrency: userCurrency,
+                    isVendorProduct: Boolean(row.product.vendorName),
+                  }) : null}
                   currency={userCurrency}
                   size="sm"
                 />
@@ -129,6 +139,11 @@ export default function AccountWishlistClient({
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ productId: row.product.id, qty: 1 }),
                     });
+                    if (res.status === 401) {
+                      const next = `${window.location.pathname}${window.location.search}`;
+                      window.location.href = `${langPrefix}/login?next=${encodeURIComponent(next)}`;
+                      return;
+                    }
                     if (res.ok) toast({ variant: "success", title: "Added to cart", message: "Added." });
                     else toast({ variant: "danger", title: "Cart", message: "Add to cart failed" });
                   }}

@@ -21,7 +21,7 @@ const patchSchema = z.object({
   description: z.string().optional().nullable(),
   shortDescription: z.string().optional().nullable(),
   // pricing
-  currency: z.enum(["INR", "USD"]).optional(),
+  currency: z.literal("INR").optional(),
   mrp: z.number().positive().optional().nullable(),
   price: z.number().positive().optional(),
   salePrice: z.number().positive().optional().nullable(),
@@ -58,6 +58,9 @@ const patchSchema = z.object({
 
   sizeOptions: z.string().trim().max(500).optional().nullable(),
   colorOptions: z.string().trim().max(500).optional().nullable(),
+  forceCodOnly: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+  isTrending: z.boolean().optional(),
 
   tags: z.array(z.string().trim().min(1)).max(20).optional(),
   variants: z
@@ -203,7 +206,7 @@ export async function PATCH(
         slug: nextSlug ?? undefined,
         description: b.description ?? undefined,
         shortDescription: b.shortDescription !== undefined ? (b.shortDescription ?? null) : undefined,
-        currency: b.currency ?? undefined,
+        currency: "INR",
         mrp: b.mrp !== undefined ? (b.mrp ?? null) : undefined,
         price: b.price ?? undefined,
         salePrice: b.salePrice !== undefined ? (b.salePrice ?? null) : undefined,
@@ -231,6 +234,9 @@ export async function PATCH(
 
         sizeOptions: b.sizeOptions !== undefined ? (b.sizeOptions ?? null) : undefined,
         colorOptions: b.colorOptions !== undefined ? (b.colorOptions ?? null) : undefined,
+        forceCodOnly: b.forceCodOnly !== undefined ? b.forceCodOnly : undefined,
+        isFeatured: b.isFeatured !== undefined ? b.isFeatured : undefined,
+        isTrending: b.isTrending !== undefined ? b.isTrending : undefined,
       },
       select: {
         id: true,
@@ -244,6 +250,8 @@ export async function PATCH(
         categoryId: true,
         brandId: true,
         vendorId: true,
+        isFeatured: true,
+        isTrending: true,
         updatedAt: true,
       },
     });
@@ -354,7 +362,13 @@ export async function PATCH(
     action: "ADMIN_PRODUCT_UPDATE",
     entity: "Product",
     entityId: updated.id,
-    meta: { title: updated.title, vendorId: updated.vendorId, categoryId: updated.categoryId },
+    meta: {
+      title: updated.title,
+      vendorId: updated.vendorId,
+      categoryId: updated.categoryId,
+      isFeatured: updated.isFeatured,
+      isTrending: updated.isTrending,
+    },
     ip: getIpFromRequest(req),
     userAgent: getUserAgentFromRequest(req),
   });

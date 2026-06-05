@@ -33,6 +33,7 @@ export default function AdminSidebar({ lang }: { lang: string }) {
     // ... items stay the same ...
     { href: `/${lang}/admin`, label: "Dashboard" },
     { href: `/${lang}/admin/settings/site`, label: "Site Theme" },
+    { href: `/${lang}/admin/settings/shop-filters`, label: "Shop Filters" },
     { href: `/${lang}/admin/settings`, label: "Settings" },
     { href: `/${lang}/admin/audit`, label: "Audit Logs" },
     { href: `/${lang}/admin/system`, label: "System" },
@@ -41,7 +42,8 @@ export default function AdminSidebar({ lang }: { lang: string }) {
     { href: `/${lang}/admin/users`, label: "Users" },
     { href: `/${lang}/admin/vendors`, label: "Vendors" },
     { href: `/${lang}/admin/orders`, label: "Orders" },
-    { href: `/${lang}/admin/products`, label: "Products" },
+    { href: `/${lang}/admin/products`, label: "All Products" },
+    { href: `/${lang}/admin/products/new`, label: "Create Product" },
     { href: `/${lang}/admin/brands`, label: "Brands" },
     { href: `/${lang}/admin/coupons`, label: "Coupons" },
     { href: `/${lang}/admin/blog`, label: "Blog" },
@@ -95,14 +97,14 @@ export default function AdminSidebar({ lang }: { lang: string }) {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-64 border-r border-border bg-card transition-transform lg:static lg:translate-x-0",
+          "fixed bottom-0 left-0 top-[76px] z-40 w-64 border-r border-border bg-card transition-transform lg:static lg:translate-x-0",
           isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         )}
       >
         <div className="p-4 border-b border-border bg-muted/20">
           <div className="text-sm font-bold tracking-widest uppercase text-muted-foreground">Admin Portal</div>
         </div>
-        <nav className="flex flex-col gap-1 p-2 overflow-y-auto max-h-[calc(100vh-64px)] scrollbar-hide">
+        <nav className="flex flex-col gap-1 p-2 overflow-y-auto max-h-[calc(100vh-140px)] scrollbar-hide">
           {items.map((it) => (
             <Link
               key={it.href}

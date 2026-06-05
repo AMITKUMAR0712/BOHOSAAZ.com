@@ -19,7 +19,6 @@ type PayoutRow = {
   vendorOrderId: string;
   status: string;
   amountPaise: string;
-  commissionPaise: string;
   createdAt: string;
   updatedAt: string;
   settledAt: string | null;
@@ -27,7 +26,6 @@ type PayoutRow = {
     orderId: string;
     status: string;
     subtotal: number;
-    commission: number;
     payout: number;
     createdAt: string;
   };
@@ -113,8 +111,7 @@ export default function VendorWalletClient({ initialWallet, initialTxns, initial
         <div className="grid grid-cols-12 gap-2 bg-gray-50 p-3 text-sm font-semibold">
           <div className="col-span-4">Payout</div>
           <div className="col-span-2">Status</div>
-          <div className="col-span-2">Amount</div>
-          <div className="col-span-2">Commission</div>
+          <div className="col-span-4">Amount</div>
           <div className="col-span-2">Created</div>
         </div>
 
@@ -127,8 +124,7 @@ export default function VendorWalletClient({ initialWallet, initialTxns, initial
               <div className="text-xs text-gray-600">order: {p.vendorOrder.orderId}</div>
             </div>
             <div className="col-span-2 font-semibold">{p.status}</div>
-            <div className="col-span-2">₹{formatRupeesFromPaise(p.amountPaise)}</div>
-            <div className="col-span-2">₹{formatRupeesFromPaise(p.commissionPaise)}</div>
+            <div className="col-span-4">₹{formatRupeesFromPaise(p.amountPaise)}</div>
             <div className="col-span-2 text-xs text-gray-600">{new Date(p.createdAt).toLocaleString()}</div>
           </div>
         ))}

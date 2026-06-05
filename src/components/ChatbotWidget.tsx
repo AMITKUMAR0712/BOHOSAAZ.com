@@ -217,7 +217,7 @@ export default function ChatbotWidget({ className }: { className?: string }) {
   }
 
   return (
-    <div className={cn("fixed bottom-5 left-5 z-50", className)}>
+    <div className={cn("fixed bottom-24 left-4 z-50 md:bottom-5 md:left-5", className)}>
       <div className="flex flex-col items-start gap-3">
         {open ? (
           <div

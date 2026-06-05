@@ -6,11 +6,20 @@ import { audit } from "@/lib/audit";
 import { jsonError, jsonOk } from "@/lib/api";
 import { getIpFromRequest, getUserAgentFromRequest } from "@/lib/requestMeta";
 
+const mediaUrlSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .refine((value) => value.startsWith("/uploads/") || z.string().url().safeParse(value).success, {
+    message: "Invalid media URL",
+  });
+
 const createSchema = z.object({
   title: z.string().trim().min(1).max(200),
   highlightText: z.string().trim().max(200).optional().nullable(),
   subtitle: z.string().trim().max(400).optional().nullable(),
-  imageUrl: z.string().trim().url(),
+  imageUrl: mediaUrlSchema,
+  videoUrl: mediaUrlSchema.optional().nullable(),
   ctaText: z.string().trim().max(80).optional().nullable(),
   ctaHref: z.string().trim().max(2048).optional().nullable(),
   isActive: z.boolean().optional().default(true),
@@ -38,6 +47,7 @@ export async function GET() {
       highlightText: true,
       subtitle: true,
       imageUrl: true,
+      videoUrl: true,
       ctaText: true,
       ctaHref: true,
       isActive: true,
@@ -75,6 +85,7 @@ export async function POST(req: NextRequest) {
       highlightText: parsed.data.highlightText ?? null,
       subtitle: parsed.data.subtitle ?? null,
       imageUrl: parsed.data.imageUrl,
+      videoUrl: parsed.data.videoUrl ?? null,
       ctaText: parsed.data.ctaText ?? null,
       ctaHref: parsed.data.ctaHref ?? null,
       isActive: parsed.data.isActive,

@@ -61,7 +61,6 @@ export default async function AdminOrderDetailPage({
           id: true,
           status: true,
           subtotal: true,
-          commission: true,
           payout: true,
           createdAt: true,
           vendor: { select: { id: true, shopName: true } },

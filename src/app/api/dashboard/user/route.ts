@@ -8,7 +8,6 @@ const UserMetricsSchema = z.object({
   cartItemsCount: z.number().int().nonnegative(),
   pendingOrdersCount: z.number().int().nonnegative(),
   deliveredOrdersCount: z.number().int().nonnegative(),
-  walletBalanceRupees: z.number().nonnegative(),
   activeReturnsCount: z.number().int().nonnegative(),
   openSupportTicketsCount: z.number().int().nonnegative(),
   vendorApplicationStatus: z.enum(["NOT_APPLIED", "PENDING", "APPROVED", "REJECTED", "SUSPENDED"]),

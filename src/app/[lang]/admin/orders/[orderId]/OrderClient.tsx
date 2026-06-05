@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type OrderStatus =
   | "PENDING"
@@ -49,7 +50,6 @@ type OrderView = {
     id: string;
     status: string;
     subtotal: number;
-    commission: number;
     payout: number;
     createdAt: string;
     vendor: { id: string; shopName: string };
@@ -60,6 +60,31 @@ export default function OrderClient({ order }: { order: OrderView }) {
   const [status, setStatus] = useState<OrderStatus>(order.status);
   const [msg, setMsg] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [creatingAwb, setCreatingAwb] = useState<Record<string, boolean>>({});
+  const router = useRouter();
+
+  async function createDelhiveryAwb(itemId: string) {
+    setMsg(null);
+    setCreatingAwb((prev) => ({ ...prev, [itemId]: true }));
+    try {
+      const res = await fetch("/api/couriers/delhivery/create", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Create AWB failed");
+
+      setMsg(`✅ Delhivery AWB created${data?.trackingNumber ? `: ${data.trackingNumber}` : ""}`);
+      router.refresh();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error creating Delhivery AWB";
+      setMsg(`❌ ${message}`);
+    } finally {
+      setCreatingAwb((prev) => ({ ...prev, [itemId]: false }));
+    }
+  }
 
   async function saveStatus(next: OrderStatus) {
     setMsg(null);
@@ -151,13 +176,26 @@ export default function OrderClient({ order }: { order: OrderView }) {
                     </div>
                     <div className="text-xs text-gray-600">Item status: {it.status}</div>
                   </div>
-                  <div className="text-xs text-gray-700">
+                  <div className="text-xs text-gray-700 flex flex-col items-end gap-2">
                     {it.trackingCourier || it.trackingNumber ? (
                       <div>
                         {it.trackingCourier || "Courier"}: {it.trackingNumber || "-"}
                       </div>
                     ) : (
                       <div className="text-gray-500">No tracking</div>
+                    )}
+                    {!it.trackingNumber && it.status !== "DELIVERED" && it.status !== "CANCELLED" && (
+                      <button
+                        className="rounded bg-primary px-3 py-1 text-xs text-primary-foreground disabled:opacity-50"
+                        disabled={creatingAwb[it.id]}
+                        onClick={() => {
+                          if (confirm("Create Delhivery AWB for this item?")) {
+                            createDelhiveryAwb(it.id);
+                          }
+                        }}
+                      >
+                        {creatingAwb[it.id] ? "Creating AWB..." : "Create Delhivery AWB"}
+                      </button>
                     )}
                   </div>
                 </div>
@@ -175,7 +213,7 @@ export default function OrderClient({ order }: { order: OrderView }) {
                   <div className="font-semibold">{vo.vendor.shopName}</div>
                   <div className="text-xs text-gray-600">Status: {vo.status}</div>
                   <div className="text-xs text-gray-700">
-                    Subtotal: ₹{vo.subtotal.toFixed(2)} • Commission: ₹{vo.commission.toFixed(2)} • Payout: ₹{vo.payout.toFixed(2)}
+                    Subtotal: ₹{vo.subtotal.toFixed(2)} • Payout: ₹{vo.payout.toFixed(2)}
                   </div>
                 </div>
               ))

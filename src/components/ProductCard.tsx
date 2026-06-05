@@ -7,8 +7,7 @@ import * as React from "react";
 import { PriceBlock } from "@/components/PriceBlock";
 import { WishlistButton } from "@/components/WishlistButton";
 import { useCurrency } from "@/lib/currency-context";
-import { getPriceInCurrency } from "@/lib/currency-utils";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { getCustomerUnitPrice } from "@/lib/customer-pricing";
 
 export type ProductCardProduct = {
   id: string;
@@ -21,6 +20,7 @@ export type ProductCardProduct = {
   createdAt?: string;
   images?: Array<{ url: string; isPrimary?: boolean }>; // from API
   vendorId?: string | null;
+  vendor?: { id?: string | null } | null;
 };
 
 function pickStockImage(key: string) {
@@ -36,7 +36,7 @@ export function ProductCard({
   product,
   className,
   onAddedToCart,
-  enableImageSwipe,
+  enableImageSwipe = true,
 }: {
   langPrefix: string;
   product: ProductCardProduct;
@@ -45,11 +45,13 @@ export function ProductCard({
   enableImageSwipe?: boolean;
 }) {
   const [busy, setBusy] = React.useState(false);
+  const [inCart, setInCart] = React.useState(false);
   const { currency: userCurrency } = useCurrency();
-  const imgs = Array.isArray(product.images) ? product.images : [];
   const fallback = pickStockImage(product.slug || product.id);
+  const [isHovering, setIsHovering] = React.useState(false);
 
   const orderedImages = React.useMemo(() => {
+    const imgs = Array.isArray(product.images) ? product.images : [];
     const urls = imgs
       .map((i) => (typeof i?.url === "string" ? i.url.trim() : ""))
       .filter(Boolean);
@@ -70,7 +72,7 @@ export function ProductCard({
     }
     if (!out.length) out.push(fallback);
     return out;
-  }, [imgs, fallback]);
+  }, [product.images, fallback]);
 
   const canSwipe = Boolean(enableImageSwipe && orderedImages.length > 1);
   const [imgIndex, setImgIndex] = React.useState(0);
@@ -82,7 +84,40 @@ export function ProductCard({
     setImgIndex(0);
   }, [product.id]);
 
-  const currentImage = orderedImages[imgIndex] ?? orderedImages[0] ?? fallback;
+  React.useEffect(() => {
+    if (!canSwipe || isHovering) return;
+    const timer = window.setInterval(() => {
+      setImgIndex((prev) => (prev + 1) % orderedImages.length);
+    }, 2600);
+    return () => window.clearInterval(timer);
+  }, [canSwipe, isHovering, orderedImages.length]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    async function syncCartState() {
+      try {
+        const res = await fetch("/api/cart", { credentials: "include", cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled || !res.ok) return;
+        const items = data?.order?.items;
+        if (!Array.isArray(items)) return;
+        const found = items.some(
+          (it: { product?: { id?: string }; productId?: string }) =>
+            it?.product?.id === product.id || it?.productId === product.id,
+        );
+        setInCart(found);
+      } catch {
+        // ignore cart state sync errors
+      }
+    }
+    void syncCartState();
+    const onCart = () => void syncCartState();
+    window.addEventListener("bohosaaz-cart", onCart);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("bohosaaz-cart", onCart);
+    };
+  }, [product.id]);
 
   function nextImage(dir: 1 | -1) {
     setImgIndex((prev) => {
@@ -105,23 +140,43 @@ export function ProductCard({
   const displaySale = product.salePrice ?? null;
   const displayMrp = product.mrp ?? null;
 
-  // Convert prices based on user's selected currency
-  const convertedPrice = getPriceInCurrency(displayPrice, displayCurrency, userCurrency);
-  const convertedSale = displaySale ? getPriceInCurrency(displaySale, displayCurrency, userCurrency) : null;
-  const convertedMrp = displayMrp ? getPriceInCurrency(displayMrp, displayCurrency, userCurrency) : null;
+  const hasVendor = Boolean(product.vendorId ?? product.vendor?.id);
+  const displayConvertedPrice = getCustomerUnitPrice({
+    basePrice: displayPrice,
+    productCurrency: displayCurrency,
+    displayCurrency: userCurrency,
+    isVendorProduct: hasVendor,
+  });
+  const displayConvertedSale = displaySale
+    ? getCustomerUnitPrice({
+        basePrice: displaySale,
+        productCurrency: displayCurrency,
+        displayCurrency: userCurrency,
+        isVendorProduct: hasVendor,
+      })
+    : null;
+  const displayConvertedMrp = displayMrp
+    ? getCustomerUnitPrice({
+        basePrice: displayMrp,
+        productCurrency: displayCurrency,
+        displayCurrency: userCurrency,
+        isVendorProduct: hasVendor,
+      })
+    : null;
 
-  // Vendor products should show +10% display markup (UI-only).
-  const hasVendor = Boolean((product as any).vendorId);
-  const displayConvertedPrice = hasVendor ? Number((convertedPrice * 1.1).toFixed(2)) : convertedPrice;
-  const displayConvertedSale = convertedSale ? (hasVendor ? Number((convertedSale * 1.1).toFixed(2)) : convertedSale) : null;
-  const displayConvertedMrp = convertedMrp ? (hasVendor ? Number((convertedMrp * 1.1).toFixed(2)) : convertedMrp) : null;
+  function redirectToLogin() {
+    const next = `${window.location.pathname}${window.location.search}`;
+    window.location.href = `${langPrefix}/login?next=${encodeURIComponent(next)}`;
+  }
 
   return (
     <div
       className={cn(
-        "group h-full transform-gpu rounded-(--radius) border border-border bg-card overflow-hidden transition will-change-transform hover:-translate-y-0.5 hover:shadow-premium flex flex-col",
+        "group flex h-full transform-gpu flex-col overflow-hidden rounded-[22px] bg-card/92 shadow-[0_14px_42px_rgba(47,38,34,0.08)] ring-1 ring-transparent backdrop-blur-xl transition duration-500 ease-out will-change-transform hover:-translate-y-1 hover:scale-[1.015] hover:ring-primary/15 hover:shadow-premium sm:rounded-[32px] sm:hover:-translate-y-1.5",
         className,
       )}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
     >
       <div className="relative">
         <Link
@@ -138,7 +193,7 @@ export function ProductCard({
           }}
         >
           <div
-            className="aspect-4/3 bg-muted overflow-hidden relative"
+            className="relative aspect-square overflow-hidden bg-linear-to-br from-muted/70 via-card to-primary/10 sm:aspect-4/3"
             style={canSwipe ? ({ touchAction: "pan-y" } as React.CSSProperties) : undefined}
             onPointerDown={(e) => {
               if (!canSwipe) return;
@@ -159,69 +214,53 @@ export function ProductCard({
               startX.current = null;
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={currentImage}
-              alt={product.title}
-              className={cn(
-                "h-full w-full object-cover transform-gpu transition-transform duration-300 ease-out will-change-transform group-hover:scale-[1.02]",
-                canSwipe ? "select-none" : "",
-              )}
-              draggable={false}
-            />
+            {orderedImages.map((imageUrl, index) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={`${imageUrl}-${index}`}
+                src={imageUrl}
+                alt={product.title}
+                className={cn(
+                  "absolute inset-0 h-full w-full transform-gpu object-cover transition-all duration-700 ease-out will-change-transform",
+                  index === imgIndex ? "opacity-100 scale-100" : "opacity-0 scale-[1.03]",
+                  "group-hover:scale-[1.08] group-hover:rotate-[0.25deg]",
+                  canSwipe ? "select-none" : "",
+                )}
+                draggable={false}
+              />
+            ))}
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-background/20 via-transparent to-white/15 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 translate-y-4 bg-linear-to-t from-primary/12 to-transparent opacity-0 blur-sm transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100" />
 
             {canSwipe ? (
               <>
-                <button
-                  type="button"
-                  aria-label="Previous image"
-                  className={cn(
-                    "absolute left-2 top-1/2 -translate-y-1/2",
-                    "h-9 w-9 grid place-items-center rounded-full border border-border bg-background/70 backdrop-blur",
-                    "opacity-0 group-hover:opacity-100 transition-opacity",
-                  )}
-                  onClick={(ev) => {
-                    ev.preventDefault();
-                    ev.stopPropagation();
-                    nextImage(-1);
-                  }}
-                >
-                  <ChevronLeft className="h-5 w-5" aria-hidden />
-                </button>
-
-                <button
-                  type="button"
-                  aria-label="Next image"
-                  className={cn(
-                    "absolute right-2 top-1/2 -translate-y-1/2",
-                    "h-9 w-9 grid place-items-center rounded-full border border-border bg-background/70 backdrop-blur",
-                    "opacity-0 group-hover:opacity-100 transition-opacity",
-                  )}
-                  onClick={(ev) => {
-                    ev.preventDefault();
-                    ev.stopPropagation();
-                    nextImage(1);
-                  }}
-                >
-                  <ChevronRight className="h-5 w-5" aria-hidden />
-                </button>
-
-                <div className="absolute bottom-2 right-2 rounded-full border border-border bg-background/70 backdrop-blur px-2 py-1 text-[11px] text-muted-foreground">
+                <div className="absolute bottom-2 right-2 rounded-full border border-border bg-background/80 backdrop-blur px-2 py-1 text-[11px] text-muted-foreground shadow-sm">
                   {imgIndex + 1}/{orderedImages.length}
+                </div>
+                <div className="absolute bottom-2 left-2 flex gap-1">
+                  {orderedImages.slice(0, 5).map((_, dotIndex) => (
+                    <span
+                      key={dotIndex}
+                      className={cn(
+                        "h-1.5 rounded-full bg-background/80 shadow-sm transition-all duration-500",
+                        dotIndex === imgIndex ? "w-5 bg-primary" : "w-1.5",
+                      )}
+                    />
+                  ))}
                 </div>
               </>
             ) : null}
           </div>
 
           {isNew ? (
-            <div className="absolute left-3 top-3 rounded-full bg-card/90 border border-border px-2.5 py-1 text-[11px] tracking-wide">
+            <div className="absolute left-2 top-2 rounded-full border border-primary/20 bg-card/90 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-primary shadow-sm backdrop-blur sm:left-3 sm:top-3 sm:px-2.5 sm:py-1 sm:text-[11px]">
               New
             </div>
           ) : null}
 
-          <div className="absolute inset-x-0 top-0 p-3 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute inset-x-0 top-0 hidden p-3 justify-end opacity-0 transition-opacity group-hover:opacity-100 sm:flex">
             <div
-              className="rounded-full bg-primary text-primary-foreground h-10 w-10 grid place-items-center shadow-premium"
+              className="rounded-full bg-primary text-primary-foreground h-10 w-10 grid place-items-center shadow-premium transition group-hover:scale-105"
               aria-hidden
             >
               →
@@ -230,17 +269,17 @@ export function ProductCard({
         </Link>
       </div>
 
-      <div className="p-4 flex flex-1 flex-col">
-        <div className="h-11 overflow-hidden">
+      <div className="flex flex-1 flex-col p-3 sm:p-5">
+        <div className="h-10 overflow-hidden sm:h-11">
           <Link
             href={`${langPrefix}/p/${product.slug}`}
-            className="font-heading text-[15px] leading-snug text-foreground hover:underline underline-offset-4 line-clamp-2"
+            className="font-heading text-[14px] leading-snug text-foreground transition line-clamp-2 hover:text-primary sm:text-[15px]"
           >
             {product.title}
           </Link>
         </div>
 
-        <div className="mt-2 min-h-11 flex items-end">
+        <div className="mt-1.5 min-h-10 flex items-end sm:mt-2 sm:min-h-11">
           <div>
             <PriceBlock
               price={displayConvertedPrice}
@@ -250,16 +289,17 @@ export function ProductCard({
               size="sm"
             />
             {hasVendor ? (
-              <div className="mt-1 text-xs text-muted-foreground">Displayed prices include a vendor markup (+10%)</div>
+              <div className="mt-1 text-xs text-muted-foreground"></div>
             ) : null}
           </div>
         </div>
 
-        <div className="mt-auto pt-4 flex items-center gap-2">
+        <div className="mt-auto flex items-center gap-2 pt-3 sm:pt-5">
           <Button
-            variant="soft"
-            className="flex-1 uppercase tracking-wide"
-            disabled={busy}
+            variant={inCart ? "outline" : "soft"}
+            size="sm"
+            className="min-h-10 flex-1 rounded-2xl px-2 text-[11px] font-semibold normal-case tracking-wide transition-transform duration-300 hover:-translate-y-px sm:px-3 sm:text-xs"
+            disabled={busy || inCart}
             onClick={async () => {
               setBusy(true);
               try {
@@ -270,15 +310,21 @@ export function ProductCard({
                   body: JSON.stringify({ productId: product.id, qty: 1 }),
                 });
                 const data = await res.json().catch(() => ({}));
+                if (res.status === 401) {
+                  redirectToLogin();
+                  return;
+                }
                 if (!res.ok) throw new Error(data?.error || "Add to cart failed");
+                setInCart(true);
                 window.dispatchEvent(new Event("bohosaaz-cart"));
+                localStorage.setItem("bohosaaz_cart_ts", String(Date.now()));
                 onAddedToCart?.();
               } finally {
                 setBusy(false);
               }
             }}
           >
-            {busy ? "ADDING..." : "ADD TO CART"}
+            {busy ? "Adding..." : inCart ? "Added" : "Add to cart"}
           </Button>
 
           <WishlistButton productId={product.id} langPrefix={langPrefix} />

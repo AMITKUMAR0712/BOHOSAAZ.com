@@ -7,6 +7,7 @@ type BrandRow = {
   name: string;
   slug: string;
   logoUrl: string | null;
+  brandType: "POPULAR" | "LUXURY";
   isActive: boolean;
   sortOrder: number;
   createdAt: string;
@@ -17,6 +18,7 @@ type BrandPayload = {
   name: string;
   slug?: string;
   logoUrl: string | null;
+  brandType: "POPULAR" | "LUXURY";
   isActive: boolean;
   sortOrder: number;
 };
@@ -35,6 +37,7 @@ export default function BrandsClient({
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+  const [brandType, setBrandType] = useState<"POPULAR" | "LUXURY">("POPULAR");
   const [sortOrder, setSortOrder] = useState("0");
   const [isActive, setIsActive] = useState(true);
 
@@ -45,6 +48,7 @@ export default function BrandsClient({
     setName("");
     setSlug("");
     setLogoUrl("");
+    setBrandType("POPULAR");
     setSortOrder("0");
     setIsActive(true);
   }
@@ -87,6 +91,7 @@ export default function BrandsClient({
     setName(b.name);
     setSlug(b.slug);
     setLogoUrl(b.logoUrl ?? "");
+    setBrandType(b.brandType);
     setSortOrder(String(b.sortOrder));
     setIsActive(b.isActive);
   }
@@ -102,6 +107,7 @@ export default function BrandsClient({
     const payload: BrandPayload = {
       name: name.trim(),
       logoUrl: logoUrl.trim() ? logoUrl.trim() : null,
+      brandType,
       isActive,
       sortOrder: nSort,
     };
@@ -202,6 +208,18 @@ export default function BrandsClient({
           </label>
 
           <label className="flex flex-col gap-1">
+            <span className="text-gray-600">Brand section</span>
+            <select
+              className="rounded-lg border px-3 py-2"
+              value={brandType}
+              onChange={(e) => setBrandType(e.target.value === "LUXURY" ? "LUXURY" : "POPULAR")}
+            >
+              <option value="POPULAR">Popular Brand</option>
+              <option value="LUXURY">Luxury Brand</option>
+            </select>
+          </label>
+
+          <label className="flex flex-col gap-1">
             <span className="text-gray-600">Upload logo</span>
             <input
               type="file"
@@ -253,6 +271,7 @@ export default function BrandsClient({
             <tr>
               <th className="px-3 py-2 text-left">Brand</th>
               <th className="px-3 py-2 text-left">Slug</th>
+              <th className="px-3 py-2 text-left">Section</th>
               <th className="px-3 py-2 text-left">Sort</th>
               <th className="px-3 py-2 text-left">Active</th>
               <th className="px-3 py-2 text-left">Actions</th>
@@ -278,6 +297,11 @@ export default function BrandsClient({
                   </div>
                 </td>
                 <td className="px-3 py-2 text-gray-600">{b.slug}</td>
+                <td className="px-3 py-2">
+                  <span className="rounded-full border px-2 py-1 text-xs">
+                    {b.brandType === "LUXURY" ? "Luxury" : "Popular"}
+                  </span>
+                </td>
                 <td className="px-3 py-2">{b.sortOrder}</td>
                 <td className="px-3 py-2">
                   <button className="text-sm underline" onClick={() => toggleActive(b.id, !b.isActive)}>
@@ -299,7 +323,7 @@ export default function BrandsClient({
 
             {!sorted.length ? (
               <tr>
-                <td className="px-3 py-6 text-gray-500" colSpan={5}>
+                <td className="px-3 py-6 text-gray-500" colSpan={6}>
                   No brands yet.
                 </td>
               </tr>

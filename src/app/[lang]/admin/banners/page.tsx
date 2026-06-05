@@ -21,6 +21,7 @@ export default async function AdminBannersPage({
       highlightText: true,
       subtitle: true,
       imageUrl: true,
+      videoUrl: true,
       ctaText: true,
       ctaHref: true,
       isActive: true,

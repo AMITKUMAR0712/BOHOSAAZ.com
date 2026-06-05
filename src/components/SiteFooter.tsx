@@ -1,137 +1,208 @@
 "use client";
 
 import { isLocale } from "@/lib/i18n";
-import { Accordion, AccordionItem } from "@/components/ui/accordion";
-import { AdSlot } from "@/components/ads/AdSlot";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function SiteFooter() {
   const pathname = usePathname();
   const seg = pathname.split("/").filter(Boolean)[0];
   const lang = seg && isLocale(seg) ? seg : "en";
   const lp = `/${lang}`;
-
-  const features = [
-    { title: "Worldwide", text: "Free shipping in India", icon: "✦" },
-    { title: "Craft First", text: "Handmade • Small batches", icon: "✶" },
-    { title: "Since 2009", text: "Trusted by thousands", icon: "✷" },
+  const trackingSteps = [
+    { label: "Picked", icon: "🎁" },
+    { label: "Packed", icon: "📦" },
+    { label: "Secured", icon: "🛡" },
+    { label: "Out", icon: "🚚" },
+    { label: "Delivered", icon: "🏠" },
   ];
+  const [activeStep, setActiveStep] = useState(1);
+  const [liveStats, setLiveStats] = useState({
+    successRate: 98.4,
+    delivered: 12500,
+    etaHours: 47,
+  });
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveStep((step) => (step + 1) % trackingSteps.length);
+      setLiveStats((stats) => ({
+        successRate: Math.min(99.2, Number((stats.successRate + 0.1).toFixed(1))),
+        delivered: stats.delivered + 3,
+        etaHours: stats.etaHours === 43 ? 47 : stats.etaHours - 1,
+      }));
+    }, 2200);
+
+    return () => window.clearInterval(timer);
+  }, [trackingSteps.length]);
+
+  const formatNumber = (value: number) =>
+    value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
   return (
-    <footer className="mt-14 border-t border-border bg-background relative overflow-hidden">
-      {/* ✅ Premium background layers */}
-      <div className="absolute inset-0 -z-10 bg-linear-to-b from-muted/20 via-background to-background pointer-events-none" />
-      <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-primary/15 blur-3xl animate-[pulse_7s_ease-in-out_infinite] motion-reduce:animate-none pointer-events-none" />
-      <div className="absolute -bottom-32 -right-24 h-72 w-72 rounded-full bg-muted/50 blur-3xl animate-[pulse_9s_ease-in-out_infinite] motion-reduce:animate-none pointer-events-none" />
-      <div className="absolute inset-0 opacity-[0.05] bg-[radial-gradient(circle_at_top,black_1px,transparent_1px)] bg-size-[22px_22px] pointer-events-none" />
-
-      <AdSlot placement="FOOTER_STRIP" className="mx-auto max-w-6xl px-4 py-6" />
-
-      {/* ✅ CTA STRIP */}
-      <div className="border-b border-border bg-background/60 backdrop-blur-xl">
-        <div className="mx-auto max-w-6xl px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-3">
-          <div>
-            <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-              Exclusive Drops
-            </div>
-            <div className="font-heading text-xl md:text-2xl tracking-tight text-foreground">
-              Get premium handcrafted deals every week ✨
-            </div>
-          </div>
-
-          <Link
-            href={`${lp}?sort=offer`}
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-(--shadowBtn) hover:shadow-(--shadowBtnHover) hover:brightness-95 hover:scale-[1.02] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            Shop Offers →
-          </Link>
-        </div>
-      </div>
-
-      {/* ✅ Feature strip */}
-      <div className="border-b border-border">
-        <div className="mx-auto max-w-6xl px-4 py-10">
-          <div className="grid gap-6 md:grid-cols-3">
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className="group rounded-[28px] border border-border bg-card/80 backdrop-blur-xl p-6 shadow-(--shadowCardSoft) hover:shadow-premium hover:-translate-y-1 transition"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="h-12 w-12 rounded-full border border-border bg-background/70 grid place-items-center text-primary shadow-sm group-hover:scale-110 transition">
-                    <span className="text-lg" aria-hidden>
-                      {f.icon}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="font-heading text-lg text-foreground">
-                      {f.title}
-                    </div>
-                    <div className="mt-1 text-sm text-muted-foreground">
-                      {f.text}
-                    </div>
-                  </div>
-                </div>
+    <footer className="relative mt-10 overflow-hidden border-t border-primary/20 bg-linear-to-b from-card/65 to-background">
+      <div className="h-1 w-full bg-linear-to-r from-transparent via-primary/55 to-transparent" />
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        <div className="relative overflow-hidden rounded-[34px] border border-primary/15 bg-card/55 p-5 ring-1 ring-white/25 md:p-7">
+          <div className="relative grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+            <div className="max-w-2xl">
+              <div className="font-heading text-2xl tracking-tight text-foreground md:text-3xl">
+                Find <span className="text-primary">meaningful gifts</span> for every celebration.
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
+              <p className="mt-2 max-w-xl text-xs leading-relaxed text-foreground/74 md:text-sm">
+                <span className="font-semibold text-primary">Curated picks</span>, artisan craftsmanship, and{" "}
+                <span className="font-semibold text-primary">beautiful packaging</span> for moments that deserve more.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2.5">
+                <Link
+                  href={`${lp}/shop`}
+                  className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-5 text-xs font-semibold text-primary-foreground shadow-(--shadowBtn) hover:shadow-(--shadowBtnHover) hover:brightness-95 hover:scale-[1.02] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  Start Gifting →
+                </Link>
+                <Link
+                  href={`${lp}/categories`}
+                  className="inline-flex h-10 items-center justify-center rounded-xl border border-primary/20 bg-background/70 px-5 text-xs font-semibold text-foreground shadow-sm transition hover:border-primary/35 hover:bg-muted/35"
+                >
+                  Explore Categories
+                </Link>
+              </div>
+            </div>
 
-      {/* ✅ Main Footer Content */}
-      <div className="mx-auto max-w-6xl px-4 py-12">
-        <div className="grid gap-12 lg:grid-cols-12">
+            <div className="relative overflow-hidden rounded-[30px] border border-primary/22 bg-linear-to-br from-card/92 via-background/78 to-primary/14 p-4 shadow-[0_18px_52px_rgba(135,56,20,0.16)] ring-1 ring-white/35 backdrop-blur-xl">
+              <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary/14 blur-2xl" />
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.24em] text-primary/80">Safe & secure</div>
+                  <div className="font-heading text-xl tracking-tight text-foreground drop-shadow-sm">Delivered with care</div>
+                </div>
+                <span className="rounded-full border border-primary/15 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
+                  Protected
+                </span>
+              </div>
+
+              <div className="footer-safe-scene relative mt-4 overflow-hidden rounded-[24px] border border-primary/14 bg-background/62 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_10px_28px_rgba(135,56,20,0.10)]">
+                <div className="flex items-center justify-between gap-2">
+                  {trackingSteps.map((step, index) => {
+                    const isActive = index === activeStep;
+                    const isDone = index < activeStep;
+
+                    return (
+                      <div key={step.label} className="relative z-10 flex min-w-0 flex-1 flex-col items-center gap-1">
+                        <div
+                          className={
+                            "grid h-8 w-8 place-items-center rounded-full text-sm shadow-sm transition duration-500 " +
+                            (isActive
+                              ? "scale-110 bg-primary text-primary-foreground shadow-(--shadowBtn)"
+                              : isDone
+                                ? "bg-primary/18 text-primary"
+                                : "bg-background/70 text-foreground/55")
+                          }
+                        >
+                          {step.icon}
+                        </div>
+                        <span
+                          className={
+                            "truncate text-[10px] font-semibold transition " +
+                            (isActive || isDone ? "text-primary" : "text-muted-foreground")
+                          }
+                        >
+                          {step.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  <div className="absolute left-7 right-7 top-7 h-1 rounded-full bg-primary/10" />
+                  <div
+                    className="absolute left-7 top-7 h-1 rounded-full bg-primary transition-all duration-700"
+                    style={{
+                      width: `${(activeStep / (trackingSteps.length - 1)) * 100}%`,
+                      maxWidth: "calc(100% - 3.5rem)",
+                    }}
+                  />
+                </div>
+                <div className="mt-3 grid gap-1.5 text-[11px] font-medium text-foreground/85 sm:grid-cols-3">
+                  <span className="rounded-lg border border-primary/10 bg-background/70 px-2 py-1">
+                    <span className="font-bold text-primary">{liveStats.successRate}%</span> success rate
+                  </span>
+                  <span className="rounded-lg border border-primary/10 bg-background/70 px-2 py-1">
+                    <span className="font-bold text-primary">{formatNumber(liveStats.delivered)}+</span> delivered
+                  </span>
+                  <span className="rounded-lg border border-primary/10 bg-background/70 px-2 py-1">
+                    <span className="font-bold text-primary">{Math.ceil(liveStats.etaHours / 24)} days</span> delivery
+                  </span>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-[11px] font-semibold text-primary">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/55" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                  </span>
+                  Live secured dispatch updates
+                </div>
+                <Link
+                  href={`${lp}/account/orders`}
+                  className="mt-3 inline-flex h-8 items-center justify-center rounded-lg border border-primary/15 bg-background/65 px-3 text-[11px] font-semibold text-primary transition hover:bg-primary hover:text-primary-foreground"
+                >
+                  Track Package
+                </Link>
+              </div>
+            </div>
+          </div>
+          {/* ✅ Main Footer Content */}
+          <div className="relative mt-7 pt-6">
+          <div className="relative grid gap-8 lg:grid-cols-12">
           {/* Left */}
           <div className="lg:col-span-4">
             <Link href={lp} className="flex items-center gap-3 group">
-              <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl border border-border bg-card grid place-items-center shadow-sm transition duration-300 ease-out group-hover:scale-105 group-hover:shadow-md">
+              <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-full border-2 border-primary/25 bg-card shadow-[0_12px_34px_rgba(135,56,20,0.20),0_0_0_5px_rgba(184,134,50,0.09)] transition duration-300 ease-out group-hover:scale-105 group-hover:border-primary/45 group-hover:shadow-premium">
                 <Image
-                  src="/logo copy.png"
+                  src="/logo copy.jpeg"
                   alt="Bohosaaz"
                   width={80}
                   height={80}
-                  className="h-12 w-12 sm:h-14 sm:w-14 object-contain"
+                  className="h-10 w-10 rounded-full object-contain"
                 />
               </div>
               <div>
-                <div className="font-heading text-2xl tracking-tight group-hover:text-primary transition">
+                <div className="font-heading text-xl tracking-tight text-foreground drop-shadow-sm group-hover:text-primary transition">
                   Bohosaaz
                 </div>
-                <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                  Handmade marketplace
+                <div className="text-xs uppercase tracking-[0.18em] text-primary/80">
+                  Art of meaningful gifting
                 </div>
               </div>
             </Link>
 
-            <p className="mt-4 text-sm text-muted-foreground max-w-sm leading-relaxed">
-              A multi-vendor marketplace for authentic handcrafted goods — curated
-              for premium taste, crafted to last.
+            <p className="mt-2 text-xs text-foreground/72 max-w-sm leading-relaxed">
+              Bohosaaz brings together <span className="font-semibold text-primary">thoughtful gifts</span>,{" "}
+              <span className="font-semibold text-primary">handcrafted keepsakes</span>, and artisan-made pieces
+              curated for birthdays, weddings, festivals, and the people who matter most.
             </p>
           </div>
 
           {/* Right */}
           <div className="lg:col-span-8">
-            <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {/* Pages */}
               <FooterCol title="Pages">
                 <FooterLink currentPathname={pathname} href={lp} label="Home" />
-                <FooterLink currentPathname={pathname} href={`${lp}/about`} label="About" />
-                <FooterLink currentPathname={pathname} href={`${lp}/contact`} label="Contact" />
-                <FooterLink currentPathname={pathname} href={`${lp}/latest`} label="Latest" />
-                <FooterLink currentPathname={pathname} href={`${lp}/offers`} label="Offers" />
-                <FooterLink currentPathname={pathname} href={`${lp}/blogs`} label="Blog" />
+                <FooterLink currentPathname={pathname} href={`${lp}/shop`} label="Shop Gifts" />
+                <FooterLink currentPathname={pathname} href={`${lp}/categories`} label="Categories" />
+                <FooterLink currentPathname={pathname} href={`${lp}/brands/popular`} label="Popular Brands" />
+                <FooterLink currentPathname={pathname} href={`${lp}/brands/luxury`} label="Luxury Brands" />
+                <FooterLink currentPathname={pathname} href={`${lp}/about`} label="About Bohosaaz" />
               </FooterCol>
 
               {/* Account */}
               <FooterCol title="Account">
-                <FooterLink currentPathname={pathname} href={`${lp}/account`} label="My account" />
-                <FooterLink currentPathname={pathname} href={`${lp}/account/orders`} label="Orders" />
-                <FooterLink currentPathname={pathname} href={`${lp}/seller`} label="Vendor login / apply" />
-                <FooterLink currentPathname={pathname} href={`${lp}/terms`} label="Terms" />
-                <FooterLink currentPathname={pathname} href={`${lp}/privacy`} label="Privacy" />
-                <FooterLink currentPathname={pathname} href={`${lp}/return`} label="Return & Policy" />
+                <FooterLink currentPathname={pathname} href={`${lp}/account`} label="My Account" />
+                <FooterLink currentPathname={pathname} href={`${lp}/account/orders`} label="Track Orders" />
+                <FooterLink currentPathname={pathname} href={`${lp}/account/wishlist`} label="Wishlist" />
+                <FooterLink currentPathname={pathname} href={`${lp}/seller`} label="Sell on Bohosaaz" />
+                <FooterLink currentPathname={pathname} href={`${lp}/contact`} label="Customer Support" />
+                <FooterLink currentPathname={pathname} href={`${lp}/faq`} label="Help & FAQ" />
               </FooterCol>
 
               {/* Social */}
@@ -166,30 +237,26 @@ export default function SiteFooter() {
               </FooterCol>
 
               {/* FAQ */}
-              <div>
-                <div className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">
-                  FAQ
-                </div>
-                <div className="mt-4 rounded-3xl border border-border bg-card/80 backdrop-blur-xl shadow-sm overflow-hidden">
-                  <Accordion>
-                    <AccordionItem title="Do you ship internationally?">
-                      Yes — availability varies by destination. Free shipping is available in India.
-                    </AccordionItem>
-                    <AccordionItem title="What is your return policy?">
-                      Returns are accepted on eligible items as per our policy. Contact support for help.
-                    </AccordionItem>
-                    <AccordionItem title="How do I track my order?">
-                      You can view order status in your account under Orders.
-                    </AccordionItem>
-                  </Accordion>
-                </div>
-              </div>
+              <FooterCol title="FAQ">
+                <Link
+                  href={`${lp}/faq`}
+                  className="group block rounded-2xl border border-primary/15 bg-linear-to-br from-primary/8 via-card/75 to-background/70 p-2.5 transition hover:-translate-y-1 hover:border-primary/30 hover:bg-card/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <div className="font-heading text-sm text-foreground">
+                    Need help <span className="text-primary">choosing</span> or tracking a gift?
+                  </div>
+                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                    Open our FAQ for shipping, returns, gifting and order support.
+                  </p>
+                  <div className="mt-2 text-xs font-semibold text-primary">View FAQ →</div>
+                </Link>
+              </FooterCol>
             </div>
           </div>
-        </div>
+          </div>
 
         {/* ✅ Bottom bar */}
-        <div className="mt-12 border-t border-border pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-muted-foreground">
+        <div className="relative mt-4 pt-2 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
           <div>
             © {new Date().getFullYear()}{" "}
             <span className="font-semibold text-foreground">Bohosaaz</span>. All
@@ -204,10 +271,15 @@ export default function SiteFooter() {
               Privacy
             </Link>
             <Link href={`${lp}/return`} className="hover:text-foreground transition underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-              Return & Policy
+              Returns
+            </Link>
+            <Link href={`${lp}/faq`} className="hover:text-foreground transition underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+              FAQ
             </Link>
           </div>
         </div>
+      </div>
+      </div>
       </div>
     </footer>
   );
@@ -223,10 +295,10 @@ function FooterCol({
 }) {
   return (
     <div>
-      <div className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">
+      <div className="text-[10px] font-semibold tracking-[0.2em] uppercase text-primary/80">
         {title}
       </div>
-      <div className="mt-4 grid gap-2 text-sm">{children}</div>
+      <div className="mt-2.5 grid gap-1.5 text-xs">{children}</div>
     </div>
   );
 }
@@ -245,13 +317,13 @@ function FooterLink({
     <Link
       className={
         (isActive
-          ? "text-foreground font-semibold"
-          : "text-muted-foreground hover:text-foreground") +
-        " transition flex items-center gap-2 w-full underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          ? "text-primary font-semibold"
+          : "text-foreground/72 hover:text-primary") +
+        " transition flex items-center gap-1.5 w-full rounded-lg px-1.5 py-0.5 underline-offset-4 hover:bg-primary/6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       }
       href={href}
     >
-      <span className={(isActive ? "opacity-100" : "opacity-80") + " h-2 w-2 rounded-full bg-primary"} />
+      <span className={(isActive ? "scale-125 opacity-100" : "opacity-70") + " h-1.5 w-1.5 rounded-full bg-primary transition"} />
       {label}
     </Link>
   );

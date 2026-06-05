@@ -28,7 +28,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           title: "Catalog",
           items: [
             { href: "/admin/products", label: "All Products" },
-            { href: "/admin/products/new", label: "Add Product", match: "exact" },
+            { href: "/admin/products/new", label: "Create Product", match: "exact" },
             { href: "/admin/categories", label: "Categories" },
           ],
         },
@@ -49,13 +49,6 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             { href: "/admin/ads", label: "Ads" },
             { href: "/admin/coupons", label: "Coupons" },
             { href: "/admin/blog", label: "Blog Content" },
-          ],
-        },
-        {
-          title: "Commission System",
-          items: [
-            { href: "/admin/commission/plans", label: "Commission Plans" },
-            { href: "/admin/commission/history", label: "Commission History" },
           ],
         },
         {

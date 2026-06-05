@@ -22,13 +22,13 @@ export function Sidebar({
     <>
       {/* Mobile trigger (shown by layouts) */}
       <Drawer open={open} onOpenChange={setOpen} side="left" title={title}>
-        <div className="space-y-6">
+        <div className="space-y-5">
           <div className="space-y-6">{children}</div>
           {footer ? <div className="border-t border-border pt-4">{footer}</div> : null}
         </div>
       </Drawer>
 
-      <aside className={cn("hidden md:flex md:w-72 md:flex-col md:border-r md:border-border md:bg-card", className)}>
+      <aside className={cn("hidden md:flex md:w-72 md:flex-col md:border-r md:border-border md:bg-card/90 md:backdrop-blur-xl", className)}>
         <div className="px-5 py-4 border-b border-border">
           <div className="font-heading text-lg tracking-tight">{title}</div>
         </div>
@@ -71,7 +71,7 @@ export function SidebarToggleButton({ className }: { className?: string }) {
     <Button
       type="button"
       variant="ghost"
-      className={className}
+      className={cn("rounded-xl px-3", className)}
       onClick={() => window.dispatchEvent(new Event("bohosaaz:sidebar-toggle"))}
     >
       Menu

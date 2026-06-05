@@ -5,7 +5,7 @@ import ProductGalleryClient from "./ProductGalleryClient";
 import { RatingRow } from "@/components/ui/rating-row";
 import { Accordion, AccordionItem } from "@/components/ui/accordion";
 import { headers } from "next/headers";
-import { formatMoney } from "@/lib/money";
+import { formatPriceInCurrency } from "@/lib/currency-utils";
 
 function pickStockImage(key: string) {
   const s = key || "x";
@@ -30,6 +30,7 @@ export default async function ProductDetailPage({
     ? `${proto}://${host}`
     : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const res = await fetch(`${origin}/api/products/${slug}`, { cache: "no-store" });
+  const userCurrency = h.get("cookie")?.includes("bohosaaz_currency=USD") ? "USD" : "INR";
 
   if (!res.ok) {
     return (
@@ -47,7 +48,7 @@ export default async function ProductDetailPage({
 
   const money = (value: number | null | undefined) => {
     if (value === null || value === undefined) return "—";
-    return formatMoney(p.currency === "USD" ? "USD" : "INR", Number(value));
+    return formatPriceInCurrency(Number(value), p.currency === "USD" ? "USD" : "INR", userCurrency);
   };
 
   const text = (value: unknown) => {
@@ -104,6 +105,7 @@ export default async function ProductDetailPage({
                 stock={Number(p.stock)}
                 variants={Array.isArray(p?.variants) ? p.variants : []}
                 disabled={Number(p.stock) <= 0}
+                isVendorProduct={Boolean(p.vendor)}
               />
             </div>
 

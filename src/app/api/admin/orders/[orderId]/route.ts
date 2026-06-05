@@ -60,7 +60,6 @@ export async function GET(
           id: true,
           status: true,
           subtotal: true,
-          commission: true,
           payout: true,
           vendor: { select: { id: true, shopName: true } },
           createdAt: true,

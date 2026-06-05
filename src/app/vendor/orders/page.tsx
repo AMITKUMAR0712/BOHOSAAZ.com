@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { Modal } from "@/components/ui/modal";
 import ExportDropdown from "@/components/ExportDropdown";
 
 type VendorOrderItem = {
@@ -48,6 +49,9 @@ export default function VendorOrdersPage() {
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
+  const [creatingAwb, setCreatingAwb] = useState<Record<string, boolean>>({});
+  const [awbModalOpen, setAwbModalOpen] = useState(false);
+  const [awbModalItem, setAwbModalItem] = useState<{ itemId: string; productTitle: string } | null>(null);
 
   async function load() {
     setLoading(true);
@@ -67,6 +71,43 @@ export default function VendorOrdersPage() {
   useEffect(() => {
     load();
   }, []);
+
+  async function createDelhiveryAwb(itemId: string) {
+    setMsg(null);
+    setCreatingAwb((prev) => ({ ...prev, [itemId]: true }));
+
+    try {
+      const res = await fetch("/api/couriers/delhivery/create", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Create AWB failed");
+      }
+
+      setMsg(`✅ Delhivery AWB created${data?.trackingNumber ? `: ${data.trackingNumber}` : ""}`);
+      await load();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error creating Delhivery AWB";
+      setMsg(`❌ ${message}`);
+    } finally {
+      setCreatingAwb((prev) => ({ ...prev, [itemId]: false }));
+    }
+  }
+
+  async function confirmCreateDelhiveryAwb() {
+    if (!awbModalItem) return;
+    setAwbModalOpen(false);
+    try {
+      await createDelhiveryAwb(awbModalItem.itemId);
+    } finally {
+      setAwbModalItem(null);
+    }
+  }
 
   const msgTone: "muted" | "success" | "danger" = msg?.startsWith("✅")
     ? "success"
@@ -198,7 +239,7 @@ export default function VendorOrdersPage() {
                             />
                           </div>
 
-                          <div className="mt-2 flex items-center gap-2">
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
                             <Button
                               size="sm"
                               onClick={async () => {
@@ -226,6 +267,20 @@ export default function VendorOrdersPage() {
                             >
                               Save
                             </Button>
+
+                            {!it.trackingNumber && it.status !== "DELIVERED" && it.status !== "CANCELLED" && (
+                              <Button
+                                size="sm"
+                                variant="soft"
+                                disabled={Boolean(creatingAwb[it.id])}
+                                onClick={() => {
+                                  setAwbModalItem({ itemId: it.id, productTitle: it.product.title });
+                                  setAwbModalOpen(true);
+                                }}
+                              >
+                                {creatingAwb[it.id] ? "Creating AWB..." : "Create Delhivery AWB"}
+                              </Button>
+                            )}
 
                             {(it.trackingCourier || it.trackingNumber) && (
                               <div className="text-xs text-muted-foreground">
@@ -261,6 +316,39 @@ export default function VendorOrdersPage() {
           )}
         </CardContent>
       </Card>
+
+      <Modal
+        open={awbModalOpen}
+        onOpenChange={(open) => {
+          setAwbModalOpen(open);
+          if (!open) setAwbModalItem(null);
+        }}
+        title="Confirm Delhivery AWB"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setAwbModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={!awbModalItem || (awbModalItem && Boolean(creatingAwb[awbModalItem.itemId]))}
+              onClick={confirmCreateDelhiveryAwb}
+            >
+              {awbModalItem && creatingAwb[awbModalItem.itemId] ? "Creating..." : "Confirm"}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3 text-sm">
+          <p>Are you sure you want to create a Delhivery AWB for this order item?</p>
+          {awbModalItem ? (
+            <p className="text-muted-foreground">
+              Item: <span className="font-semibold">{awbModalItem.productTitle}</span>
+            </p>
+          ) : null}
+          <p>This action will create the shipment and assign a tracking number to the item.</p>
+        </div>
+      </Modal>
     </div>
   );
 }

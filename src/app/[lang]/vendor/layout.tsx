@@ -21,15 +21,15 @@ export default async function VendorLayout({
   if (user.vendor?.status !== "APPROVED") redirect(`/${lang}/account/vendor-apply`);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-10">
-      <div className="mb-6">
+    <div className="mx-auto w-full max-w-6xl px-4 py-4 md:px-8 md:py-6">
+      <div className="mb-4">
         <div className="text-2xl font-semibold">Vendor Panel</div>
         <div className="mt-1 text-sm text-muted-foreground">
           Manage products and fulfill orders. Customer contact is handled by Admin tickets only.
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-[260px_1fr]">
+      <div className="grid gap-4 md:grid-cols-[260px_1fr]">
         <aside>
           <VendorSidebar lang={lang} />
         </aside>

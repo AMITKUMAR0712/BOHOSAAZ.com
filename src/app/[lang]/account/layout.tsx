@@ -18,20 +18,19 @@ export default async function AccountLayout({
   if (user.role !== "USER") redirect("/403");
 
   const showVendorApply = !user.vendor || user.vendor.status !== "APPROVED";
-  const showVendorStatus = Boolean(user.vendor && user.vendor.status !== "APPROVED");
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-10">
-      <div className="mb-6">
+    <div className="site-container mobile-bottom-safe py-5 md:py-10">
+      <div className="mb-4 md:mb-6">
         <div className="text-2xl font-semibold">My Account</div>
         <div className="mt-1 text-sm text-muted-foreground">
-          Manage orders, returns, profile, and security.
+          Manage orders, returns, profile, and settings.
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-[260px_1fr]">
-        <aside>
-          <AccountSidebar lang={lang} showVendorApply={showVendorApply} showVendorStatus={showVendorStatus} />
+      <div className="grid gap-4 md:grid-cols-[260px_1fr] md:gap-6">
+        <aside className="min-w-0">
+          <AccountSidebar lang={lang} showVendorApply={showVendorApply} />
         </aside>
         <main className="min-w-0">{children}</main>
       </div>

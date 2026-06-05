@@ -35,7 +35,6 @@ export async function GET(req: Request) {
       vendorOrderId: true,
       status: true,
       amountPaise: true,
-      commissionPaise: true,
       createdAt: true,
       settledAt: true,
       vendor: { select: { shopName: true } },
@@ -46,7 +45,6 @@ export async function GET(req: Request) {
   const typed = payouts as Array<
     {
       amountPaise: bigint;
-      commissionPaise: bigint;
       createdAt: Date;
       settledAt: Date | null;
       vendor: { shopName: string };
@@ -63,7 +61,6 @@ export async function GET(req: Request) {
     "vendorOrderStatus",
     "payoutStatus",
     "amount",
-    "commission",
     "createdAt",
     "settledAt",
   ];
@@ -77,7 +74,6 @@ export async function GET(req: Request) {
     vendorOrderStatus: p.vendorOrder.status,
     payoutStatus: String(p.status ?? ""),
     amount: formatInrPaise(p.amountPaise),
-    commission: formatInrPaise(p.commissionPaise),
     createdAt: formatIsoDateTime(p.createdAt),
     settledAt: p.settledAt ? formatIsoDateTime(p.settledAt) : "",
   }));

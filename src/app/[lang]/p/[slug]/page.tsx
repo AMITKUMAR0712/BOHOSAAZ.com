@@ -6,9 +6,7 @@ import { Card } from "@/components/ui/card";
 import { RatingRow } from "@/components/ui/rating-row";
 import { Accordion, AccordionItem } from "@/components/ui/accordion";
 import { headers } from "next/headers";
-import { formatMoney } from "@/lib/money";
 import { formatPriceInCurrency } from "@/lib/currency-utils";
-import { AdSlot } from "@/components/ads/AdSlot";
 
 function pickStockImage(key: string) {
   const s = key || "x";
@@ -126,11 +124,12 @@ export default async function ProductDetailPage({
     images?: ProductImageRow[];
     variants?: ProductVariantRow[];
     tags?: ProductTagRow[];
+    forceCodOnly?: boolean | null;
   };
 
   const money = (value: number | null | undefined) => {
     if (value === null || value === undefined) return "—";
-    return formatMoney(p.currency === "USD" ? "USD" : "INR", Number(value));
+    return formatPriceInCurrency(Number(value), p.currency === "USD" ? "USD" : "INR", userCurrency);
   };
 
   const text = (value: unknown) => {
@@ -173,7 +172,7 @@ export default async function ProductDetailPage({
   }
 
   return (
-    <div className="relative overflow-x-hidden">
+    <div className="relative overflow-x-hidden mobile-bottom-safe">
       {/* ✅ Premium Background */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 h-88 w-2xl sm:h-104 sm:w-3xl rounded-full bg-muted/30 blur-3xl" />
@@ -181,7 +180,7 @@ export default async function ProductDetailPage({
         <div className="absolute -bottom-20 -right-24 h-64 w-64 rounded-full bg-muted/50 blur-3xl" />
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 py-8 md:py-12">
+      <div className="site-container py-5 md:py-12">
         {/* ✅ Top Navigation */}
         <div className="flex items-center justify-between gap-4">
           <Link
@@ -201,12 +200,12 @@ export default async function ProductDetailPage({
         </div>
 
         {/* ✅ Main Layout */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="mt-5 grid grid-cols-1 gap-6 lg:mt-8 lg:grid-cols-2 lg:gap-10">
           {/* ✅ Left Side: Gallery + Premium Fill Area */}
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {/* ✅ Gallery (Fixed blank issue) */}
-            <Card className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_18px_70px_-40px_rgba(0,0,0,0.55)]">
-              <div className="relative min-h-88 sm:min-h-104 md:min-h-128 bg-muted/20">
+            <Card className="overflow-hidden rounded-[24px] border border-border/80 bg-card/85 shadow-premium backdrop-blur-xl md:rounded-[28px]">
+              <div className="relative min-h-[360px] bg-muted/20 sm:min-h-[420px] md:min-h-128">
                 <ProductGalleryClient title={p.title} images={images} />
 
                 {/* ✅ Overlay gradient */}
@@ -215,8 +214,8 @@ export default async function ProductDetailPage({
             </Card>
 
             {/* ✅ NEW: Fill the Blank Space (Highlights + Trust + Support) */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-xl p-5 shadow-sm hover:shadow-md transition">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+              <div className="rounded-[22px] border border-border/80 bg-card/80 p-4 shadow-sm backdrop-blur-xl transition hover:shadow-md md:rounded-[26px] md:p-5">
                 <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
                   Product Highlights
                 </div>
@@ -236,7 +235,7 @@ export default async function ProductDetailPage({
                 </ul>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-xl p-5 shadow-sm hover:shadow-md transition">
+              <div className="rounded-[22px] border border-border/80 bg-card/80 p-4 shadow-sm backdrop-blur-xl transition hover:shadow-md md:rounded-[26px] md:p-5">
                 <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
                   Seller Trust
                 </div>
@@ -260,7 +259,7 @@ export default async function ProductDetailPage({
             </div>
 
             {/* ✅ Contact box */}
-            <div className="rounded-2xl border border-border bg-background/60 p-5 shadow-sm">
+            <div className="rounded-[26px] border border-border/80 bg-background/70 p-5 shadow-sm backdrop-blur">
               <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
                 Need help?
               </div>
@@ -279,7 +278,7 @@ export default async function ProductDetailPage({
 
           {/* ✅ Right Side Purchase Panel */}
           <div className="lg:sticky lg:top-24 h-fit">
-            <div className="rounded-2xl border border-border bg-card p-7 shadow-[0_30px_80px_-55px_rgba(0,0,0,0.65)]">
+            <div className="rounded-[30px] border border-border/80 bg-card/90 p-5 shadow-premium backdrop-blur-xl md:p-7">
               <div className="flex flex-wrap items-center gap-2 text-[11px] tracking-[0.18em] uppercase text-muted-foreground">
                 <span className="rounded-full border border-border bg-muted/40 px-3 py-1">
                   {p?.category?.name || "Uncategorized"}
@@ -323,21 +322,12 @@ export default async function ProductDetailPage({
                     : []
                 }
                 disabled={Number(p.stock) <= 0}
-              />
-
-              <p className="mt-5 text-xs text-muted-foreground leading-relaxed">
-                ⚡ Tip: Add to cart quickly — limited stock items may sell out fast.
-              </p>
-            </div>
-
-            <div className="mt-4">
-              <AdSlot placement="PRODUCT_DETAIL_RIGHT" />
+                forceCodOnly={Boolean(p.forceCodOnly)}
+                isVendorProduct={Boolean(p.vendor)}
+               />
             </div>
           </div>
-        </div>
 
-        {/* ✅ Details Section */}
-        <div className="mt-12 rounded-2xl border border-border bg-card overflow-hidden shadow-[0_16px_60px_-45px_rgba(0,0,0,0.6)]">
           <div className="px-6 py-5 border-b border-border">
             <h2 className="text-lg font-semibold tracking-tight">Product Details</h2>
             <p className="text-sm text-muted-foreground mt-1">
@@ -464,7 +454,7 @@ export default async function ProductDetailPage({
               </Link>
             </div>
 
-            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-6 sm:gap-5 lg:grid-cols-4">
               {similar.map((sp) => {
                 const img =
                   Array.isArray(sp?.images) && sp.images?.[0]?.url

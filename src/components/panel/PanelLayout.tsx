@@ -26,10 +26,10 @@ export function PanelLayout({
   className?: string;
 }) {
   return (
-    <div className={cn("min-h-screen flex flex-col md:flex-row", className)}>
+    <div className={cn("min-h-screen flex flex-col bg-background md:flex-row", className)}>
       <PanelSidebar title={sidebarTitle} nav={nav} />
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 overflow-hidden">
         <PanelTopbar title={topbarTitle} userName={userName} role={role} actions={topbarActions} />
         <PanelShell>{children}</PanelShell>
       </div>

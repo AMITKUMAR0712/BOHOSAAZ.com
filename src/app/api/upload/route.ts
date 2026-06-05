@@ -8,11 +8,15 @@ import crypto from "crypto";
 export const runtime = "nodejs";
 
 const BodySchema = z.object({
-  purpose: z.enum(["products", "brand", "vendor_kyc", "vendor_logo"]).optional(),
+  purpose: z.enum(["products", "brand", "banner", "vendor_kyc", "vendor_logo"]).optional(),
 });
 
 function isAllowedMime(mime: string, purpose: z.infer<typeof BodySchema>["purpose"]) {
   const images = new Set(["image/jpeg", "image/png", "image/webp"]);
+  const videos = new Set(["video/mp4", "video/webm"]);
+  if (purpose === "banner") {
+    return images.has(mime) || videos.has(mime);
+  }
   if (purpose === "vendor_kyc") {
     const kyc = new Set([...images, "application/pdf"]);
     return kyc.has(mime);
@@ -25,6 +29,8 @@ function extFromMime(mime: string) {
   if (mime === "image/jpeg") return ".jpg";
   if (mime === "image/png") return ".png";
   if (mime === "image/webp") return ".webp";
+  if (mime === "video/mp4") return ".mp4";
+  if (mime === "video/webm") return ".webm";
   if (mime === "application/pdf") return ".pdf";
   return "";
 }
@@ -62,9 +68,12 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "File is required" }, { status: 400 });
   }
 
-  const maxBytes = 12 * 1024 * 1024; // 12MB
+  const maxBytes = purpose === "banner" ? 60 * 1024 * 1024 : 12 * 1024 * 1024;
   if (file.size <= 0) return Response.json({ error: "Empty file" }, { status: 400 });
-  if (file.size > maxBytes) return Response.json({ error: "File too large (max 12MB)" }, { status: 413 });
+  if (file.size > maxBytes) {
+    const maxMb = Math.floor(maxBytes / 1024 / 1024);
+    return Response.json({ error: `File too large (max ${maxMb}MB)` }, { status: 413 });
+  }
 
   const mime = (file.type || "").toLowerCase();
   if (!mime || !isAllowedMime(mime, purpose)) {

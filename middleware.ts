@@ -6,6 +6,7 @@ const LANG_COOKIE = "bohosaaz_lang";
 const PUBLIC_FILE = /\.[^/]+$/;
 
 type JwtRole = "USER" | "VENDOR" | "ADMIN";
+type JwtRolePayload = { role?: unknown };
 
 function base64UrlDecode(input: string): string {
   const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
@@ -19,7 +20,7 @@ function getJwtRoleFromToken(token: string): JwtRole | null {
 
   try {
     const json = base64UrlDecode(parts[1] || "");
-    const payload: any = JSON.parse(json);
+    const payload = JSON.parse(json) as JwtRolePayload;
     const role = payload?.role;
 
     return role === "ADMIN" || role === "VENDOR" || role === "USER" ? role : null;

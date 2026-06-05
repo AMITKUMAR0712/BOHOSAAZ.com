@@ -9,7 +9,6 @@ import ExportDropdown from "@/components/ExportDropdown";
 type PayoutRow = {
   id: string;
   subtotal: number;
-  commission: number;
   payout: number;
   order: { id: string };
   vendor: { id: string; shopName: string };
@@ -91,7 +90,6 @@ export default function PayoutsClient({
                 <TH>Order</TH>
                 <TH>Vendor</TH>
                 <TH>Subtotal</TH>
-                <TH>Commission</TH>
                 <TH>Payout</TH>
                 <TH>Action</TH>
               </TR>
@@ -99,13 +97,13 @@ export default function PayoutsClient({
             <tbody>
               {loading ? (
                 <TR>
-                  <TD colSpan={6} className="text-sm text-muted-foreground">
+                  <TD colSpan={5} className="text-sm text-muted-foreground">
                     Loading...
                   </TD>
                 </TR>
               ) : rows.length === 0 ? (
                 <TR>
-                  <TD colSpan={6} className="text-sm text-muted-foreground">
+                  <TD colSpan={5} className="text-sm text-muted-foreground">
                     No payouts
                   </TD>
                 </TR>
@@ -115,7 +113,6 @@ export default function PayoutsClient({
                     <TD>{r.order.id}</TD>
                     <TD>{r.vendor.shopName}</TD>
                     <TD>₹{r.subtotal}</TD>
-                    <TD>₹{r.commission}</TD>
                     <TD className="font-semibold">₹{r.payout}</TD>
                     <TD>
                       <Button size="sm" onClick={() => settle(r.id)}>

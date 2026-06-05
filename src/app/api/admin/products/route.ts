@@ -74,6 +74,9 @@ export async function GET(req: Request) {
       salePrice: true,
       stock: true,
       isActive: true,
+      forceCodOnly: true,
+      isFeatured: true,
+      isTrending: true,
       createdAt: true,
       vendor: { select: { id: true, shopName: true, status: true } },
       category: { select: { id: true, name: true } },
@@ -96,7 +99,7 @@ const createSchema = z.object({
   brandId: z.string().trim().min(1).optional().nullable(),
 
   // pricing
-  currency: z.enum(["INR", "USD"]),
+  currency: z.literal("INR").optional().default("INR"),
   // base fields (optional when variants are provided)
   mrp: z.number().positive().optional().nullable(),
   price: z.number().positive().optional(),
@@ -132,6 +135,9 @@ const createSchema = z.object({
 
   sizeOptions: z.string().trim().max(500).optional().nullable(),
   colorOptions: z.string().trim().max(500).optional().nullable(),
+  forceCodOnly: z.boolean().optional().default(false),
+  isFeatured: z.boolean().optional().default(false),
+  isTrending: z.boolean().optional().default(false),
 
   tags: z.array(z.string().trim().min(1)).max(20).optional().default([]),
   variants: z
@@ -266,7 +272,7 @@ export async function POST(req: NextRequest) {
         slug,
         description: parsed.data.description ?? null,
         shortDescription: parsed.data.shortDescription ?? null,
-        currency: parsed.data.currency,
+        currency: "INR",
         mrp: hasVariants ? null : (parsed.data.mrp ?? null),
         price: computedBasePrice,
         salePrice: computedBaseSale,
@@ -292,6 +298,9 @@ export async function POST(req: NextRequest) {
 
         sizeOptions: parsed.data.sizeOptions ?? null,
         colorOptions: parsed.data.colorOptions ?? null,
+        forceCodOnly: parsed.data.forceCodOnly ?? false,
+        isFeatured: parsed.data.isFeatured ?? false,
+        isTrending: parsed.data.isTrending ?? false,
       },
       select: { id: true, title: true, slug: true, vendorId: true, categoryId: true, isActive: true },
     });

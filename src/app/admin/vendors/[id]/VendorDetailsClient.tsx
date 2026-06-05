@@ -80,12 +80,12 @@ export default function VendorDetailsClient({ initialVendor }: { initialVendor: 
       if (!res.ok) throw new Error(data.error || "Action failed");
 
       toast.success(action === "approve" ? "Vendor approved successfully" : "Vendor rejected");
-      
+
       // Refresh vendor data
       const refreshRes = await fetch(`/api/admin/vendors/${vendor.id}`);
       const refreshData = await refreshRes.json();
       if (refreshRes.ok) setVendor(refreshData.vendor);
-      
+
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -110,11 +110,10 @@ export default function VendorDetailsClient({ initialVendor }: { initialVendor: 
           <p className="text-muted-foreground">Application ID: {vendor.id}</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-            vendor.status === "APPROVED" ? "bg-green-100 text-green-800" :
-            vendor.status === "REJECTED" ? "bg-red-100 text-red-800" :
-            "bg-yellow-100 text-yellow-800"
-          }`}>
+          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${vendor.status === "APPROVED" ? "bg-green-100 text-green-800" :
+              vendor.status === "REJECTED" ? "bg-red-100 text-red-800" :
+                "bg-yellow-100 text-yellow-800"
+            }`}>
             {vendor.status}
           </span>
           {vendor.status === "PENDING" && (

@@ -47,12 +47,12 @@ export function Modal({
         onMouseDown={() => onOpenChange(false)}
         aria-hidden="true"
       />
-      <div className="absolute inset-0 grid place-items-center p-4">
+      <div className="absolute inset-0 flex items-start justify-center overflow-y-auto p-3 sm:p-4">
         <div
           role="dialog"
           aria-modal="true"
           className={cn(
-            "w-full max-w-lg rounded-[var(--radius)] border border-border bg-card text-card-foreground shadow-premium",
+            "max-h-[92vh] w-full max-w-[min(100%,42rem)] overflow-y-auto rounded-(--radius) border border-border bg-card text-card-foreground shadow-premium",
           )}
           onMouseDown={(e) => e.stopPropagation()}
         >
@@ -67,7 +67,7 @@ export function Modal({
             </div>
           )}
 
-          <div className="p-4">{children}</div>
+          <div className="p-4 sm:p-5">{children}</div>
 
           {footer ? <div className="border-t border-border p-4">{footer}</div> : null}
         </div>

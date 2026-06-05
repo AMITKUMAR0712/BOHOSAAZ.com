@@ -12,16 +12,21 @@ type Me = {
 };
 
 type Address = {
+  id?: string;
+  label: string;
   fullName: string;
   phone: string;
   address1: string;
-  address2: string;
+  address2: string | null;
   city: string;
   state: string;
   pincode: string;
+  kind: "PRIMARY" | "DEFAULT" | "SECONDARY";
+  isDefault: boolean;
 };
 
 const defaultAddress: Address = {
+  label: "",
   fullName: "",
   phone: "",
   address1: "",
@@ -29,6 +34,8 @@ const defaultAddress: Address = {
   city: "",
   state: "",
   pincode: "",
+  kind: "SECONDARY",
+  isDefault: false,
 };
 
 export default function AccountProfilePage() {
@@ -37,6 +44,7 @@ export default function AccountProfilePage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [addr, setAddr] = useState<Address>(defaultAddress);
+  const [addresses, setAddresses] = useState<Address[]>([]);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -63,9 +71,11 @@ export default function AccountProfilePage() {
       return;
     }
 
-    const addrRes = await fetch("/api/profile", { credentials: "include" });
-    const addrJson = await addrRes.json();
-    setAddr(addrJson.address || defaultAddress);
+    const addrRes = await fetch("/api/addresses", { credentials: "include", cache: "no-store" });
+    const addrJson = await addrRes.json().catch(() => ({}));
+    const rows = Array.isArray(addrJson?.addresses) ? (addrJson.addresses as Address[]) : [];
+    setAddresses(rows);
+    setAddr(rows.find((row) => row.isDefault) ?? defaultAddress);
 
     setLoading(false);
   }
@@ -85,7 +95,7 @@ export default function AccountProfilePage() {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ name, phone, address: addr }),
+        body: JSON.stringify({ name, phone }),
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error || "Failed");
@@ -97,6 +107,61 @@ export default function AccountProfilePage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  async function saveAddress() {
+    setMsg(null);
+    setSaving(true);
+    try {
+      const payload = {
+        label: addr.label,
+        fullName: addr.fullName,
+        phone: addr.phone,
+        address1: addr.address1,
+        address2: addr.address2 || null,
+        city: addr.city,
+        state: addr.state,
+        pincode: addr.pincode,
+        kind: addr.isDefault ? "DEFAULT" : addr.kind,
+        isDefault: addr.isDefault,
+      };
+      const res = await fetch("/api/addresses", {
+        method: addr.id ? "PATCH" : "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(addr.id ? { id: addr.id, action: "update", address: payload } : payload),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || "Failed to save address");
+      setMsg("✅ Address saved");
+      setAddr(defaultAddress);
+      await load();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Failed to save address");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function setDefaultAddress(id: string) {
+    await fetch("/api/addresses", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id, action: "default" }),
+    });
+    await load();
+  }
+
+  async function deleteAddress(id: string) {
+    await fetch("/api/addresses", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id, action: "delete" }),
+    });
+    setAddr(defaultAddress);
+    await load();
   }
 
   async function changePassword() {
@@ -174,10 +239,65 @@ export default function AccountProfilePage() {
       </div>
 
       <div className="rounded-2xl border p-4">
-        <div className="text-xl font-semibold">Shipping address</div>
-        <div className="mt-1 text-sm text-gray-600">Saved for faster checkout.</div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-xl font-semibold">Shipping addresses</div>
+            <div className="mt-1 text-sm text-gray-600">Add multiple addresses and choose default, primary, or secondary.</div>
+          </div>
+          <button className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50" onClick={() => setAddr(defaultAddress)}>
+            Add new
+          </button>
+        </div>
+
+        {addresses.length ? (
+          <div className="mt-4 grid gap-3">
+            {addresses.map((address) => (
+              <div key={address.id} className="rounded-2xl border bg-card/70 p-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="font-semibold">{address.label || address.fullName}</div>
+                    <div className="mt-1 text-sm text-muted-foreground">
+                      {address.fullName} • {address.phone}
+                    </div>
+                    <div className="mt-1 text-sm text-muted-foreground">
+                      {address.address1}{address.address2 ? `, ${address.address2}` : ""}, {address.city}, {address.state} - {address.pincode}
+                    </div>
+                  </div>
+                  <span className="rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                    {address.isDefault ? "Default" : address.kind}
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button className="rounded-lg border px-3 py-1.5 text-xs hover:bg-gray-50" onClick={() => setAddr(address)}>
+                    Edit
+                  </button>
+                  {!address.isDefault ? (
+                    <button className="rounded-lg border px-3 py-1.5 text-xs hover:bg-gray-50" onClick={() => address.id && setDefaultAddress(address.id)}>
+                      Set default
+                    </button>
+                  ) : null}
+                  <button className="rounded-lg border px-3 py-1.5 text-xs text-danger hover:bg-gray-50" onClick={() => address.id && deleteAddress(address.id)}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <label className="grid gap-1">
+            <span className="text-xs text-gray-600">Label</span>
+            <input className="rounded-lg border px-3 py-2" value={addr.label} onChange={(e) => setAddr({ ...addr, label: e.target.value })} placeholder="Home, Office, Parents..." />
+          </label>
+          <label className="grid gap-1">
+            <span className="text-xs text-gray-600">Type</span>
+            <select className="rounded-lg border px-3 py-2" value={addr.kind} onChange={(e) => setAddr({ ...addr, kind: e.target.value as Address["kind"], isDefault: e.target.value === "DEFAULT" })}>
+              <option value="PRIMARY">Primary</option>
+              <option value="DEFAULT">Default</option>
+              <option value="SECONDARY">Secondary</option>
+            </select>
+          </label>
           <label className="grid gap-1">
             <span className="text-xs text-gray-600">Full name</span>
             <input className="rounded-lg border px-3 py-2" value={addr.fullName} onChange={(e) => setAddr({ ...addr, fullName: e.target.value })} />
@@ -192,7 +312,7 @@ export default function AccountProfilePage() {
           </label>
           <label className="grid gap-1 md:col-span-2">
             <span className="text-xs text-gray-600">Address line 2</span>
-            <input className="rounded-lg border px-3 py-2" value={addr.address2} onChange={(e) => setAddr({ ...addr, address2: e.target.value })} />
+            <input className="rounded-lg border px-3 py-2" value={addr.address2 || ""} onChange={(e) => setAddr({ ...addr, address2: e.target.value })} />
           </label>
           <label className="grid gap-1">
             <span className="text-xs text-gray-600">City</span>
@@ -206,14 +326,18 @@ export default function AccountProfilePage() {
             <span className="text-xs text-gray-600">Pincode</span>
             <input className="rounded-lg border px-3 py-2" value={addr.pincode} onChange={(e) => setAddr({ ...addr, pincode: e.target.value })} />
           </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={addr.isDefault} onChange={(e) => setAddr({ ...addr, isDefault: e.target.checked, kind: e.target.checked ? "DEFAULT" : addr.kind })} />
+            Use as default checkout address
+          </label>
         </div>
 
         <button
           className="mt-4 rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
-          onClick={saveProfile}
+          onClick={saveAddress}
           disabled={saving}
         >
-          Save address
+          {addr.id ? "Update address" : "Save address"}
         </button>
       </div>
 

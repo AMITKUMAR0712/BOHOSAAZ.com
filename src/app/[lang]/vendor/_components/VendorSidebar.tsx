@@ -10,7 +10,8 @@ export default function VendorSidebar({ lang }: { lang: string }) {
   const items = [
     { href: `${lp}/vendor`, label: "Dashboard" },
     { href: `${lp}/vendor/orders`, label: "Orders" },
-    { href: `${lp}/vendor/products`, label: "Products" },
+    { href: `${lp}/vendor/products`, label: "All Products" },
+    { href: `${lp}/vendor/products/new`, label: "Create Product" },
     { href: `${lp}/vendor/kyc`, label: "KYC" },
     { href: `${lp}/vendor/payouts`, label: "Payouts" },
     { href: `${lp}/vendor/support`, label: "Support (Admin Tickets)" },

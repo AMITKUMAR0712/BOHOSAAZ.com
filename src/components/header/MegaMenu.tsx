@@ -56,8 +56,6 @@ export function MegaMenu({
     { label: "Shawl / Stole", href: `${langPrefix}?q=shawl` },
     { label: "Wall Art", href: `${langPrefix}?q=wall%20art` },
     { label: "Indian Handicrafts", href: `${langPrefix}?q=handicrafts` },
-    { label: "Latest Products", href: `${langPrefix}?sort=latest` },
-    { label: "Special Offer", href: `${langPrefix}?sort=offer` },
   ];
 
   return (
@@ -111,8 +109,8 @@ export function MegaMenu({
               }
             }}
           >
-            <Card className="w-130 p-4 shadow-premium" role="menu" aria-label="Shop by Category">
-              <div className="grid grid-cols-2 gap-2">
+            <Card className="w-[min(36rem,calc(100vw-2rem))] p-4 shadow-premium" role="menu" aria-label="Shop by Category">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {links.map((l) => (
                   <Link
                     key={l.label}

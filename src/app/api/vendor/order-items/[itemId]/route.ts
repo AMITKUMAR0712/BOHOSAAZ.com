@@ -4,6 +4,7 @@ import { verifyToken, type JwtPayload } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { rateLimit } from "@/lib/rateLimit";
 import { bumpLiveVersion } from "@/lib/live";
+import { createDelhiveryShipmentForOrderItem } from "@/lib/delhivery";
 
 const ALLOWED = ["PLACED", "PACKED", "SHIPPED", "DELIVERED", "CANCELLED"] as const;
 
@@ -50,7 +51,7 @@ export async function PATCH(
 
   const status = String(body?.status || "").toUpperCase();
   const trackingCourier = body?.trackingCourier ? String(body.trackingCourier).trim() : null;
-  const trackingNumber = body?.trackingNumber ? String(body.trackingNumber).trim() : null;
+  let trackingNumber = body?.trackingNumber ? String(body.trackingNumber).trim() : null;
 
   if (!ALLOWED.includes(status as (typeof ALLOWED)[number])) {
     return Response.json({ error: "Invalid status" }, { status: 400 });
@@ -85,6 +86,12 @@ export async function PATCH(
     data.shippedAt = item.shippedAt ?? now;
     data.trackingCourier = trackingCourier;
     data.trackingNumber = trackingNumber;
+
+    if (!trackingNumber && trackingCourier?.toLowerCase() === "delhivery") {
+      const result = await createDelhiveryShipmentForOrderItem(itemId);
+      data.trackingNumber = result.trackingNumber;
+      trackingNumber = result.trackingNumber;
+    }
   }
   if (status === "DELIVERED") data.deliveredAt = item.deliveredAt ?? now;
 

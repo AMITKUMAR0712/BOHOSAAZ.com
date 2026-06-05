@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { JwtPayload, verifyToken } from "@/lib/auth";
 import { z } from "zod";
 import { bumpLiveVersion } from "@/lib/live";
+import { getCurrencyFromCookie, getCustomerUnitPrice } from "@/lib/customer-pricing";
 
 const bodySchema = z.object({
   productId: z.string().trim().min(1),
@@ -29,6 +30,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { productId, variantId, qty } = parsed.data;
+    const orderCurrency = getCurrencyFromCookie(req.cookies.get("bohosaaz_currency")?.value);
 
     const product = await prisma.product.findUnique({
       where: { id: productId },
@@ -72,18 +74,25 @@ export async function POST(req: NextRequest) {
     }
     const finalQty = Math.min(qty, maxQty);
 
-    const unitPrice = pickedVariant
+    const baseUnitPrice = pickedVariant
       ? Number(pickedVariant.salePrice ?? pickedVariant.price)
       : Number(product.salePrice ?? product.price);
+    const productCurrency = product.currency === "USD" ? "USD" : "INR";
+    const unitPrice = getCustomerUnitPrice({
+      basePrice: baseUnitPrice,
+      productCurrency,
+      displayCurrency: orderCurrency,
+      isVendorProduct: Boolean(product.vendorId),
+    });
 
     // find/create cart order
     let order = await prisma.order.findFirst({
-      where: { userId: payload.sub, status: "PENDING" },
+      where: { userId: payload.sub, status: "PENDING", currency: orderCurrency },
     });
 
     if (!order) {
       order = await prisma.order.create({
-        data: { userId: payload.sub, status: "PENDING", total: 0 },
+        data: { userId: payload.sub, status: "PENDING", currency: orderCurrency, subtotal: 0, total: 0 },
       });
     }
 
@@ -129,7 +138,7 @@ export async function POST(req: NextRequest) {
 
     await prisma.order.update({
       where: { id: order.id },
-      data: { total },
+      data: { subtotal: total, total },
     });
 
     await bumpLiveVersion({ kind: "user", userId: payload.sub });

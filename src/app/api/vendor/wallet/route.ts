@@ -57,7 +57,6 @@ export async function GET() {
       vendorOrderId: true,
       status: true,
       amountPaise: true,
-      commissionPaise: true,
       settledAt: true,
       createdAt: true,
       updatedAt: true,
@@ -66,7 +65,6 @@ export async function GET() {
           orderId: true,
           status: true,
           subtotal: true,
-          commission: true,
           payout: true,
           createdAt: true,
         },
@@ -77,7 +75,6 @@ export async function GET() {
   const payoutsTyped = payouts as Array<
     {
       amountPaise: bigint;
-      commissionPaise: bigint;
       createdAt: Date;
       updatedAt: Date;
       settledAt: Date | null;
@@ -101,7 +98,6 @@ export async function GET() {
     payouts: payoutsTyped.map((p) => ({
       ...p,
       amountPaise: p.amountPaise.toString(),
-      commissionPaise: p.commissionPaise.toString(),
       settledAt: p.settledAt ? p.settledAt.toISOString() : null,
       createdAt: p.createdAt.toISOString(),
       updatedAt: p.updatedAt.toISOString(),

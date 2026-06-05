@@ -22,7 +22,7 @@ const THEMES: Array<{ id: ThemeId; name: string; description: string }> = [
 
 const ACTIONS = [
   { href: "/admin/vendors", label: "Vendor Requests", icon: Store },
-  { href: "/admin/products", label: "Products", icon: Package },
+  { href: "/admin/products", label: "All Products", icon: Package },
   { href: "/admin/categories", label: "Categories", icon: Tags },
   { href: "/admin/orders", label: "Orders", icon: LayoutDashboard },
   { href: "/admin/customers", label: "Customers", icon: Users },

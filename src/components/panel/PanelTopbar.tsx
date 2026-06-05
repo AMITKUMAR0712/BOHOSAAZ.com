@@ -45,7 +45,7 @@ export function PanelTopbar({
 
   return (
     <div className={cn("sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur-xl", className)}>
-      <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-3 px-4 py-3 md:px-6">
+      <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 md:px-6 md:py-3">
         <div className="md:hidden">
           <SidebarToggleButton />
         </div>
@@ -55,14 +55,14 @@ export function PanelTopbar({
           <div className="mt-1 hidden md:block text-xs text-muted-foreground truncate">{pathname}</div>
         </div>
 
-        {actions ? <div className="hidden sm:flex items-center gap-2 flex-wrap">{actions}</div> : null}
+        {actions ? <div className="order-3 flex w-full items-center gap-2 overflow-x-auto pb-1 sm:order-0 sm:w-auto sm:flex-wrap sm:overflow-visible sm:pb-0">{actions}</div> : null}
 
-        <div className="flex flex-1 flex-wrap items-center gap-2 rounded-3xl border border-border bg-card/80 px-3 py-2 text-sm">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 rounded-2xl border border-border bg-card/80 px-2.5 py-2 text-sm sm:rounded-3xl sm:px-3">
           <span className="inline-flex items-center rounded-full bg-accent/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground">
             {roleLabel(role)}
           </span>
           <span className="min-w-0 truncate text-sm font-medium text-foreground">{userName}</span>
-          <Button size="sm" variant="outline" onClick={onLogout} disabled={loading} className="ml-auto">
+          <Button size="sm" variant="outline" onClick={onLogout} disabled={loading} className="ml-auto rounded-xl">
             Logout
           </Button>
         </div>

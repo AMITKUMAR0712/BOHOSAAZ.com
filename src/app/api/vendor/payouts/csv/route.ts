@@ -23,7 +23,6 @@ export async function GET() {
       vendorOrderId: true,
       status: true,
       amountPaise: true,
-      commissionPaise: true,
       createdAt: true,
       settledAt: true,
       vendorOrder: { select: { orderId: true, status: true } },
@@ -33,7 +32,6 @@ export async function GET() {
   const typed = payouts as Array<
     {
       amountPaise: bigint;
-      commissionPaise: bigint;
       createdAt: Date;
       settledAt: Date | null;
       vendorOrder: { orderId: string; status: string };
@@ -47,7 +45,6 @@ export async function GET() {
     vendorOrderStatus: p.vendorOrder.status,
     payoutStatus: p.status,
     amountRupees: paiseToRupees(p.amountPaise).toFixed(2),
-    commissionRupees: paiseToRupees(p.commissionPaise).toFixed(2),
     createdAt: p.createdAt.toISOString(),
     settledAt: p.settledAt ? p.settledAt.toISOString() : "",
   }));

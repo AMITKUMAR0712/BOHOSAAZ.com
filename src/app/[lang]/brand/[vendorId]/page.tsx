@@ -15,7 +15,17 @@ export async function generateMetadata({
   });
 
   if (!brand || !brand.isActive) return { title: "Brand | Bohosaaz" };
-  return { title: `${brand.name} | Bohosaaz` };
+  return {
+    title: `${brand.name} Gift Products in Noida & Delhi NCR | Bohosaaz`,
+    description: `Shop ${brand.name} gift products on Bohosaaz for Noida, Greater Noida, New Delhi and Delhi NCR. Find premium gifts, birthday gifts, anniversary gifts and curated online gifting ideas.`,
+    keywords: [
+      `${brand.name} gifts`,
+      `${brand.name} gift products Noida`,
+      "gift products Delhi NCR",
+      "online gifts Greater Noida",
+      "premium gifts New Delhi",
+    ],
+  };
 }
 
 export default async function BrandPage({
@@ -55,7 +65,7 @@ export default async function BrandPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 md:py-12">
-      <div className="rounded-4xl border border-border bg-card/70 backdrop-blur-xl p-6 md:p-10 shadow-premium">
+      <div className="rounded-[36px] border border-border/80 bg-card/80 p-6 shadow-premium backdrop-blur-xl md:p-10">
         <div className="flex items-center gap-4">
           <div className="h-14 w-14 rounded-2xl border border-border bg-background/70 overflow-hidden grid place-items-center">
             {brand.logoUrl ? (
@@ -72,7 +82,7 @@ export default async function BrandPage({
         </div>
       </div>
 
-      <div className="mt-8 grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-5 grid auto-rows-fr grid-cols-2 gap-3 sm:mt-8 sm:gap-5 lg:grid-cols-3">
         {products.map((p) => (
           <ProductCard
             key={p.id}
@@ -92,7 +102,7 @@ export default async function BrandPage({
         ))}
 
         {!products.length ? (
-          <div className="sm:col-span-2 lg:col-span-3 rounded-3xl border border-border bg-card p-6 text-sm text-muted-foreground">
+          <div className="rounded-3xl border border-border bg-card/80 p-6 text-sm text-muted-foreground sm:col-span-2 lg:col-span-3">
             No products found for this brand.
           </div>
         ) : null}

@@ -8,6 +8,7 @@ type BannerRow = {
   highlightText: string | null;
   subtitle: string | null;
   imageUrl: string;
+  videoUrl: string | null;
   ctaText: string | null;
   ctaHref: string | null;
   isActive: boolean;
@@ -24,6 +25,7 @@ type BannerPayload = {
   highlightText: string | null;
   subtitle: string | null;
   imageUrl: string;
+  videoUrl: string | null;
   ctaText: string | null;
   ctaHref: string | null;
   sortOrder: number;
@@ -58,6 +60,7 @@ export default function BannersClient({
   const [highlightText, setHighlightText] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [ctaText, setCtaText] = useState("");
   const [ctaHref, setCtaHref] = useState("");
   const [sortOrder, setSortOrder] = useState("0");
@@ -74,6 +77,7 @@ export default function BannersClient({
     setHighlightText("");
     setSubtitle("");
     setImageUrl("");
+    setVideoUrl("");
     setCtaText("");
     setCtaHref("");
     setSortOrder("0");
@@ -81,6 +85,25 @@ export default function BannersClient({
     setStartAt("");
     setEndAt("");
     setIsActive(true);
+  }
+
+  async function uploadToServer(file: File) {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("purpose", "banner");
+
+    const uploadRes = await fetch("/api/upload", {
+      method: "POST",
+      credentials: "include",
+      body: form,
+    });
+
+    const uploaded = await uploadRes.json().catch(() => ({}));
+    if (!uploadRes.ok) throw new Error(uploaded?.error || "Upload failed");
+
+    const url = String(uploaded?.url || "");
+    if (!url) throw new Error("Upload failed");
+    return url;
   }
 
   async function reload() {
@@ -110,6 +133,7 @@ export default function BannersClient({
       highlightText: highlightText.trim() === "" ? null : highlightText.trim(),
       subtitle: subtitle.trim() === "" ? null : subtitle.trim(),
       imageUrl: imageUrl.trim(),
+      videoUrl: videoUrl.trim() === "" ? null : videoUrl.trim(),
       ctaText: ctaText.trim() === "" ? null : ctaText.trim(),
       ctaHref: ctaHref.trim() === "" ? null : ctaHref.trim(),
       sortOrder: nSort,
@@ -136,6 +160,60 @@ export default function BannersClient({
     resetForm();
   }
 
+  async function uploadMultipleVideoStories(files: FileList | null) {
+    const selected = Array.from(files ?? []).filter((file) => file.type === "video/mp4" || file.type === "video/webm");
+    if (!selected.length) return;
+
+    const nSort = Number(sortOrder);
+    if (!Number.isFinite(nSort) || nSort < 0 || !Number.isInteger(nSort)) {
+      return setMsg("Sort order must be a non-negative integer");
+    }
+
+    setLoading(true);
+    setMsg(`Uploading ${selected.length} video stories...`);
+
+    try {
+      const baseTitle = title.trim() || "Bohosaaz gifting story";
+      const fallbackImage = imageUrl.trim() || "/s1.jpg";
+
+      for (let i = 0; i < selected.length; i++) {
+        const file = selected[i];
+        const url = await uploadToServer(file);
+        const payload: BannerPayload = {
+          title: selected.length > 1 ? `${baseTitle} ${i + 1}` : baseTitle,
+          highlightText: highlightText.trim() === "" ? "Gifting Story" : highlightText.trim(),
+          subtitle: subtitle.trim() === "" ? "Thoughtful gifts, premium moments, and celebration-ready picks." : subtitle.trim(),
+          imageUrl: fallbackImage,
+          videoUrl: url,
+          ctaText: ctaText.trim() === "" ? "Shop now" : ctaText.trim(),
+          ctaHref: ctaHref.trim() === "" ? null : ctaHref.trim(),
+          sortOrder: nSort + i,
+          couponCode: couponCode.trim() === "" ? null : couponCode.trim().toUpperCase(),
+          startAt: startAt === "" ? null : new Date(startAt).toISOString(),
+          endAt: endAt === "" ? null : new Date(endAt).toISOString(),
+          isActive,
+        };
+
+        const res = await fetch("/api/admin/banners", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.ok) throw new Error(data?.error || `Failed to create story ${i + 1}`);
+      }
+
+      await reload();
+      setMsg(`${selected.length} video stories uploaded and added to homepage.`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Multiple video upload failed";
+      setMsg(message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function toggleActive(bannerId: string, nextActive: boolean) {
     setMsg(null);
     const res = await fetch(`/api/admin/banners/${bannerId}`, {
@@ -155,6 +233,7 @@ export default function BannersClient({
     setHighlightText(b.highlightText ?? "");
     setSubtitle(b.subtitle ?? "");
     setImageUrl(b.imageUrl);
+    setVideoUrl(b.videoUrl ?? "");
     setCtaText(b.ctaText ?? "");
     setCtaHref(b.ctaHref ?? "");
     setSortOrder(String(b.sortOrder));
@@ -233,6 +312,84 @@ export default function BannersClient({
               onChange={(e) => setImageUrl(e.target.value)}
               placeholder="https://..."
             />
+          </label>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-gray-600">Upload image</span>
+            <input
+              type="file"
+              accept="image/*"
+              className="rounded-lg border px-3 py-2"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setMsg(null);
+                try {
+                  const url = await uploadToServer(file);
+                  setImageUrl(url);
+                  setMsg("Image uploaded");
+                } catch (err) {
+                  const message = err instanceof Error ? err.message : "Upload failed";
+                  setMsg(message);
+                } finally {
+                  e.target.value = "";
+                }
+              }}
+            />
+          </label>
+
+          <label className="flex flex-col gap-1 md:col-span-2">
+            <span className="text-gray-600">Hero video URL (optional, MP4/WebM)</span>
+            <input
+              className="rounded-lg border px-3 py-2"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="https://.../hero.mp4"
+            />
+            <span className="text-xs text-gray-500">When set, this video plays in the homepage banner as a 5-second gifting story. Add multiple active banners to show multiple videos.</span>
+          </label>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-gray-600">Upload hero video</span>
+            <input
+              type="file"
+              accept="video/mp4,video/webm"
+              className="rounded-lg border px-3 py-2"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setMsg(null);
+                try {
+                  const url = await uploadToServer(file);
+                  setVideoUrl(url);
+                  setMsg("Video uploaded");
+                } catch (err) {
+                  const message = err instanceof Error ? err.message : "Upload failed";
+                  setMsg(message);
+                } finally {
+                  e.target.value = "";
+                }
+              }}
+            />
+            <span className="text-xs text-gray-500">Max 60MB. MP4/WebM recommended.</span>
+          </label>
+
+          <label className="flex flex-col gap-1 md:col-span-2">
+            <span className="text-gray-600">Upload multiple 5-sec gifting videos</span>
+            <input
+              type="file"
+              accept="video/mp4,video/webm"
+              multiple
+              className="rounded-lg border px-3 py-2"
+              disabled={loading}
+              onChange={async (e) => {
+                await uploadMultipleVideoStories(e.target.files);
+                e.target.value = "";
+              }}
+            />
+            <span className="text-xs text-gray-500">
+              Select multiple MP4/WebM files. Each file becomes one active dynamic homepage banner/story and plays for 5 seconds.
+            </span>
           </label>
 
           <label className="flex flex-col gap-1">
@@ -332,6 +489,7 @@ export default function BannersClient({
             </div>
             <div className="col-span-2 text-xs text-gray-700 break-all">
               <div>Img: {b.imageUrl}</div>
+              {b.videoUrl ? <div>Video: {b.videoUrl}</div> : null}
               <div>CTA: {b.ctaText ?? "-"}</div>
               <div>Href: {b.ctaHref ?? "-"}</div>
               <div>Coupon: {b.couponCode ?? "-"}</div>

@@ -7,8 +7,6 @@ export const runtime = "nodejs";
 const AdminMetricsSchema = z.object({
   gmvTodayRupees: z.number().nonnegative(),
   gmv7dRupees: z.number().nonnegative(),
-  commissionTodayRupees: z.number().nonnegative(),
-  commission7dRupees: z.number().nonnegative(),
   pendingVendorApprovalsCount: z.number().int().nonnegative(),
   pendingPayoutSettlementsCount: z.number().int().nonnegative(),
   openTicketsCount: z.number().int().nonnegative(),

@@ -24,8 +24,8 @@ export default async function VendorLayout({ children }: { children: ReactNode }
           title: "Vendor",
           items: [
             { href: "/vendor/dashboard", label: "Dashboard", match: "exact" },
-            { href: "/vendor/products", label: "My Products" },
-            { href: "/vendor/products/new", label: "Add Product", match: "exact" },
+            { href: "/vendor/products", label: "All Products" },
+            { href: "/vendor/products/new", label: "Create Product", match: "exact" },
             { href: "/vendor/orders", label: "Orders" },
             { href: "/vendor/earnings", label: "Earnings" },
             { href: "/vendor/kyc", label: "KYC" },

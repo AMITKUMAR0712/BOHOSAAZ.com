@@ -17,14 +17,12 @@ export async function GET() {
       orderId: true,
       status: true,
       subtotal: true,
-      commission: true,
       payout: true,
       payoutRecord: {
         select: {
           id: true,
           status: true,
           amountPaise: true,
-          commissionPaise: true,
           createdAt: true,
           updatedAt: true,
           settledAt: true,
@@ -42,7 +40,6 @@ export async function GET() {
         ? {
             ...o.payoutRecord,
             amountPaise: o.payoutRecord.amountPaise.toString(),
-            commissionPaise: o.payoutRecord.commissionPaise.toString(),
             createdAt: o.payoutRecord.createdAt.toISOString(),
             updatedAt: o.payoutRecord.updatedAt.toISOString(),
             settledAt: o.payoutRecord.settledAt ? o.payoutRecord.settledAt.toISOString() : null,

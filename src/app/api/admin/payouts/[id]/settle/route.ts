@@ -28,13 +28,12 @@ export async function POST(
         vendorId: true,
         status: true,
         payout: true,
-        commission: true,
       },
     });
     if (!vendorOrder) throw new Error("Vendor order not found");
 
     const payoutPaise = rupeesToPaise(vendorOrder.payout);
-    const commissionPaise = rupeesToPaise(vendorOrder.commission);
+    const commissionPaise = BigInt(0);
 
     // Create/ensure payout record (unique by vendorOrderId)
     const payout = await (tx as unknown as {

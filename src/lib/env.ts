@@ -37,6 +37,12 @@ const EnvSchema = z
     NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().optional(),
     RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
 
+    // Courier / logistics
+    DELHIVERY_AUTH_TOKEN: z.string().optional(),
+    DELHIVERY_API_USERNAME: z.string().optional(),
+    DELHIVERY_API_PASSWORD: z.string().optional(),
+    DELHIVERY_LOGIN_BASE: z.string().optional(),
+
     // existing app keys (used by the app)
     SMTP_HOST: z.string().optional(),
     SMTP_PORT: z.string().optional(),
@@ -82,6 +88,10 @@ const EnvSchema = z
         message: "⚠️ [env] COURIER_WEBHOOK_SECRET is not configured. Shipping updates will be disabled.",
       },
       {
+        check: () => nonEmpty(v.DELHIVERY_AUTH_TOKEN) || (nonEmpty(v.DELHIVERY_API_USERNAME) && nonEmpty(v.DELHIVERY_API_PASSWORD)),
+        message: "⚠️ [env] Delhivery is not configured. Delhivery shipping requests will be disabled.",
+      },
+      {
         check: () => nonEmpty(v.RAZORPAY_KEY_ID) && nonEmpty(v.RAZORPAY_KEY_SECRET) && nonEmpty(v.NEXT_PUBLIC_RAZORPAY_KEY_ID),
         message: "⚠️ [env] Razorpay is not configured. Payments will be disabled.",
       },
@@ -120,6 +130,9 @@ export function getEnv(): Env {
       "UPSTASH_REDIS_REST_TOKEN",
       "CRON_SECRET",
       "COURIER_WEBHOOK_SECRET",
+      "DELHIVERY_AUTH_TOKEN",
+      "DELHIVERY_API_USERNAME",
+      "DELHIVERY_API_PASSWORD",
       "RAZORPAY_KEY_ID",
       "RAZORPAY_KEY_SECRET",
       "NEXT_PUBLIC_RAZORPAY_KEY_ID",

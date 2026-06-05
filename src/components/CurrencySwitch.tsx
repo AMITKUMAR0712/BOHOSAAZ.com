@@ -4,6 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/cn";
 import { useCurrency, type CurrencyType } from "@/lib/currency-context";
 import { Globe } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   Dropdown,
   DropdownContent,
@@ -51,6 +52,7 @@ function CurrencyOption({
 
 export default function CurrencySwitch({ className }: { className?: string } = {}) {
   const { currency, setCurrency, isLoading } = useCurrency();
+  const router = useRouter();
 
   if (isLoading) {
     return (
@@ -88,7 +90,10 @@ export default function CurrencySwitch({ className }: { className?: string } = {
             label={c.label}
             symbol={c.symbol}
             active={c.code === currency}
-            onSelect={setCurrency}
+            onSelect={(nextCurrency) => {
+              setCurrency(nextCurrency);
+              router.refresh();
+            }}
           />
         ))}
       </DropdownContent>

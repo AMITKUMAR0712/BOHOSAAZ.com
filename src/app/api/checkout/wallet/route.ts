@@ -6,7 +6,6 @@ import { z } from "zod";
 import { rateLimit } from "@/lib/rateLimit";
 import { rupeesToPaise } from "@/lib/money";
 import { recomputePendingOrderTotals } from "@/lib/orderTotals";
-import { resolveCommissionPlanTx } from "@/lib/commission";
 
 type WalletAccountDelegate = {
   upsert(args: unknown): Promise<unknown>;
@@ -72,18 +71,7 @@ export async function POST(req: NextRequest) {
     if (!order) throw new Error("Cart is empty");
     if (order.items.length === 0) throw new Error("Cart is empty");
 
-    // Wallet is INR-only. Also block mixed-currency carts.
-    const orderCurrency = (() => {
-      const first = order.items[0]?.product?.currency;
-      return first === "USD" ? "USD" : "INR";
-    })();
-
-    for (const it of order.items) {
-      const c = it.product?.currency === "USD" ? "USD" : "INR";
-      if (c !== orderCurrency) {
-        throw new Error("Mixed currency cart is not supported. Checkout INR and USD items separately.");
-      }
-    }
+    const orderCurrency = order.currency === "USD" ? "USD" : "INR";
     if (orderCurrency !== "INR") {
       throw new Error("Wallet checkout is only available for INR orders.");
     }
@@ -131,26 +119,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // update items price to current variant/product price
-    for (const it of order.items) {
-      let unitPrice: number;
-      if (it.variantId) {
-        if (!it.variant) throw new Error("Variant unavailable");
-        unitPrice = Number(it.variant.salePrice ?? it.variant.price);
-      } else {
-        unitPrice = Number(it.product.salePrice ?? it.product.price);
-      }
-
-      await tx.orderItem.update({
-        where: { id: it.id },
-        data: {
-          price: unitPrice,
-          variantSku: it.variantId ? it.variant?.sku ?? null : null,
-          variantSize: it.variantId ? it.variant?.size ?? null : null,
-          variantColor: it.variantId ? it.variant?.color ?? null : null,
-        },
-      });
-    }
+    // Keep cart item prices unchanged here. They were already converted to order.currency.
 
     // compute per-vendor subtotals from fresh item prices
     const refreshed = await tx.orderItem.findMany({
@@ -158,14 +127,11 @@ export async function POST(req: NextRequest) {
       include: { product: { include: { vendor: true } } },
     });
 
-    const perVendor: Record<
-      string,
-      { vendor: { id: string; commission: number | null }; subtotal: number; itemIds: string[] }
-    > = {};
+    const perVendor: Record<string, { subtotal: number; itemIds: string[] }> = {};
     for (const it of refreshed) {
       const vendor = it.product.vendor;
       if (!vendor) throw new Error("Vendor missing for product");
-      if (!perVendor[vendor.id]) perVendor[vendor.id] = { vendor, subtotal: 0, itemIds: [] };
+      if (!perVendor[vendor.id]) perVendor[vendor.id] = { subtotal: 0, itemIds: [] };
       perVendor[vendor.id].subtotal += it.price * it.quantity;
       perVendor[vendor.id].itemIds.push(it.id);
     }
@@ -173,12 +139,8 @@ export async function POST(req: NextRequest) {
     // create vendor sub-orders
     const vendorOrderByVendorId: Record<string, string> = {};
     for (const vendorId of Object.keys(perVendor)) {
-      const { vendor, subtotal } = perVendor[vendorId];
-      const planned = await resolveCommissionPlanTx(tx as unknown as Prisma.TransactionClient, { vendorId });
-      const commissionPct = planned.planId ? planned.percent : Number(vendor.commission ?? 0);
-      const rate = commissionPct > 1 ? commissionPct / 100 : commissionPct;
-      const commission = +(subtotal * rate).toFixed(2);
-      const payout = +(subtotal - commission).toFixed(2);
+      const { subtotal } = perVendor[vendorId];
+      const payout = +subtotal.toFixed(2);
 
       const vo = await tx.vendorOrder.create({
         data: {
@@ -186,28 +148,10 @@ export async function POST(req: NextRequest) {
           vendorId,
           status: "PLACED",
           subtotal,
-          commission,
+          commission: 0,
           payout,
         },
         select: { id: true },
-      });
-
-      await (tx as unknown as Prisma.TransactionClient).commissionHistory.upsert({
-        where: { vendorOrderId: vo.id },
-        update: {
-          commissionPercent: commissionPct,
-          baseAmountPaise: rupeesToPaise(subtotal),
-          commissionPaise: rupeesToPaise(commission),
-          planId: planned.planId,
-        },
-        create: {
-          vendorId,
-          vendorOrderId: vo.id,
-          planId: planned.planId,
-          commissionPercent: commissionPct,
-          baseAmountPaise: rupeesToPaise(subtotal),
-          commissionPaise: rupeesToPaise(commission),
-        },
       });
       vendorOrderByVendorId[vendorId] = vo.id;
     }

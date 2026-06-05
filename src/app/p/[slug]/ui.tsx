@@ -7,7 +7,7 @@ import { QtyStepper } from "@/components/ui/qty-stepper";
 import { PriceBlock } from "@/components/PriceBlock";
 import { WishlistButton } from "@/components/WishlistButton";
 import { useCurrency } from "@/lib/currency-context";
-import { getPriceInCurrency } from "@/lib/currency-utils";
+import { getCustomerUnitPrice } from "@/lib/customer-pricing";
 
 type Variant = {
   id: string;
@@ -30,6 +30,8 @@ export default function PurchasePanel({
   variants,
   disabled,
   langPrefix,
+  forceCodOnly = false,
+  isVendorProduct = false,
 }: {
   productId: string;
   currency: "INR" | "USD";
@@ -40,8 +42,11 @@ export default function PurchasePanel({
   variants?: Variant[];
   disabled?: boolean;
   langPrefix?: string;
+  forceCodOnly?: boolean;
+  isVendorProduct?: boolean;
 }) {
   const [loading, setLoading] = useState(false);
+  const [inCart, setInCart] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
   const { currency: userCurrency } = useCurrency();
@@ -57,10 +62,28 @@ export default function PurchasePanel({
   const baseSale = salePrice ?? null;
   const baseMrp = mrp ?? null;
 
-  // Convert prices based on user's selected currency
-  const convertedBasePrice = getPriceInCurrency(basePrice, displayCurrency, userCurrency);
-  const convertedBaseSale = baseSale ? getPriceInCurrency(baseSale, displayCurrency, userCurrency) : null;
-  const convertedBaseMrp = baseMrp ? getPriceInCurrency(baseMrp, displayCurrency, userCurrency) : null;
+  const convertedBasePrice = getCustomerUnitPrice({
+    basePrice,
+    productCurrency: displayCurrency,
+    displayCurrency: userCurrency,
+    isVendorProduct,
+  });
+  const convertedBaseSale = baseSale
+    ? getCustomerUnitPrice({
+        basePrice: baseSale,
+        productCurrency: displayCurrency,
+        displayCurrency: userCurrency,
+        isVendorProduct,
+      })
+    : null;
+  const convertedBaseMrp = baseMrp
+    ? getCustomerUnitPrice({
+        basePrice: baseMrp,
+        productCurrency: displayCurrency,
+        displayCurrency: userCurrency,
+        isVendorProduct,
+      })
+    : null;
 
   const sizes = useMemo(() => {
     const set = new Set(activeVariants.map((v) => v.size).filter(Boolean));
@@ -108,6 +131,33 @@ export default function PurchasePanel({
     return list.find((v) => (v.color ?? null) === selectedColor) ?? null;
   }, [activeVariants, colorsForSize.length, hasVariants, selectedColor, selectedSize]);
 
+  useEffect(() => {
+    let cancelled = false;
+    async function syncCartState() {
+      try {
+        const res = await fetch("/api/cart", { credentials: "include", cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled || !res.ok) return;
+        const items = data?.order?.items;
+        if (!Array.isArray(items)) return;
+        const found = items.some(
+          (it: { product?: { id?: string }; productId?: string }) =>
+            it?.product?.id === productId || it?.productId === productId,
+        );
+        setInCart(found);
+      } catch {
+        // ignore cart state sync errors
+      }
+    }
+    void syncCartState();
+    const onCart = () => void syncCartState();
+    window.addEventListener("bohosaaz-cart", onCart);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("bohosaaz-cart", onCart);
+    };
+  }, [productId]);
+
   const unitPrice = hasVariants
     ? selectedVariant
       ? Number(selectedVariant.salePrice ?? selectedVariant.price)
@@ -119,10 +169,15 @@ export default function PurchasePanel({
   const lp = langPrefix || "";
   const checkoutHref = `${lp}/checkout` || "/checkout";
 
+  function redirectToLogin() {
+    const next = `${window.location.pathname}${window.location.search}`;
+    window.location.href = `${lp || ""}/login?next=${encodeURIComponent(next)}`;
+  }
+
   return (
-    <div className="space-y-5">
-      <div className="rounded-(--radius) border border-border bg-card p-5">
-        <div className="flex items-start justify-between gap-6">
+    <div className="space-y-4 sm:space-y-5">
+      <div className="rounded-[22px] border border-border bg-card p-4 sm:rounded-(--radius) sm:p-5">
+        <div className="flex items-start justify-between gap-4 sm:gap-6">
           <div>
             <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Price</div>
             <div className="mt-2">
@@ -130,8 +185,8 @@ export default function PurchasePanel({
                 <div className="font-heading text-2xl text-muted-foreground">—</div>
               ) : (
                 <PriceBlock
-                  price={hasVariants ? getPriceInCurrency(Number(selectedVariant?.price ?? 0), displayCurrency, userCurrency) : convertedBasePrice}
-                  salePrice={hasVariants ? (selectedVariant?.salePrice ? getPriceInCurrency(selectedVariant.salePrice, displayCurrency, userCurrency) : null) : convertedBaseSale}
+                  price={hasVariants ? getCustomerUnitPrice({ basePrice: Number(selectedVariant?.price ?? 0), productCurrency: displayCurrency, displayCurrency: userCurrency, isVendorProduct }) : convertedBasePrice}
+                  salePrice={hasVariants && selectedVariant?.salePrice ? getCustomerUnitPrice({ basePrice: selectedVariant.salePrice, productCurrency: displayCurrency, displayCurrency: userCurrency, isVendorProduct }) : convertedBaseSale}
                   mrp={hasVariants ? null : convertedBaseMrp}
                   currency={userCurrency}
                   size="lg"
@@ -192,78 +247,93 @@ export default function PurchasePanel({
         </div>
       )}
 
-      <div className="rounded-(--radius) border border-border bg-card p-5">
+      <div className="rounded-[22px] border border-border bg-card p-4 sm:rounded-(--radius) sm:p-5">
         <div className="flex items-center justify-between gap-3">
           <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Quantity</div>
           <QtyStepper value={qty} min={1} max={Math.max(1, availableStock || 1)} onChange={setQty} />
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-2">
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          {forceCodOnly ? (
+            <div className="col-span-2 mb-1 rounded-lg border border-yellow-200/50 bg-yellow-50/50 p-3 text-sm text-yellow-900">
+              <span className="font-medium">Cash on Delivery:</span> This product prefers COD payment. 
+            </div>
+          ) : null}
           <Button
-            variant="soft"
-            className="h-11 uppercase tracking-[0.12em]"
-            disabled={!canAdd}
-            onClick={async () => {
-              setMsg(null);
-              setLoading(true);
-              try {
-                const res = await fetch("/api/cart/buynow", {
-                  method: "POST",
-                  credentials: "include",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    productId,
-                    qty,
-                    ...(selectedVariant ? { variantId: selectedVariant.id } : {}),
-                  }),
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) throw new Error(data?.error || "Add to cart failed");
-                setMsg("Added to cart.");
-                window.dispatchEvent(new Event("bohosaaz-cart"));
-              } catch (e: unknown) {
-                const message = e instanceof Error ? e.message : "Error";
-                setMsg(message);
-              } finally {
-                setLoading(false);
-              }
-            }}
-          >
-            {loading ? "ADDING..." : "ADD TO CART"}
-          </Button>
-
-          <Button
-            className="h-11 uppercase tracking-[0.12em]"
-            disabled={!canAdd}
-            onClick={async () => {
-              setMsg(null);
-              setLoading(true);
-              try {
-                const res = await fetch("/api/cart/add", {
-                  method: "POST",
-                  credentials: "include",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    productId,
-                    qty,
-                    ...(selectedVariant ? { variantId: selectedVariant.id } : {}),
-                  }),
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) throw new Error(data?.error || "Add to cart failed");
+             variant={inCart ? "outline" : "soft"}
+             className="h-12 rounded-2xl px-2 text-xs uppercase tracking-widest sm:text-sm sm:tracking-[0.12em]"
+             disabled={!canAdd || inCart}
+             onClick={async () => {
+               setMsg(null);
+               setLoading(true);
+               try {
+                 const res = await fetch("/api/cart/buynow", {
+                   method: "POST",
+                   credentials: "include",
+                   headers: { "Content-Type": "application/json" },
+                   body: JSON.stringify({
+                     productId,
+                     qty,
+                     ...(selectedVariant ? { variantId: selectedVariant.id } : {}),
+                   }),
+                 });
+                 const data = await res.json().catch(() => ({}));
+                 if (res.status === 401) {
+                   redirectToLogin();
+                   return;
+                 }
+                 if (!res.ok) throw new Error(data?.error || "Add to cart failed");
+                 setInCart(true);
+                 setMsg("Added to cart.");
+                 window.dispatchEvent(new Event("bohosaaz-cart"));
+                 localStorage.setItem("bohosaaz_cart_ts", String(Date.now()));
+               } catch (e: unknown) {
+                 const message = e instanceof Error ? e.message : "Error";
+                 setMsg(message);
+               } finally {
+                 setLoading(false);
+               }
+             }}
+           >
+             {loading ? "ADDING..." : inCart ? "ADDED" : "ADD TO CART"}
+           </Button>
+ 
+           <Button
+            className="h-12 rounded-2xl px-2 text-xs uppercase tracking-widest sm:text-sm sm:tracking-[0.12em]"
+             disabled={!canAdd}
+             onClick={async () => {
+               setMsg(null);
+               setLoading(true);
+               try {
+                 const res = await fetch("/api/cart/add", {
+                   method: "POST",
+                   credentials: "include",
+                   headers: { "Content-Type": "application/json" },
+                   body: JSON.stringify({
+                     productId,
+                     qty,
+                     ...(selectedVariant ? { variantId: selectedVariant.id } : {}),
+                   }),
+                 });
+                 const data = await res.json().catch(() => ({}));
+                 if (res.status === 401) {
+                   redirectToLogin();
+                   return;
+                 }
+                 if (!res.ok) throw new Error(data?.error || "Add to cart failed");
+                // If product is COD-only, the checkout page will auto-select COD payment.
                 window.location.href = checkoutHref;
-              } catch (e: unknown) {
-                const message = e instanceof Error ? e.message : "Error";
-                setMsg(message);
-              } finally {
-                setLoading(false);
-              }
-            }}
-          >
-            {loading ? "PLEASE WAIT..." : "BUY NOW"}
-          </Button>
-        </div>
-
+               } catch (e: unknown) {
+                 const message = e instanceof Error ? e.message : "Error";
+                 setMsg(message);
+               } finally {
+                 setLoading(false);
+               }
+             }}
+           >
+            {loading ? "PLEASE WAIT..." : forceCodOnly ? "BUY NOW " : "BUY NOW"}
+           </Button>
+         </div>
         <div className="mt-4 flex items-center justify-between">
           <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Wishlist</div>
           <WishlistButton productId={productId} langPrefix={lp || "/"} />

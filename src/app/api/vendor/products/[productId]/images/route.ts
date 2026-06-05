@@ -5,6 +5,20 @@ import { audit } from "@/lib/audit";
 import { rateLimit } from "@/lib/rateLimit";
 import { z } from "zod";
 
+const imageUrlSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .refine((value) => {
+    if (value.startsWith("/uploads/")) return true;
+    try {
+      const url = new URL(value);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+      return false;
+    }
+  }, "Invalid image url");
+
 export async function POST(
   req: NextRequest,
   ctx: { params: Promise<{ productId: string }> }
@@ -25,7 +39,7 @@ export async function POST(
 
   const { productId } = await ctx.params;
   const body = await req.json().catch(() => null);
-  const parsed = z.object({ url: z.string().trim().url() }).safeParse(body);
+  const parsed = z.object({ url: imageUrlSchema }).safeParse(body);
   if (!parsed.success) return Response.json({ error: "Invalid image url" }, { status: 400 });
   const url = parsed.data.url;
 

@@ -13,7 +13,7 @@ type DbClient = {
   $transaction?<T>(fn: (db: DbClient) => Promise<T>): Promise<T>;
 };
 
-export type WalletTxnType = "TOPUP" | "ORDER_PAYMENT" | "REFUND" | "PAYOUT" | "COMMISSION" | "ADJUSTMENT";
+export type WalletTxnType = "TOPUP" | "ORDER_PAYMENT" | "REFUND" | "PAYOUT" | "ADJUSTMENT";
 export type WalletTxnDirection = "CREDIT" | "DEBIT";
 export type WalletTxnStatus = "PENDING" | "POSTED" | "FAILED";
 

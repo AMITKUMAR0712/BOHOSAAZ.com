@@ -39,8 +39,8 @@ export default function AccountSecurityPage() {
   return (
     <div className="grid gap-6">
       <div>
-        <div className="text-xl font-semibold">Security</div>
-        <div className="mt-1 text-sm text-gray-600">Password & session controls.</div>
+        <div className="text-xl font-semibold">Settings</div>
+        <div className="mt-1 text-sm text-gray-600">Password and account controls.</div>
         {msg ? <div className="mt-2 text-sm">{msg}</div> : null}
       </div>
 

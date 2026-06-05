@@ -65,7 +65,7 @@ export function DashboardLayout({
   );
 
   return (
-    <div className={cn("min-h-[calc(100vh-0px)] md:min-h-screen md:flex", className)}>
+    <div className={cn("min-h-[calc(100vh-0px)] bg-background md:min-h-screen md:flex", className)}>
       <Sidebar title={title} footer={footer ?? defaultFooter}>
         {nav.map((group) => (
           <SidebarGroup key={group.title} title={group.title}>
@@ -82,9 +82,9 @@ export function DashboardLayout({
         ))}
       </Sidebar>
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 overflow-hidden">
         <div className="sticky top-0 z-20 border-b border-border bg-background/70 backdrop-blur-xl">
-          <div className="mx-auto w-full px-4 py-3 md:px-6 flex items-center gap-3">
+          <div className="mx-auto flex w-full flex-wrap items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 md:px-6 md:py-3">
             <div className="md:hidden">
               <SidebarToggleButton />
             </div>
@@ -98,11 +98,11 @@ export function DashboardLayout({
               </div>
             </div>
 
-            {topbarActions ? <div className="flex items-center gap-2">{topbarActions}</div> : null}
+            {topbarActions ? <div className="order-3 flex w-full items-center gap-2 overflow-x-auto pb-1 sm:order-0 sm:w-auto sm:overflow-visible sm:pb-0">{topbarActions}</div> : null}
           </div>
         </div>
 
-        <main className="mx-auto w-full px-4 py-6 md:px-6">
+        <main className="mx-auto w-full px-3 py-3 mobile-bottom-safe sm:px-4 md:px-6 md:py-6">
           {topbarTitle ? (
             <div className="mb-6">
               <div className="text-2xl font-semibold">{topbarTitle}</div>

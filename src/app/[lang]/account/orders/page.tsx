@@ -2,6 +2,9 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import ExportDropdown from "@/components/ExportDropdown";
+import { cookies } from "next/headers";
+import { formatMoney } from "@/lib/money";
+import { getPriceInCurrency } from "@/lib/currency-utils";
 
 function paymentMode(orderStatus: string) {
 	return orderStatus === "PAID" ? "Paid" : "COD";
@@ -15,6 +18,8 @@ export default async function AccountOrdersPage({
 	const { lang } = await params;
 	const user = await requireUser();
 	if (!user) return null;
+	const cookieStore = await cookies();
+	const displayCurrency = cookieStore.get("bohosaaz_currency")?.value === "USD" ? "USD" : "INR";
 
 	const orders = await prisma.order.findMany({
 		where: { userId: user.id, status: { not: "PENDING" } },
@@ -23,6 +28,7 @@ export default async function AccountOrdersPage({
 			id: true,
 			createdAt: true,
 			total: true,
+			currency: true,
 			status: true,
 		},
 	});
@@ -60,7 +66,13 @@ export default async function AccountOrdersPage({
 										Status: <b>{o.status}</b>
 									</div>
 									<div className="text-sm">
-										Total: <b>₹{o.total}</b>
+										Total:{" "}
+										<b>
+											{formatMoney(
+												displayCurrency,
+												getPriceInCurrency(Number(o.total || 0), o.currency === "USD" ? "USD" : "INR", displayCurrency),
+											)}
+										</b>
 									</div>
 								</div>
 							</div>

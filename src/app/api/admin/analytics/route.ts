@@ -25,7 +25,6 @@ export async function GET(req: Request) {
   });
 
   const gmv = rows.reduce((s, r) => s + r.subtotal, 0);
-  const commission = rows.reduce((s, r) => s + r.commission, 0);
   const payout = rows.reduce((s, r) => s + r.payout, 0);
 
   type VendorAgg = {
@@ -33,7 +32,6 @@ export async function GET(req: Request) {
     shopName: string;
     orders: number;
     gmv: number;
-    commission: number;
     payout: number;
   };
 
@@ -45,20 +43,18 @@ export async function GET(req: Request) {
         shopName: r.vendor.shopName,
         orders: 0,
         gmv: 0,
-        commission: 0,
         payout: 0,
       };
     }
     vendorMap[r.vendorId].orders += 1;
     vendorMap[r.vendorId].gmv += r.subtotal;
-    vendorMap[r.vendorId].commission += r.commission;
     vendorMap[r.vendorId].payout += r.payout;
   }
 
   const leaderboard = Object.values(vendorMap).sort((a, b) => b.gmv - a.gmv);
 
   return jsonOk({
-    summary: { gmv, commission, payout, orders: rows.length },
+    summary: { gmv, payout, orders: rows.length },
     leaderboard,
   });
 }

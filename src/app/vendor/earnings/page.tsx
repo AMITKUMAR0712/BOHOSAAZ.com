@@ -26,7 +26,7 @@ function MoneyIcon() {
   );
 }
 
-function WalletIcon() {
+function PayoutIcon() {
   return (
     <IconBox>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -61,7 +61,7 @@ export default function VendorEarningsPage() {
         <div>
           <h1 className="text-2xl font-semibold">Earnings</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Total earnings, payouts, and commission paid.
+            Total earnings and payout activity.
           </p>
           {error ? <div className="mt-2 text-sm text-danger">{error}</div> : null}
         </div>
@@ -93,7 +93,7 @@ export default function VendorEarningsPage() {
           label="Pending Payout"
           value={formatInr(d?.pendingPayoutRupees ?? 0)}
           href="/vendor/earnings"
-          icon={<WalletIcon />}
+          icon={<PayoutIcon />}
           updatedText={updatedText}
           loading={loading}
         />
@@ -101,15 +101,7 @@ export default function VendorEarningsPage() {
           label="Settled Payout"
           value={formatInr(d?.settledPayoutRupees ?? 0)}
           href="/vendor/earnings"
-          icon={<WalletIcon />}
-          updatedText={updatedText}
-          loading={loading}
-        />
-        <KpiCard
-          label="Commission Paid"
-          value={formatInr(d?.commissionPaidRupees ?? 0)}
-          href="/vendor/earnings"
-          icon={<MoneyIcon />}
+          icon={<PayoutIcon />}
           updatedText={updatedText}
           loading={loading}
         />

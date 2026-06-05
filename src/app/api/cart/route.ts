@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { JwtPayload, verifyToken } from "@/lib/auth";
 import { z } from "zod";
 import { recomputePendingOrderTotals } from "@/lib/orderTotals";
+import { getCurrencyFromCookie, getCustomerUnitPrice } from "@/lib/customer-pricing";
+import { bumpLiveVersion } from "@/lib/live";
 
 const addBodySchema = z.object({
   productId: z.string().trim().min(1),
@@ -38,6 +40,7 @@ export async function GET(req: NextRequest) {
   try {
     const order = await prisma.order.findFirst({
       where: { userId: payload.sub, status: "PENDING" },
+      orderBy: { updatedAt: "desc" },
       include: {
         items: {
           include: {
@@ -49,6 +52,7 @@ export async function GET(req: NextRequest) {
                 slug: true,
                 stock: true,
                 currency: true,
+                forceCodOnly: true,
                 images: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], select: { url: true, isPrimary: true } },
                 vendor: { select: { shopName: true } },
                 category: { select: { name: true } },
@@ -57,8 +61,29 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
     });
+
+    if (order && order.items.length === 0) {
+      if (Number(order.total || 0) !== 0 || Number(order.subtotal || 0) !== 0 || order.couponId || order.couponCode) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { subtotal: 0, total: 0, couponId: null, couponCode: null, couponDiscount: 0 },
+        });
+      }
+      const data = {
+        order: {
+          ...order,
+          subtotal: 0,
+          total: 0,
+          couponId: null,
+          couponCode: null,
+          couponDiscount: 0,
+        },
+      };
+      return new Response(JSON.stringify(data, (k, v) => typeof v === 'bigint' ? v.toString() : v), {
+        headers: { "Content-Type": "application/json" }
+      });
+    }
 
     const data = { order: order || null };
     return new Response(JSON.stringify(data, (k, v) => typeof v === 'bigint' ? v.toString() : v), {
@@ -82,6 +107,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return Response.json({ error: "Invalid payload" }, { status: 400 });
 
   const { productId, variantId, qty } = parsed.data;
+  const orderCurrency = getCurrencyFromCookie(req.cookies.get("bohosaaz_currency")?.value);
 
   const product = await prisma.product.findUnique({
     where: { id: productId },
@@ -117,21 +143,28 @@ export async function POST(req: NextRequest) {
   if (maxQty <= 0) return Response.json({ error: "Out of stock" }, { status: 400 });
   const finalQty = Math.min(qty, maxQty);
 
-  const unitPrice = pickedVariant
+  const baseUnitPrice = pickedVariant
     ? Number(pickedVariant.salePrice ?? pickedVariant.price)
     : Number(product.salePrice ?? product.price);
+  const productCurrency = product.currency === "USD" ? "USD" : "INR";
+  const unitPrice = getCustomerUnitPrice({
+    basePrice: baseUnitPrice,
+    productCurrency,
+    displayCurrency: orderCurrency,
+    isVendorProduct: Boolean(product.vendorId),
+  });
 
   try {
     const totals = await prisma.$transaction(async (tx) => {
       let order = await tx.order.findFirst({
-        where: { userId: payload.sub, status: "PENDING" },
+        where: { userId: payload.sub, status: "PENDING", currency: orderCurrency },
         orderBy: { createdAt: "desc" },
         select: { id: true },
       });
 
       if (!order) {
         order = await tx.order.create({
-          data: { userId: payload.sub, status: "PENDING", subtotal: 0, total: 0 },
+          data: { userId: payload.sub, status: "PENDING", currency: orderCurrency, subtotal: 0, total: 0 },
           select: { id: true },
         });
       }
@@ -175,6 +208,7 @@ export async function POST(req: NextRequest) {
       return recomputePendingOrderTotals(tx, order.id);
     });
 
+    await bumpLiveVersion({ kind: "user", userId: payload.sub });
     return Response.json({
       ok: true,
       total: totals.total,
@@ -212,9 +246,17 @@ export async function PATCH(req: NextRequest) {
     if (maxQty <= 0) return Response.json({ error: "Out of stock" }, { status: 400 });
     const finalQty = Math.min(quantity, maxQty);
 
-    const unitPrice = item.variant
+    const orderCurrency = item.order.currency === "USD" ? "USD" : "INR";
+    const baseUnitPrice = item.variant
       ? Number(item.variant.salePrice ?? item.variant.price)
       : Number(item.product.salePrice ?? item.product.price);
+    const productCurrency = item.product.currency === "USD" ? "USD" : "INR";
+    const unitPrice = getCustomerUnitPrice({
+      basePrice: baseUnitPrice,
+      productCurrency,
+      displayCurrency: orderCurrency,
+      isVendorProduct: Boolean(item.product.vendorId),
+    });
 
     const totals = await prisma.$transaction(async (tx) => {
       await tx.orderItem.update({
@@ -231,6 +273,7 @@ export async function PATCH(req: NextRequest) {
       return recomputePendingOrderTotals(tx, item.orderId);
     });
 
+    await bumpLiveVersion({ kind: "user", userId: payload.sub });
     return Response.json({
       ok: true,
       quantity: finalQty,
@@ -286,6 +329,7 @@ export async function DELETE(req: NextRequest) {
       return recomputePendingOrderTotals(tx, order.id);
     });
 
+    await bumpLiveVersion({ kind: "user", userId: payload.sub });
     return Response.json({ ok: true, total: totals.total, subtotal: totals.subtotal, discount: totals.discount, couponCode: totals.couponCode });
   } catch (e: any) {
     console.error("[api/cart] DELETE failed:", e);

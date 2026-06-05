@@ -16,7 +16,6 @@ export async function GET() {
           id: true,
           vendorId: true,
           subtotal: true,
-          commission: true,
           payout: true,
           status: true,
         },

@@ -2,6 +2,17 @@ import { prisma } from "@/lib/prisma";
 import { verifyCourierSignature } from "@/lib/secrets";
 import { bumpLiveVersion } from "@/lib/live";
 
+function normalizeCourierStatus(raw: unknown) {
+  const status = typeof raw === "string" ? raw.trim().toUpperCase() : "";
+  if (!status) return "";
+
+  if (/DELIVER|DELIVERED|DELIVERANCE|SUCCEEDED/.test(status)) return "DELIVERED";
+  if (/IN_TRANSIT|IN TRANSIT|OUT_FOR_DELIVERY|OUT FOR DELIVERY|OUT_FOR_DELIVERY|OD|ON THE WAY|ON THE WAY|PICKED|DISPATCH|SHIPPED|ARRIVED|PICKUP/.test(status)) {
+    return "SHIPPED";
+  }
+  return status;
+}
+
 export async function POST(req: Request) {
   const guard = await verifyCourierSignature(req);
   if (guard) return guard;
@@ -10,8 +21,17 @@ export async function POST(req: Request) {
   if (!payload) return Response.json({ ok: true });
 
   // Example payload mapping
-  const tracking = String(payload.tracking_number || "").trim();
-  const status = String(payload.status || "").trim(); // IN_TRANSIT | DELIVERED
+  const tracking = String(
+    payload.tracking_number ||
+      payload.waybill ||
+      payload.awb ||
+      payload.awb_number ||
+      payload.trackingNumber ||
+      ""
+  ).trim();
+  const status = normalizeCourierStatus(
+    payload.status || payload.current_status || payload.shipment_status || payload.scan_status || ""
+  );
 
   if (!tracking) return Response.json({ ok: true });
 

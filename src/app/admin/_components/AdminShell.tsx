@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import {
   BadgePercent,
   BookOpenText,
-  CircleDollarSign,
   HandCoins,
   LayoutDashboard,
   Megaphone,
@@ -60,7 +59,6 @@ export default function AdminShell({
     if (href.includes("/coupons")) return <BadgePercent className="h-4 w-4" />;
     if (href.includes("/ads")) return <Megaphone className="h-4 w-4" />;
 
-    if (href.includes("/commission")) return <CircleDollarSign className="h-4 w-4" />;
     if (href.includes("/settings")) return <Settings className="h-4 w-4" />;
 
     return <Settings className="h-4 w-4" />;
@@ -113,7 +111,7 @@ export default function AdminShell({
   );
 
   return (
-    <div className="min-h-[calc(100vh-0px)] md:min-h-screen md:flex">
+    <div className="min-h-[calc(100vh-0px)] bg-background md:min-h-screen md:flex">
       <Sidebar title="Admin" footer={footer}>
         <SidebarGroup title="Overview">
           <SidebarItem href="/admin" label="Dashboard" match="exact" icon={iconForHref("/admin")} />
@@ -128,7 +126,7 @@ export default function AdminShell({
           />
           <SidebarItem
             href="/admin/products/new"
-            label="Add Product"
+            label="Create Product"
             match="exact"
             icon={iconForHref("/admin/products/new")}
           />
@@ -202,21 +200,6 @@ export default function AdminShell({
           <SidebarItem href="/admin/ads" label="Ads" match="exact" icon={iconForHref("/admin/ads")} />
         </SidebarGroup>
 
-        <SidebarGroup title="Commission System">
-          <SidebarItem
-            href="/admin/commission/plans"
-            label="Commission Plans"
-            match="exact"
-            icon={iconForHref("/admin/commission/plans")}
-          />
-          <SidebarItem
-            href="/admin/commission/history"
-            label="Commission History"
-            match="exact"
-            icon={iconForHref("/admin/commission/history")}
-          />
-        </SidebarGroup>
-
         <SidebarGroup title="Settings">
           <SidebarItem
             href="/admin/settings/site"
@@ -227,22 +210,22 @@ export default function AdminShell({
         </SidebarGroup>
       </Sidebar>
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 overflow-hidden">
         <div className="sticky top-0 z-20 border-b border-border bg-background/70 backdrop-blur-xl">
-          <div className="mx-auto w-full px-4 py-3 md:px-6 flex items-center gap-3">
+          <div className="mx-auto flex w-full flex-wrap items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 md:px-6 md:py-3">
             <div className="md:hidden">
               <SidebarToggleButton />
             </div>
 
-            <div className="flex-1 flex items-center gap-3">
-              <div className="hidden lg:block w-105 max-w-full">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="hidden w-104 max-w-full lg:block">
                 <Input placeholder="Search (optional)" />
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="order-3 flex w-full items-center gap-2 overflow-x-auto pb-1 sm:order-0 sm:w-auto sm:overflow-visible sm:pb-0">
               <Button size="sm" onClick={() => router.push("/admin/products/new")}>
-                Add Product
+                Create Product
               </Button>
               <Button size="sm" variant="outline" onClick={() => router.push("/admin/settings/site")}> 
                 Site Settings
@@ -254,7 +237,7 @@ export default function AdminShell({
           </div>
         </div>
 
-        <main className="mx-auto w-full px-4 py-6 md:px-6">{children}</main>
+        <main className="mx-auto w-full px-3 py-3 mobile-bottom-safe sm:px-4 md:px-6 md:py-6">{children}</main>
       </div>
     </div>
   );

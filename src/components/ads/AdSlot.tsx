@@ -14,6 +14,20 @@ type Ad = {
   imageUrl: string | null;
   linkUrl: string | null;
   html: string | null;
+  isFallback?: boolean;
+  product?: {
+    id: string;
+    title: string;
+    slug: string;
+    currency?: "INR" | "USD" | string;
+    mrp?: number | null;
+    price: number;
+    salePrice?: number | null;
+    createdAt?: string | Date;
+    images?: Array<{ url: string; isPrimary?: boolean }>;
+    vendorId?: string | null;
+    vendor?: { id?: string | null } | null;
+  } | null;
 };
 
 function isAd(value: unknown): value is Ad {
@@ -53,6 +67,7 @@ function detectDevice(): AdTargetDevice {
 export function AdSlot({
   placement,
   className,
+  langPrefix = "",
 }: {
   placement:
     | "HOME_TOP"
@@ -63,10 +78,11 @@ export function AdSlot({
     | "FOOTER_STRIP"
     | "SEARCH_TOP";
   className?: string;
+  langPrefix?: string;
 }) {
-  const [ad, setAd] = useState<Ad | null>(null);
+  const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
-  const didImpress = useRef(false);
+  const impressedIds = useRef(new Set<string>());
 
   const device = useMemo(() => detectDevice(), []);
 
@@ -81,11 +97,10 @@ export function AdSlot({
       const res = await fetch(`/api/ads?${sp.toString()}`, { cache: "no-store" }).catch(() => null);
       const payload: unknown = res ? await res.json().catch(() => null) : null;
       const list = extractAds(payload);
-      const first = list[0] ?? null;
       if (!cancelled) {
-        setAd(first);
+        setAds(list);
         setLoading(false);
-        didImpress.current = false;
+        impressedIds.current = new Set();
       }
     }
 
@@ -96,19 +111,21 @@ export function AdSlot({
   }, [placement, device]);
 
   useEffect(() => {
-    if (!ad) return;
-    if (didImpress.current) return;
-    didImpress.current = true;
+    for (const ad of ads) {
+      if (ad.isFallback) continue;
+      if (impressedIds.current.has(ad.id)) continue;
+      impressedIds.current.add(ad.id);
+      void fetch(`/api/ads/${encodeURIComponent(ad.id)}/impression`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ referrer: typeof window !== "undefined" ? window.location.href : undefined }),
+      }).catch(() => null);
+    }
+  }, [ads]);
 
-    void fetch(`/api/ads/${encodeURIComponent(ad.id)}/impression`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ referrer: typeof window !== "undefined" ? window.location.href : undefined }),
-    }).catch(() => null);
-  }, [ad]);
-
-  async function trackClick() {
+  async function trackClick(ad: Ad) {
     if (!ad) return;
+    if (ad.isFallback) return;
     void fetch(`/api/ads/${encodeURIComponent(ad.id)}/click`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -117,15 +134,15 @@ export function AdSlot({
   }
 
   if (loading) return null;
-  if (!ad) return null;
+  if (!ads.length) return null;
 
-  const wrap = (node: React.ReactNode) => {
+  const wrap = (ad: Ad, node: React.ReactNode) => {
     if (!ad.linkUrl) return node;
     return (
       <a
         href={ad.linkUrl}
         onClick={() => {
-          void trackClick();
+          void trackClick(ad);
         }}
         className="block"
         rel="noreferrer"
@@ -135,17 +152,22 @@ export function AdSlot({
     );
   };
 
+  const ad = ads.find((item) => item.type !== "PRODUCT_SPOTLIGHT");
+  if (!ad) return null;
+
   if (ad.type === "IMAGE_BANNER" && ad.imageUrl) {
     return (
       <div className={className} aria-label={ad.title}>
         {wrap(
-          <div className="rounded-4xl border border-border bg-card/70 overflow-hidden shadow-premium">
+          ad,
+          <div className="group relative overflow-hidden rounded-[38px] border border-primary/15 bg-card/80 p-2 shadow-[0_24px_80px_rgba(47,38,34,0.12)] backdrop-blur-2xl transition hover:-translate-y-1 hover:shadow-premium">
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-primary/10 via-transparent to-amber-500/10 opacity-80" />
             <Image
               src={ad.imageUrl}
               alt={ad.title}
               width={1400}
               height={500}
-              className="w-full h-auto"
+              className="relative h-auto w-full rounded-[30px] object-cover transition duration-500 group-hover:scale-[1.015]"
               priority={placement === "HOME_TOP"}
             />
           </div>
@@ -170,8 +192,9 @@ export function AdSlot({
     return (
       <div className={className} aria-label={ad.title}>
         {wrap(
+          ad,
           <div
-            className="rounded-4xl border border-border bg-card/70 shadow-premium overflow-hidden"
+            className="overflow-hidden rounded-[38px] border border-primary/15 bg-card/80 p-3 shadow-[0_24px_80px_rgba(47,38,34,0.12)] backdrop-blur-2xl"
             dangerouslySetInnerHTML={{ __html: safe }}
           />
         )}

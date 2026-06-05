@@ -16,6 +16,7 @@ export type HomeBanner = {
   highlightText: string | null;
   subtitle: string | null;
   imageUrl: string;
+  videoUrl?: string | null;
   ctaText: string | null;
   ctaHref: string | null;
   sortOrder: number;
@@ -24,31 +25,9 @@ export type HomeBanner = {
 };
 
 type HomeThemeId = "studio" | "market" | "commerce" | "noir" | "atlas" | "heritage" | "mono";
-
-function discountLabel(coupon: BannerCoupon) {
-  if (!coupon) return null;
-  if (coupon.type === "PERCENT") {
-    const pct = Math.round(Number(coupon.value));
-    return `${pct}% OFF`;
-  }
-  const amount = Math.round(Number(coupon.value));
-  return `₹${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })} OFF`;
-}
-
-function appendCouponParam(href: string, couponCode: string) {
-  try {
-    const url = new URL(href, "http://local");
-    if (!url.searchParams.get("coupon")) url.searchParams.set("coupon", couponCode);
-    const path = `${url.pathname}${url.search ? url.search : ""}${url.hash ? url.hash : ""}`;
-    return href.startsWith("http://") || href.startsWith("https://") ? url.toString() : path;
-  } catch {
-    const joiner = href.includes("?") ? "&" : "?";
-    return `${href}${joiner}coupon=${encodeURIComponent(couponCode)}`;
-  }
-}
+const SLIDE_MS = 5000;
 
 export function BannerCarousel({
-  lang,
   banners,
   homeTheme,
 }: {
@@ -69,35 +48,29 @@ export function BannerCarousel({
     setIndex(i);
   };
 
-  // Auto-swipe every 4s; pause on hover.
+  // Each gifting story plays for 5 seconds, then moves to the next banner/video.
   useEffect(() => {
     if (safeBanners.length <= 1) return;
     if (paused) return;
-    const t = setInterval(() => {
+    const t = setTimeout(() => {
       setIndex((prev) => {
         const n = safeBanners.length;
         return n ? (prev + 1) % n : 0;
       });
-    }, 4000);
-    return () => clearInterval(t);
-  }, [paused, safeBanners.length]);
+    }, SLIDE_MS);
+    return () => clearTimeout(t);
+  }, [index, paused, safeBanners.length]);
 
   if (!safeBanners.length) return null;
 
-  const href = (() => {
-    if (!current) return null;
-    const base = current.ctaHref?.trim() || null;
-    if (!base) return current.couponCode ? `/${lang}/offers?coupon=${encodeURIComponent(current.couponCode)}` : null;
-    return current.couponCode ? appendCouponParam(base, current.couponCode) : base;
-  })();
-
-  const badge = discountLabel(current?.coupon ?? null);
+  const storyUrl = current?.videoUrl?.trim() || null;
+  const isAnimatedSvgStory = Boolean(storyUrl?.toLowerCase().split("?")[0]?.endsWith(".svg"));
 
   const chrome = (() => {
     if (homeTheme !== "commerce") {
       return {
-        shell: "relative overflow-hidden rounded-[28px] border border-border bg-card shadow-premium",
-        overlay: "absolute inset-0 bg-linear-to-r from-background/85 via-background/55 to-transparent",
+        shell: "relative overflow-hidden rounded-[34px] border border-border/80 bg-card/80 shadow-premium backdrop-blur-xl",
+        overlay: "absolute inset-0 bg-linear-to-r from-background/82 via-background/48 to-background/5",
         cta: "inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md hover:-translate-y-px active:translate-y-0 transition",
         nav: "rounded-full border border-border bg-background/70 px-3 py-2 text-sm backdrop-blur hover:bg-background/85 transition",
         dotOn: "bg-primary",
@@ -112,7 +85,7 @@ export function BannerCarousel({
     // Commerce: more retail/boxed, clearer chrome (Amazon-like vibe)
     return {
       shell: "relative overflow-hidden rounded-2xl border-2 border-border bg-background shadow-sm",
-      overlay: "absolute inset-0 bg-linear-to-r from-background/92 via-background/70 to-transparent",
+        overlay: "absolute inset-0 bg-linear-to-r from-background/86 via-background/58 to-transparent",
       cta: "inline-flex h-11 items-center justify-center rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition",
       nav: "rounded-lg border border-border bg-background/85 px-3 py-2 text-sm backdrop-blur hover:bg-background transition",
       dotOn: "bg-foreground",
@@ -125,7 +98,7 @@ export function BannerCarousel({
   })();
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-4">
+    <section className="mx-auto w-full max-w-6xl px-3 sm:px-4">
       <div
         className={chrome.shell}
         onMouseEnter={() => {
@@ -137,49 +110,42 @@ export function BannerCarousel({
           setPaused(false);
         }}
       >
-        <div className="relative aspect-16/7 w-full">
-          <img
-            src={current?.imageUrl}
-            alt={current?.title || "Banner"}
-            className="absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
-          />
+        <div className="relative min-h-[280px] w-full sm:aspect-16/7 sm:min-h-0">
+          {storyUrl ? (
+            isAnimatedSvgStory ? (
+              <img
+                src={storyUrl}
+                alt={current?.title || "Bohosaaz gifting story"}
+                className="absolute inset-0 h-full w-full object-cover"
+                loading="eager"
+              />
+            ) : (
+            <video
+              key={storyUrl}
+              src={storyUrl}
+              poster={current.imageUrl || undefined}
+              className="absolute inset-0 h-full w-full object-cover"
+              autoPlay
+              muted
+              playsInline
+              preload="auto"
+              onLoadedData={(event) => {
+                event.currentTarget.currentTime = 0;
+                void event.currentTarget.play().catch(() => undefined);
+              }}
+            />
+            )
+          ) : (
+            <img
+              src={current?.imageUrl}
+              alt={current?.title || "Banner"}
+              className="absolute inset-0 h-full w-full object-cover"
+              loading="lazy"
+            />
+          )}
           <div className={chrome.overlay} />
 
-          <div className="relative z-10 flex h-full flex-col justify-end p-6 md:p-10">
-            <div className="flex flex-wrap items-center gap-2">
-              {current?.highlightText ? (
-                <span className={chrome.chipA}>
-                  {current.highlightText}
-                </span>
-              ) : null}
-              {badge ? (
-                <span className={chrome.chipB}>
-                  {badge}
-                </span>
-              ) : null}
-            </div>
-
-            <div className="mt-4 font-heading text-2xl md:text-4xl tracking-tight text-foreground">
-              {current?.title}
-            </div>
-            {current?.subtitle ? (
-              <div className="mt-2 max-w-xl text-sm md:text-base text-muted-foreground">
-                {current.subtitle}
-              </div>
-            ) : null}
-
-            {href ? (
-              <div className="mt-6">
-                <a
-                  href={href}
-                  className={chrome.cta}
-                >
-                  {current?.ctaText?.trim() || "Shop now"}
-                </a>
-              </div>
-            ) : null}
-          </div>
+          <div className="relative z-10 h-full" />
         </div>
 
         {safeBanners.length > 1 ? (
@@ -188,7 +154,7 @@ export function BannerCarousel({
               type="button"
               onClick={() => go(index - 1)}
               className={
-                "absolute left-3 top-1/2 -translate-y-1/2 " +
+                "absolute left-2 top-1/2 -translate-y-1/2 sm:left-3 " +
                 chrome.nav
               }
               aria-label="Previous banner"
@@ -199,7 +165,7 @@ export function BannerCarousel({
               type="button"
               onClick={() => go(index + 1)}
               className={
-                "absolute right-3 top-1/2 -translate-y-1/2 " +
+                "absolute right-2 top-1/2 -translate-y-1/2 sm:right-3 " +
                 chrome.nav
               }
               aria-label="Next banner"

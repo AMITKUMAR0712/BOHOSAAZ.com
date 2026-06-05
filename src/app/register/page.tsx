@@ -1,12 +1,18 @@
-import { Suspense } from "react";
 import RegisterClient from "./RegisterClient";
+import { isLocale } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
-export default function RegisterPage() {
-  return (
-    <Suspense fallback={<main className="min-h-screen flex items-center justify-center p-6">Loading...</main>}>
-      <RegisterClient />
-    </Suspense>
-  );
+type RegisterPageProps = {
+  params?: Promise<{ lang?: string }>;
+  searchParams?: Promise<{ next?: string | string[] }>;
+};
+
+export default async function RegisterPage({ params, searchParams }: RegisterPageProps) {
+  const resolvedParams = (await params) ?? {};
+  const resolvedSearch = (await searchParams) ?? {};
+  const lang = resolvedParams.lang && isLocale(resolvedParams.lang) ? resolvedParams.lang : "en";
+  const next = typeof resolvedSearch.next === "string" ? resolvedSearch.next : null;
+
+  return <RegisterClient langPrefix={`/${lang}`} next={next} />;
 }

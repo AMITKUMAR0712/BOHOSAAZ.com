@@ -6,7 +6,6 @@ import { z } from "zod";
 import { rateLimit } from "@/lib/rateLimit";
 import { recomputePendingOrderTotals } from "@/lib/orderTotals";
 import { amountToMinorUnits } from "@/lib/money";
-import { resolveCommissionPlanTx } from "@/lib/commission";
 
 const bodySchema = z.object({
   fullName: z.string().trim().min(2),
@@ -80,6 +79,7 @@ export async function POST(req: NextRequest) {
     const order = await tx.order.findFirst({
       where: { userId: payload.sub, status: "PENDING" },
       include: {
+        payment: true,
         items: {
           include: {
             variant: true,
@@ -93,20 +93,72 @@ export async function POST(req: NextRequest) {
     if (!order) throw new Error("Cart is empty");
     if (order.items.length === 0) throw new Error("Cart is empty");
 
-    // Ensure single-currency order (INR or USD) early, before side effects.
-    const orderCurrency = (() => {
-      const first = order.items[0]?.product?.currency;
-      return first === "USD" ? "USD" : "INR";
-    })();
-
-    for (const it of order.items) {
-      const c = it.product?.currency === "USD" ? "USD" : "INR";
-      if (c !== orderCurrency) {
-        throw new Error("Mixed currency cart is not supported. Checkout INR and USD items separately.");
-      }
-    }
+    const orderCurrency = order.currency === "USD" ? "USD" : "INR";
     if (requestedCurrency && requestedCurrency !== orderCurrency) {
       throw new Error("Selected currency does not match cart currency.");
+    }
+
+    if (order.payment?.status === "CREATED" && order.payment.razorpayOrderId) {
+      const totals = await recomputePendingOrderTotals(tx, order.id);
+      const rpCurrency: "INR" | "USD" = orderCurrency;
+      const amountMinor = amountToMinorUnits(orderCurrency, totals.total);
+
+      await tx.order.update({
+        where: { id: order.id },
+        data: {
+          status: "PENDING",
+          subtotal: totals.subtotal,
+          total: totals.total,
+          paymentMethod: "RAZORPAY",
+          fullName,
+          phone,
+          address1,
+          address2: address2 || null,
+          city,
+          state,
+          pincode,
+        },
+      });
+
+      if (order.payment.amountPaise === amountMinor && order.payment.currency === rpCurrency) {
+        return {
+          keyId,
+          orderId: order.id,
+          razorpayOrderId: order.payment.razorpayOrderId,
+          amountPaise: amountMinor.toString(),
+          currency: rpCurrency,
+        };
+      }
+
+      const rpOrder = (await razorpay.orders.create({
+        amount: Number(amountMinor),
+        currency: rpCurrency,
+        receipt: `order_${order.id}`,
+        payment_capture: true,
+        notes: { orderId: order.id, userId: payload.sub },
+      })) as unknown as { id: string };
+
+      await tx.orderPayment.update({
+        where: { orderId: order.id },
+        data: {
+          amountPaise: amountMinor,
+          currency: rpCurrency,
+          status: "CREATED",
+          razorpayOrderId: rpOrder.id,
+          razorpayPaymentId: null,
+          capturedAt: null,
+          failedAt: null,
+          failureReason: null,
+        },
+      });
+
+      return {
+        keyId,
+        orderId: order.id,
+        razorpayOrderId: rpOrder.id,
+        amountPaise: amountMinor.toString(),
+        currency: rpCurrency,
+      };
     }
 
     // validate stock + recompute prices
@@ -149,26 +201,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // update items price to current variant/product price
-    for (const it of order.items) {
-      let unitPrice: number;
-      if (it.variantId) {
-        if (!it.variant) throw new Error("Variant unavailable");
-        unitPrice = Number(it.variant.salePrice ?? it.variant.price);
-      } else {
-        unitPrice = Number(it.product.salePrice ?? it.product.price);
-      }
-
-      await tx.orderItem.update({
-        where: { id: it.id },
-        data: {
-          price: unitPrice,
-          variantSku: it.variantId ? it.variant?.sku ?? null : null,
-          variantSize: it.variantId ? it.variant?.size ?? null : null,
-          variantColor: it.variantId ? it.variant?.color ?? null : null,
-        },
-      });
-    }
+    // Keep cart item prices unchanged here. They were already converted to
+    // order.currency when the item was added, and Razorpay must charge that same total.
 
     // compute per-vendor subtotals from fresh item prices
     const refreshed = await tx.orderItem.findMany({
@@ -176,14 +210,11 @@ export async function POST(req: NextRequest) {
       include: { product: { include: { vendor: true } } },
     });
 
-    const perVendor: Record<
-      string,
-      { vendor: { id: string; commission: number | null }; subtotal: number; itemIds: string[] }
-    > = {};
+    const perVendor: Record<string, { subtotal: number; itemIds: string[] }> = {};
     for (const it of refreshed) {
       const vendor = it.product.vendor;
       if (!vendor) throw new Error("Vendor missing for product");
-      if (!perVendor[vendor.id]) perVendor[vendor.id] = { vendor, subtotal: 0, itemIds: [] };
+      if (!perVendor[vendor.id]) perVendor[vendor.id] = { subtotal: 0, itemIds: [] };
       perVendor[vendor.id].subtotal += it.price * it.quantity;
       perVendor[vendor.id].itemIds.push(it.id);
     }
@@ -191,12 +222,8 @@ export async function POST(req: NextRequest) {
     // create vendor sub-orders
     const vendorOrderByVendorId: Record<string, string> = {};
     for (const vendorId of Object.keys(perVendor)) {
-      const { vendor, subtotal } = perVendor[vendorId];
-      const planned = await resolveCommissionPlanTx(tx, { vendorId });
-      const commissionPct = planned.planId ? planned.percent : Number(vendor.commission ?? 0);
-      const rate = commissionPct > 1 ? commissionPct / 100 : commissionPct;
-      const commission = +(subtotal * rate).toFixed(2);
-      const payout = +(subtotal - commission).toFixed(2);
+      const { subtotal } = perVendor[vendorId];
+      const payout = +subtotal.toFixed(2);
 
       const vo = await tx.vendorOrder.create({
         data: {
@@ -204,28 +231,10 @@ export async function POST(req: NextRequest) {
           vendorId,
           status: "PLACED",
           subtotal,
-          commission,
+          commission: 0,
           payout,
         },
         select: { id: true },
-      });
-
-      await tx.commissionHistory.upsert({
-        where: { vendorOrderId: vo.id },
-        update: {
-          commissionPercent: commissionPct,
-          baseAmountPaise: amountToMinorUnits(orderCurrency, subtotal),
-          commissionPaise: amountToMinorUnits(orderCurrency, commission),
-          planId: planned.planId,
-        },
-        create: {
-          vendorId,
-          vendorOrderId: vo.id,
-          planId: planned.planId,
-          commissionPercent: commissionPct,
-          baseAmountPaise: amountToMinorUnits(orderCurrency, subtotal),
-          commissionPaise: amountToMinorUnits(orderCurrency, commission),
-        },
       });
       vendorOrderByVendorId[vendorId] = vo.id;
     }
@@ -243,22 +252,29 @@ export async function POST(req: NextRequest) {
 
     // Recompute totals (subtotal + coupon discount + total) from the latest item prices
     const totals = await recomputePendingOrderTotals(tx, order.id);
+
+    // Use the order currency for Razorpay so USD orders create USD payments
+    // and INR orders create INR payments. Ensure your Razorpay account is
+    // configured to accept the chosen currency (USD support may require
+    // additional setup with Razorpay).
+    const rpCurrency: "INR" | "USD" = orderCurrency;
     const amountMinor = amountToMinorUnits(orderCurrency, totals.total);
 
     // Create/refresh Razorpay order
     const rpOrder = (await razorpay.orders.create({
       amount: Number(amountMinor),
-      currency: orderCurrency,
+      currency: rpCurrency,
       receipt: `order_${order.id}`,
       payment_capture: true,
       notes: { orderId: order.id, userId: payload.sub },
     })) as unknown as { id: string };
 
-    // Finalize order (payment pending on Razorpay side)
+    // Keep the order as cart/pending until Razorpay verifies payment.
+    // A dismissed/cancelled Razorpay modal must not become a placed order.
     await tx.order.update({
       where: { id: order.id },
       data: {
-        status: "PLACED",
+        status: "PENDING",
         subtotal: totals.subtotal,
         total: totals.total,
         paymentMethod: "RAZORPAY",
@@ -277,7 +293,7 @@ export async function POST(req: NextRequest) {
       where: { orderId: order.id },
       update: {
         amountPaise: amountMinor,
-        currency: orderCurrency,
+        currency: rpCurrency,
         status: "CREATED",
         razorpayOrderId: rpOrder.id,
         razorpayPaymentId: null,
@@ -288,7 +304,7 @@ export async function POST(req: NextRequest) {
       create: {
         orderId: order.id,
         amountPaise: amountMinor,
-        currency: orderCurrency,
+        currency: rpCurrency,
         status: "CREATED",
         razorpayOrderId: rpOrder.id,
       },
@@ -299,7 +315,7 @@ export async function POST(req: NextRequest) {
       orderId: order.id,
       razorpayOrderId: rpOrder.id,
       amountPaise: amountMinor.toString(),
-      currency: orderCurrency,
+      currency: rpCurrency,
     };
     });
 

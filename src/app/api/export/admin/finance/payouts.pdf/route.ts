@@ -33,7 +33,6 @@ export async function GET(req: Request) {
       id: true,
       status: true,
       amountPaise: true,
-      commissionPaise: true,
       createdAt: true,
       settledAt: true,
       vendor: { select: { shopName: true } },
@@ -44,7 +43,6 @@ export async function GET(req: Request) {
   const typed = payouts as Array<
     {
       amountPaise: bigint;
-      commissionPaise: bigint;
       createdAt: Date;
       settledAt: Date | null;
       vendor: { shopName: string };
@@ -58,7 +56,6 @@ export async function GET(req: Request) {
     vendor: p.vendor.shopName,
     status: String(p.status ?? ""),
     amount: formatInrPaise(p.amountPaise),
-    commission: formatInrPaise(p.commissionPaise),
     createdAt: formatIsoDateTime(p.createdAt),
     settledAt: p.settledAt ? formatIsoDateTime(p.settledAt) : "",
   }));
@@ -73,7 +70,6 @@ export async function GET(req: Request) {
           { key: "vendor", label: "Vendor", width: 120 },
           { key: "status", label: "Status", width: 60 },
           { key: "amount", label: "Amount", width: 70, align: "right" },
-          { key: "commission", label: "Comm", width: 60, align: "right" },
           { key: "createdAt", label: "Created (ISO)", width: 140 },
         ],
         rows,

@@ -50,7 +50,7 @@ const ORDER_STATUS_GMV = [
 ] as const satisfies readonly OrderStatus[];
 
 export async function getUserDashboardMetrics(userId: string): Promise<UserDashboardMetrics> {
-  const [cartOrder, pendingOrdersCount, deliveredOrdersCount, wallet, activeReturnsCount, openSupportTicketsCount, vendor] =
+  const [cartOrder, pendingOrdersCount, deliveredOrdersCount, activeReturnsCount, openSupportTicketsCount, vendor] =
     await Promise.all([
       prisma.order.findFirst({
         where: { userId, status: "PENDING" },
@@ -61,10 +61,6 @@ export async function getUserDashboardMetrics(userId: string): Promise<UserDashb
       }),
       prisma.order.count({
         where: { userId, status: "DELIVERED" },
-      }),
-      prisma.walletAccount.findUnique({
-        where: { userId },
-        select: { balancePaise: true },
       }),
       prisma.returnRequest.count({
         where: {
@@ -91,7 +87,6 @@ export async function getUserDashboardMetrics(userId: string): Promise<UserDashb
     cartItemsCount,
     pendingOrdersCount,
     deliveredOrdersCount,
-    walletBalanceRupees: round2(paiseToRupees(wallet?.balancePaise ?? BigInt(0))),
     activeReturnsCount,
     openSupportTicketsCount,
     vendorApplicationStatus,
@@ -115,7 +110,7 @@ export async function getVendorDashboardMetrics(vendorId: string): Promise<Vendo
     }),
     prisma.payout.aggregate({
       where: { vendorId, status: "SETTLED" },
-      _sum: { amountPaise: true, commissionPaise: true },
+      _sum: { amountPaise: true },
     }),
     prisma.payout.aggregate({
       where: { vendorId, status: "SETTLED", settledAt: { gte: month } },
@@ -127,7 +122,6 @@ export async function getVendorDashboardMetrics(vendorId: string): Promise<Vendo
 
   const pendingPayoutPaise = (pendingPayoutAgg._sum.amountPaise ?? BigInt(0)) as bigint;
   const settledPayoutPaise = (settledAgg._sum.amountPaise ?? BigInt(0)) as bigint;
-  const commissionPaidPaise = (settledAgg._sum.commissionPaise ?? BigInt(0)) as bigint;
   const monthEarningsPaise = (monthSettledAgg._sum.amountPaise ?? BigInt(0)) as bigint;
 
   return {
@@ -135,7 +129,6 @@ export async function getVendorDashboardMetrics(vendorId: string): Promise<Vendo
     earningsThisMonthRupees: round2(paiseToRupees(monthEarningsPaise)),
     pendingPayoutRupees: round2(paiseToRupees(pendingPayoutPaise)),
     settledPayoutRupees: round2(paiseToRupees(settledPayoutPaise)),
-    commissionPaidRupees: round2(paiseToRupees(commissionPaidPaise)),
     totalOrdersCount: ordersCount,
     totalReturnsCount: returnsCount,
     updatedAt: new Date().toISOString(),
@@ -149,8 +142,6 @@ export async function getAdminDashboardMetrics(): Promise<AdminDashboardMetrics>
   const [
     gmvTodayAgg,
     gmv7dAgg,
-    commissionTodayAgg,
-    commission7dAgg,
     pendingVendorApprovalsCount,
     pendingPayoutSettlementsCount,
     supportTicketsOpen,
@@ -171,20 +162,6 @@ export async function getAdminDashboardMetrics(): Promise<AdminDashboardMetrics>
       },
       _sum: { total: true },
     }),
-    prisma.vendorOrder.aggregate({
-      where: {
-        createdAt: { gte: today },
-        status: { in: ["PLACED", "PACKED", "SHIPPED", "DELIVERED", "SETTLED"] },
-      },
-      _sum: { commission: true },
-    }),
-    prisma.vendorOrder.aggregate({
-      where: {
-        createdAt: { gte: week },
-        status: { in: ["PLACED", "PACKED", "SHIPPED", "DELIVERED", "SETTLED"] },
-      },
-      _sum: { commission: true },
-    }),
     prisma.vendor.count({ where: { status: "PENDING" } }),
     prisma.payout.count({ where: { status: { in: ["PENDING", "HELD"] } } }),
     prisma.supportTicket.count({ where: { status: { in: ["OPEN", "IN_PROGRESS"] } } }),
@@ -195,8 +172,6 @@ export async function getAdminDashboardMetrics(): Promise<AdminDashboardMetrics>
   return {
     gmvTodayRupees: round2(Number(gmvTodayAgg._sum?.total ?? 0)),
     gmv7dRupees: round2(Number(gmv7dAgg._sum?.total ?? 0)),
-    commissionTodayRupees: round2(Number(commissionTodayAgg._sum.commission ?? 0)),
-    commission7dRupees: round2(Number(commission7dAgg._sum.commission ?? 0)),
     pendingVendorApprovalsCount,
     pendingPayoutSettlementsCount,
     openTicketsCount: supportTicketsOpen + userTicketsOpen,

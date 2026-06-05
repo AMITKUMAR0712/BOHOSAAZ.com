@@ -6,11 +6,20 @@ import { audit } from "@/lib/audit";
 import { jsonError, jsonOk } from "@/lib/api";
 import { getIpFromRequest, getUserAgentFromRequest } from "@/lib/requestMeta";
 
+const mediaUrlSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .refine((value) => value.startsWith("/uploads/") || z.string().url().safeParse(value).success, {
+    message: "Invalid media URL",
+  });
+
 const patchSchema = z.object({
   title: z.string().trim().min(1).max(200).optional(),
   highlightText: z.string().trim().max(200).optional().nullable(),
   subtitle: z.string().trim().max(400).optional().nullable(),
-  imageUrl: z.string().trim().url().optional(),
+  imageUrl: mediaUrlSchema.optional(),
+  videoUrl: mediaUrlSchema.optional().nullable(),
   ctaText: z.string().trim().max(80).optional().nullable(),
   ctaHref: z.string().trim().max(2048).optional().nullable(),
   isActive: z.boolean().optional(),
@@ -56,6 +65,7 @@ export async function PATCH(
         parsed.data.highlightText !== undefined ? parsed.data.highlightText : undefined,
       subtitle: parsed.data.subtitle !== undefined ? parsed.data.subtitle : undefined,
       imageUrl: parsed.data.imageUrl ?? undefined,
+      videoUrl: parsed.data.videoUrl !== undefined ? parsed.data.videoUrl : undefined,
       ctaText: parsed.data.ctaText !== undefined ? parsed.data.ctaText : undefined,
       ctaHref: parsed.data.ctaHref !== undefined ? parsed.data.ctaHref : undefined,
       isActive: parsed.data.isActive ?? undefined,
@@ -80,6 +90,7 @@ export async function PATCH(
       highlightText: true,
       subtitle: true,
       imageUrl: true,
+      videoUrl: true,
       ctaText: true,
       ctaHref: true,
       isActive: true,

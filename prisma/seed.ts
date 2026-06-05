@@ -421,6 +421,15 @@ async function main() {
     const commission = pick(rng, [6, 8, 10, 12, 15]);
     const shopName = `${pick(rng, shopAdjectives)} ${pick(rng, shopNouns)}`;
 
+    const cities = [
+      { city: "Delhi", state: "DL", pin: "110001" },
+      { city: "Mumbai", state: "MH", pin: "400001" },
+      { city: "Bengaluru", state: "KA", pin: "560001" },
+      { city: "Kolkata", state: "WB", pin: "700001" },
+      { city: "Chennai", state: "TN", pin: "600001" }
+    ];
+    const location = pick(rng, cities);
+
     const v = await prisma.vendor.create({
       data: {
         userId: u.id,
@@ -431,9 +440,9 @@ async function main() {
         pickupName: `${fn} ${ln}`,
         pickupPhone: u.phone,
         pickupAddress1: `${randInt(rng, 1, 200)} Artisan Street`,
-        pickupCity: pick(rng, ["Jaipur", "Delhi", "Mumbai", "Kolkata", "Bengaluru", "Chennai"]),
-        pickupState: pick(rng, ["RJ", "DL", "MH", "WB", "KA", "TN"]),
-        pickupPincode: String(randInt(rng, 110001, 560099)),
+        pickupCity: location.city,
+        pickupState: location.state,
+        pickupPincode: location.pin,
       },
       select: { id: true, commission: true, userId: true, shopName: true },
     });
@@ -814,6 +823,15 @@ async function main() {
 
     const createdAt = isoDateDaysAgo(randInt(rng, 0, 30));
 
+    const cities = [
+      { city: "Delhi", state: "DL", pin: "110001" },
+      { city: "Mumbai", state: "MH", pin: "400001" },
+      { city: "Bengaluru", state: "KA", pin: "560001" },
+      { city: "Kolkata", state: "WB", pin: "700001" },
+      { city: "Chennai", state: "TN", pin: "600001" }
+    ];
+    const location = pick(rng, cities);
+
     const order = await prisma.order.create({
       data: {
         userId: user.id,
@@ -824,9 +842,9 @@ async function main() {
         phone: `9${randInt(rng, 100000000, 999999999)}`,
         address1: `${randInt(rng, 1, 200)} Seed Street`,
         address2: maybe(rng, 0.35) ? "Near Seed Market" : null,
-        city: pick(rng, ["Jaipur", "Delhi", "Mumbai", "Kolkata", "Bengaluru", "Chennai"]),
-        state: pick(rng, ["RJ", "DL", "MH", "WB", "KA", "TN"]),
-        pincode: String(randInt(rng, 110001, 560099)),
+        city: location.city,
+        state: location.state,
+        pincode: location.pin,
         createdAt,
       },
       select: { id: true, userId: true, total: true },

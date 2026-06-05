@@ -1,4 +1,6 @@
 import { NextRequest } from "next/server";
+import { verifyToken, type JwtPayload } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 import { POST as razorpayCreate } from "../razorpay/create/route";
 import { POST as codCreate } from "../cod/route";
@@ -34,6 +36,36 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => null);
     const paymentMethod = isRecord(body) ? (body.paymentMethod ?? body.method) : undefined;
     const method = normalizeMethod(paymentMethod);
+
+    if (method === "RAZORPAY") {
+      const token = req.cookies.get("token")?.value;
+      if (!token) {
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      let payload: JwtPayload;
+      try {
+        payload = verifyToken(token);
+      } catch {
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const order = await prisma.order.findFirst({
+        where: { userId: payload.sub, status: "PENDING" },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (!order?.items.length) {
+        return Response.json({ error: "Cart is empty" }, { status: 400 });
+      }
+    }
 
     const forwardReq = forwardAsNextRequest(req, body);
 

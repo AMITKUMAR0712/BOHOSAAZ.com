@@ -36,7 +36,7 @@ export default function VendorShell({
   );
 
   return (
-    <div className="min-h-[calc(100vh-0px)] md:min-h-screen md:flex">
+    <div className="min-h-[calc(100vh-0px)] bg-background md:min-h-screen md:flex">
       <Sidebar title="Vendor" footer={footer}>
         <SidebarGroup title="Dashboard">
           <SidebarItem
@@ -47,19 +47,19 @@ export default function VendorShell({
           />
         </SidebarGroup>
 
-        <SidebarGroup title="My Products">
+        <SidebarGroup title="All Products">
           <SidebarItem
             href="/vendor/products"
-            label="My Products"
+            label="All Products"
             match="exact"
             icon={<Package className="h-4 w-4" />}
           />
         </SidebarGroup>
 
-        <SidebarGroup title="Add Product">
+        <SidebarGroup title="Create Product">
           <SidebarItem
             href="/vendor/products/new"
-            label="Add Product"
+            label="Create Product"
             match="exact"
             icon={<PlusSquare className="h-4 w-4" />}
           />
@@ -75,24 +75,24 @@ export default function VendorShell({
         </SidebarGroup>
       </Sidebar>
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 overflow-hidden">
         <div className="sticky top-0 z-20 border-b border-border bg-background/70 backdrop-blur-xl">
-          <div className="mx-auto w-full px-4 py-3 md:px-6 flex items-center gap-3">
+          <div className="mx-auto flex w-full items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 md:px-6 md:py-3">
             <div className="md:hidden">
               <SidebarToggleButton />
             </div>
             <div className="flex-1">
               <div className="font-heading text-base md:text-lg tracking-tight">Vendor Panel</div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <Button size="sm" onClick={() => router.push("/vendor/products/new")}>
-                Add Product
+                Create Product
               </Button>
             </div>
           </div>
         </div>
 
-        <main className="mx-auto w-full px-4 py-6 md:px-6">{children}</main>
+        <main className="mx-auto w-full px-3 py-3 mobile-bottom-safe sm:px-4 md:px-6 md:py-6">{children}</main>
       </div>
     </div>
   );

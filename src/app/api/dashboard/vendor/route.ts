@@ -9,7 +9,6 @@ const VendorMetricsSchema = z.object({
   earningsThisMonthRupees: z.number().nonnegative(),
   pendingPayoutRupees: z.number().nonnegative(),
   settledPayoutRupees: z.number().nonnegative(),
-  commissionPaidRupees: z.number().nonnegative(),
   totalOrdersCount: z.number().int().nonnegative(),
   totalReturnsCount: z.number().int().nonnegative(),
   updatedAt: z.string(),

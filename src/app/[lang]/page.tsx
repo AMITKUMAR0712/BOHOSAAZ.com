@@ -1,29 +1,37 @@
-﻿import { dict } from "@/lib/dict";
+import type { Metadata } from "next";
+import { dict } from "@/lib/dict";
 import { isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import Link from "next/link";
 import { ProductCard } from "@/components/ProductCard";
-import { BrandCarousel } from "@/components/BrandCarousel";
 import { BannerCarousel, type HomeBanner } from "@/components/BannerCarousel";
 import { AdSlot } from "@/components/ads/AdSlot";
 import IconByName from "@/components/IconByName";
+import { DEFAULT_OCCASION_OPTIONS, DEFAULT_RECIPIENT_OPTIONS } from "@/lib/shopFilters";
+import { formatPriceInCurrency } from "@/lib/currency-utils";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-function renderNumericRuns(text: string) {
-  const parts = String(text).split(/(\d[\d,\.]*)/g);
-  return parts
-    .filter((p) => p.length > 0)
-    .map((part, i) =>
-      /\d/.test(part) ? (
-        <span key={i} className="font-numeric tabular-nums">
-          {part}
-        </span>
-      ) : (
-        <span key={i}>{part}</span>
-      )
-    );
-}
+export const metadata: Metadata = {
+  title: "Gift Products in Noida, Greater Noida & Delhi NCR | Bohosaaz",
+  description:
+    "Bohosaaz is a premium online gifting store for Noida, Greater Noida, New Delhi and Delhi NCR. Shop birthday gifts, anniversary gifts, corporate gifts, festival gifts, barware, home decor and curated gift hampers.",
+  keywords: [
+    "gift products in Noida",
+    "gift products in Greater Noida",
+    "gift products in New Delhi",
+    "gift products in Delhi NCR",
+    "online gifts Noida",
+    "birthday gifts Delhi NCR",
+    "anniversary gifts Greater Noida",
+    "corporate gifts New Delhi",
+    "premium gift hampers Noida",
+    "Bohosaaz gifts",
+  ],
+};
 
 type Category = {
   id: string;
@@ -44,6 +52,8 @@ type Product = {
   salePrice?: number | null;
   createdAt?: string;
   images?: ProductImage[];
+  vendorId?: string | null;
+  vendor?: { id?: string | null } | null;
 };
 
 type Brand = {
@@ -51,6 +61,7 @@ type Brand = {
   name: string;
   slug: string;
   logoUrl: string | null;
+  brandType: string;
 };
 
 /* ✅ Premium Chip */
@@ -179,6 +190,78 @@ function SectionHeader({
   );
 }
 
+function BrandMarquee({
+  title,
+  eyebrow,
+  href,
+  brands,
+  duration,
+}: {
+  title: string;
+  eyebrow: string;
+  href: string;
+  brands: Brand[];
+  duration: string;
+}) {
+  const marqueeBrands = brands.length ? [...brands, ...brands] : [];
+
+  return (
+    <div className="relative overflow-hidden rounded-[34px] border border-primary/15 bg-linear-to-br from-background/90 via-card/80 to-primary/5 p-5 shadow-[0_18px_60px_rgba(47,38,34,0.08)] backdrop-blur-xl">
+      <div className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full bg-primary/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-16 -left-12 h-44 w-44 rounded-full bg-amber-500/10 blur-3xl" />
+      <div className="relative flex items-end justify-between gap-4">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.3em] text-primary/75">{eyebrow}</div>
+          <h3 className="mt-2 font-heading text-3xl tracking-tight text-foreground">{title}</h3>
+        </div>
+        <Link
+          href={href}
+          className="rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:border-primary/30 hover:text-primary"
+        >
+          View all
+        </Link>
+      </div>
+
+      {brands.length ? (
+        <div className="relative mt-6 overflow-hidden">
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-linear-to-r from-background/95 to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-linear-to-l from-background/95 to-transparent" />
+          <div
+            className="flex w-max gap-4 py-1 animate-[brand-marquee_linear_infinite] hover:[animation-play-state:paused]"
+            style={{ animationDuration: duration }}
+          >
+            {marqueeBrands.map((brand, index) => (
+              <Link
+                key={`${brand.id}-${index}`}
+                href={href.replace(/\/brands\/(popular|luxury)$/, `/brand/${encodeURIComponent(brand.slug)}`)}
+                className="group grid h-36 w-40 shrink-0 place-items-center rounded-[28px] border border-border/80 bg-background/85 p-4 text-center shadow-[0_12px_35px_rgba(47,38,34,0.06)] transition hover:-translate-y-1.5 hover:border-primary/35 hover:bg-card hover:shadow-premium"
+              >
+                <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-[22px] border border-primary/10 bg-card shadow-sm transition group-hover:scale-105">
+                  {brand.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={brand.logoUrl} alt={brand.name} className="h-12 w-12 object-contain" />
+                  ) : (
+                    <span className="font-heading text-2xl text-primary">
+                      {brand.name.trim().slice(0, 1).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-3 line-clamp-2 text-sm font-semibold text-foreground transition group-hover:text-primary">
+                  {brand.name}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="mt-6 rounded-2xl border border-dashed border-border bg-card/60 px-4 py-6 text-sm text-muted-foreground">
+          No brands yet
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default async function Home({
   params,
   searchParams,
@@ -187,7 +270,9 @@ export default async function Home({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { lang } = await params;
-  if (!isLocale(lang)) throw new Error("Invalid locale");
+  if (!isLocale(lang)) {
+    redirect("/en");
+  }
 
   const homeTheme = await (async () => {
     try {
@@ -218,13 +303,13 @@ export default async function Home({
         ? "min-h-screen bg-background overflow-hidden bg-linear-to-b from-primary/6 via-background to-muted/25"
         : homeTheme === "commerce"
           ? "min-h-screen bg-background overflow-hidden bg-linear-to-b from-muted/18 via-background to-muted/12"
-        : homeTheme === "noir"
-          ? "min-h-screen bg-background overflow-hidden bg-linear-to-b from-background via-background to-muted/40"
-          : homeTheme === "atlas"
-            ? "min-h-screen bg-background overflow-hidden"
-            : homeTheme === "heritage"
-              ? "min-h-screen bg-background overflow-hidden bg-linear-to-b from-primary/5 via-background to-muted/20"
-              : "min-h-screen bg-background overflow-hidden bg-linear-to-b from-muted/20 via-background to-background";
+          : homeTheme === "noir"
+            ? "min-h-screen bg-background overflow-hidden bg-linear-to-b from-background via-background to-muted/40"
+            : homeTheme === "atlas"
+              ? "min-h-screen bg-background overflow-hidden"
+              : homeTheme === "heritage"
+                ? "min-h-screen bg-background overflow-hidden bg-linear-to-b from-primary/5 via-background to-muted/20"
+                : "min-h-screen bg-background overflow-hidden bg-linear-to-b from-muted/20 via-background to-background";
 
   const heroBackdropClass =
     homeTheme === "studio"
@@ -233,13 +318,13 @@ export default async function Home({
         ? "absolute inset-0 bg-linear-to-b from-primary/16 via-background to-muted/30"
         : homeTheme === "commerce"
           ? "absolute inset-0 bg-linear-to-b from-muted/35 via-background to-background"
-        : homeTheme === "noir"
-          ? "absolute inset-0 bg-linear-to-b from-muted/65 via-background to-background"
-          : homeTheme === "atlas"
-            ? "absolute inset-0 bg-linear-to-b from-background via-background to-background"
-            : homeTheme === "heritage"
-              ? "absolute inset-0 bg-linear-to-b from-primary/14 via-background to-muted/25"
-              : "absolute inset-0 bg-linear-to-b from-muted/45 via-background to-background";
+          : homeTheme === "noir"
+            ? "absolute inset-0 bg-linear-to-b from-muted/65 via-background to-background"
+            : homeTheme === "atlas"
+              ? "absolute inset-0 bg-linear-to-b from-background via-background to-background"
+              : homeTheme === "heritage"
+                ? "absolute inset-0 bg-linear-to-b from-primary/14 via-background to-muted/25"
+                : "absolute inset-0 bg-linear-to-b from-muted/45 via-background to-background";
 
   const heroTopBlobClass =
     homeTheme === "atlas"
@@ -248,13 +333,13 @@ export default async function Home({
         ? "absolute -top-44 left-1/2 h-110 w-110 -translate-x-1/2 rounded-full bg-muted/45 blur-3xl animate-[pulse_7s_ease-in-out_infinite]"
         : homeTheme === "commerce"
           ? "absolute -top-44 left-1/2 h-110 w-110 -translate-x-1/2 rounded-full bg-primary/18 blur-3xl animate-[pulse_7s_ease-in-out_infinite]"
-        : homeTheme === "market"
-          ? "absolute -top-44 left-1/2 h-110 w-110 -translate-x-1/2 rounded-full bg-primary/30 blur-3xl animate-[pulse_7s_ease-in-out_infinite]"
-          : homeTheme === "noir"
-            ? "absolute -top-44 left-1/2 h-110 w-110 -translate-x-1/2 rounded-full bg-muted/55 blur-3xl animate-[pulse_7s_ease-in-out_infinite]"
-            : homeTheme === "heritage"
-              ? "absolute -top-44 left-1/2 h-110 w-110 -translate-x-1/2 rounded-full bg-primary/22 blur-3xl animate-[pulse_7s_ease-in-out_infinite]"
-              : "absolute -top-44 left-1/2 h-110 w-110 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl animate-[pulse_7s_ease-in-out_infinite]";
+          : homeTheme === "market"
+            ? "absolute -top-44 left-1/2 h-110 w-110 -translate-x-1/2 rounded-full bg-primary/30 blur-3xl animate-[pulse_7s_ease-in-out_infinite]"
+            : homeTheme === "noir"
+              ? "absolute -top-44 left-1/2 h-110 w-110 -translate-x-1/2 rounded-full bg-muted/55 blur-3xl animate-[pulse_7s_ease-in-out_infinite]"
+              : homeTheme === "heritage"
+                ? "absolute -top-44 left-1/2 h-110 w-110 -translate-x-1/2 rounded-full bg-primary/22 blur-3xl animate-[pulse_7s_ease-in-out_infinite]"
+                : "absolute -top-44 left-1/2 h-110 w-110 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl animate-[pulse_7s_ease-in-out_infinite]";
 
   const heroBottomLeftBlobClass =
     homeTheme === "atlas"
@@ -263,13 +348,13 @@ export default async function Home({
         ? "absolute -bottom-48 -left-40 h-110 w-110 rounded-full bg-muted/45 blur-3xl animate-[pulse_8s_ease-in-out_infinite]"
         : homeTheme === "commerce"
           ? "absolute -bottom-48 -left-40 h-110 w-110 rounded-full bg-muted/55 blur-3xl animate-[pulse_8s_ease-in-out_infinite]"
-        : homeTheme === "market"
-          ? "absolute -bottom-48 -left-40 h-110 w-110 rounded-full bg-primary/12 blur-3xl animate-[pulse_8s_ease-in-out_infinite]"
-          : homeTheme === "mono"
-            ? "absolute -bottom-48 -left-40 h-110 w-110 rounded-full bg-muted/55 blur-3xl animate-[pulse_8s_ease-in-out_infinite]"
-            : homeTheme === "heritage"
-              ? "absolute -bottom-48 -left-40 h-110 w-110 rounded-full bg-muted/60 blur-3xl animate-[pulse_8s_ease-in-out_infinite]"
-              : "absolute -bottom-48 -left-40 h-110 w-110 rounded-full bg-muted/70 blur-3xl animate-[pulse_8s_ease-in-out_infinite]";
+          : homeTheme === "market"
+            ? "absolute -bottom-48 -left-40 h-110 w-110 rounded-full bg-primary/12 blur-3xl animate-[pulse_8s_ease-in-out_infinite]"
+            : homeTheme === "mono"
+              ? "absolute -bottom-48 -left-40 h-110 w-110 rounded-full bg-muted/55 blur-3xl animate-[pulse_8s_ease-in-out_infinite]"
+              : homeTheme === "heritage"
+                ? "absolute -bottom-48 -left-40 h-110 w-110 rounded-full bg-muted/60 blur-3xl animate-[pulse_8s_ease-in-out_infinite]"
+                : "absolute -bottom-48 -left-40 h-110 w-110 rounded-full bg-muted/70 blur-3xl animate-[pulse_8s_ease-in-out_infinite]";
 
   const heroDotsClass =
     homeTheme === "atlas"
@@ -278,9 +363,9 @@ export default async function Home({
         ? "absolute inset-0 opacity-[0.08] bg-[radial-gradient(circle_at_top,black_1px,transparent_1px)] bg-size-[18px_18px]"
         : homeTheme === "commerce"
           ? "absolute inset-0 opacity-[0.05] bg-[radial-gradient(circle_at_top,black_1px,transparent_1px)] bg-size-[16px_16px]"
-        : homeTheme === "noir"
-          ? "absolute inset-0 opacity-[0.09] bg-[radial-gradient(circle_at_top,black_1px,transparent_1px)] bg-size-[22px_22px]"
-          : "absolute inset-0 opacity-[0.06] bg-[radial-gradient(circle_at_top,black_1px,transparent_1px)] bg-size-[22px_22px]";
+          : homeTheme === "noir"
+            ? "absolute inset-0 opacity-[0.09] bg-[radial-gradient(circle_at_top,black_1px,transparent_1px)] bg-size-[22px_22px]"
+            : "absolute inset-0 opacity-[0.06] bg-[radial-gradient(circle_at_top,black_1px,transparent_1px)] bg-size-[22px_22px]";
 
   const heroRightCardClass =
     homeTheme === "studio"
@@ -289,13 +374,13 @@ export default async function Home({
         ? "rounded-[22px] border border-border/70 bg-card/80 backdrop-blur-2xl p-7 md:p-10 shadow-[0_40px_130px_rgba(0,0,0,0.18)]"
         : homeTheme === "commerce"
           ? "rounded-2xl border-2 border-border bg-background p-7 md:p-10 shadow-sm"
-        : homeTheme === "noir"
-          ? "rounded-[42px] border border-border bg-foreground p-7 md:p-10 shadow-[0_42px_140px_rgba(0,0,0,0.22)]"
-          : homeTheme === "atlas"
-            ? "rounded-[16px] border-2 border-border bg-background p-7 md:p-10 shadow-sm"
-            : homeTheme === "heritage"
-              ? "rounded-[52px] border border-border bg-card/75 backdrop-blur-2xl p-7 md:p-10 shadow-[0_34px_110px_rgba(0,0,0,0.12)]"
-              : "rounded-[18px] border border-border bg-card/70 backdrop-blur-xl p-7 md:p-10 shadow-[0_30px_90px_rgba(0,0,0,0.12)]";
+          : homeTheme === "noir"
+            ? "rounded-[42px] border border-border bg-foreground p-7 md:p-10 shadow-[0_42px_140px_rgba(0,0,0,0.22)]"
+            : homeTheme === "atlas"
+              ? "rounded-[16px] border-2 border-border bg-background p-7 md:p-10 shadow-sm"
+              : homeTheme === "heritage"
+                ? "rounded-[52px] border border-border bg-card/75 backdrop-blur-2xl p-7 md:p-10 shadow-[0_34px_110px_rgba(0,0,0,0.12)]"
+                : "rounded-[18px] border border-border bg-card/70 backdrop-blur-xl p-7 md:p-10 shadow-[0_30px_90px_rgba(0,0,0,0.12)]";
 
   const theme = (() => {
     type Tokens = {
@@ -626,6 +711,10 @@ export default async function Home({
 
   const q = typeof sp.q === "string" ? sp.q.trim() : "";
   const category = typeof sp.category === "string" ? sp.category.trim() : "";
+  const occasion = typeof sp.occasion === "string" ? sp.occasion.trim() : "";
+  const recipient = typeof sp.recipient === "string" ? sp.recipient.trim() : "";
+  const budget = typeof sp.budget === "string" ? sp.budget.trim() : "";
+  const availability = typeof sp.availability === "string" ? sp.availability.trim() : "";
   const size = typeof sp.size === "string" ? sp.size.trim() : "";
   const color = typeof sp.color === "string" ? sp.color.trim() : "";
   const minPrice = typeof sp.minPrice === "string" ? sp.minPrice.trim() : "";
@@ -643,6 +732,10 @@ export default async function Home({
     const next = new URLSearchParams();
     if (q) next.set("q", q);
     if (category) next.set("category", category);
+    if (occasion) next.set("occasion", occasion);
+    if (recipient) next.set("recipient", recipient);
+    if (budget) next.set("budget", budget);
+    if (availability) next.set("availability", availability);
     if (size) next.set("size", size);
     if (color) next.set("color", color);
     if (minPrice) next.set("minPrice", minPrice);
@@ -660,6 +753,10 @@ export default async function Home({
     const qs2 = new URLSearchParams();
     const q2 = next.get("q") || "";
     const c2 = next.get("category") || "";
+    const occasion2 = next.get("occasion") || "";
+    const recipient2 = next.get("recipient") || "";
+    const budget2 = next.get("budget") || "";
+    const availability2 = next.get("availability") || "";
     const s2 = next.get("size") || "";
     const col2 = next.get("color") || "";
     const min2 = next.get("minPrice") || "";
@@ -670,6 +767,10 @@ export default async function Home({
 
     if (q2) qs2.set("q", q2);
     if (c2) qs2.set("category", c2);
+    if (occasion2) qs2.set("occasion", occasion2);
+    if (recipient2) qs2.set("recipient", recipient2);
+    if (budget2) qs2.set("budget", budget2);
+    if (availability2) qs2.set("availability", availability2);
     if (s2) qs2.set("size", s2);
     if (col2) qs2.set("color", col2);
     if (min2) qs2.set("minPrice", min2);
@@ -687,6 +788,10 @@ export default async function Home({
   const qs = new URLSearchParams();
   if (q) qs.set("q", q);
   if (category) qs.set("category", category);
+  if (occasion) qs.set("occasion", occasion);
+  if (recipient) qs.set("recipient", recipient);
+  if (budget) qs.set("budget", budget);
+  if (availability) qs.set("availability", availability);
   if (size) qs.set("size", size);
   if (color) qs.set("color", color);
   if (minPrice) qs.set("minPrice", minPrice);
@@ -712,12 +817,29 @@ export default async function Home({
     : [];
 
   const hasFilters =
-    Boolean(q || category || size || color || minPrice || maxPrice || inStock || discountOnly) ||
+    Boolean(
+      q ||
+      category ||
+      occasion ||
+      recipient ||
+      budget ||
+      availability ||
+      size ||
+      color ||
+      minPrice ||
+      maxPrice ||
+      inStock ||
+      discountOnly
+    ) ||
     sort !== "latest";
 
   const appliedCount =
     (q ? 1 : 0) +
     (category ? 1 : 0) +
+    (occasion ? 1 : 0) +
+    (recipient ? 1 : 0) +
+    (budget ? 1 : 0) +
+    (availability ? 1 : 0) +
     (size ? 1 : 0) +
     (color ? 1 : 0) +
     (minPrice ? 1 : 0) +
@@ -730,167 +852,286 @@ export default async function Home({
 
   const activeBanners: HomeBanner[] = showHomeSections
     ? await (async () => {
-        const fallback: HomeBanner[] = [
-          {
-            id: "fallback-1",
-            title: "Handcrafted Luxury",
-            highlightText: "New arrivals",
-            subtitle: "Discover artisan-made pieces with timeless elegance.",
-            imageUrl: "/s1.jpg",
-            ctaText: "Shop latest",
-            ctaHref: `/${lang}?sort=latest`,
-            sortOrder: 1,
-            couponCode: null,
-            coupon: null,
+      try {
+        const now = new Date();
+        const rows = await prisma.banner.findMany({
+          where: {
+            isActive: true,
+            AND: [
+              { OR: [{ startAt: null }, { startAt: { lte: now } }] },
+              { OR: [{ endAt: null }, { endAt: { gte: now } }] },
+            ],
           },
-          {
-            id: "fallback-2",
-            title: "Premium Offers",
-            highlightText: "Limited time",
-            subtitle: "Save on selected styles from trusted vendors.",
-            imageUrl: "/s2.jpg",
-            ctaText: "Shop offers",
-            ctaHref: `/${lang}?sort=offer`,
-            sortOrder: 2,
-            couponCode: null,
-            coupon: null,
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+          select: {
+            id: true,
+            title: true,
+            highlightText: true,
+            subtitle: true,
+            imageUrl: true,
+            videoUrl: true,
+            ctaText: true,
+            ctaHref: true,
+            sortOrder: true,
+            couponCode: true,
+            coupon: {
+              select: {
+                code: true,
+                type: true,
+                value: true,
+              },
+            },
           },
-          {
-            id: "fallback-3",
-            title: "Curated Collections",
-            highlightText: "Editor picks",
-            subtitle: "Explore categories designed for every occasion.",
-            imageUrl: "/s3.jpg",
-            ctaText: "Explore",
-            ctaHref: `/${lang}?sort=latest`,
-            sortOrder: 3,
-            couponCode: null,
-            coupon: null,
-          },
-        ];
+        });
 
-        try {
-          const r = await fetch(`${baseUrl}/api/banners/active`, { cache: "no-store" });
-          const j = await r.json().catch(() => ({} as unknown));
-          const rows: unknown[] = (() => {
-            if (typeof j !== "object" || j === null) return [];
-            const banners = (j as Record<string, unknown>).banners;
-            return Array.isArray(banners) ? banners : [];
-          })();
+        const normalized: HomeBanner[] = rows
+          .map((b) => ({
+            id: b.id,
+            title: b.title,
+            highlightText: b.highlightText,
+            subtitle: b.subtitle,
+            imageUrl: b.imageUrl,
+            videoUrl: b.videoUrl,
+            ctaText: b.ctaText,
+            ctaHref: b.ctaHref,
+            sortOrder: b.sortOrder,
+            couponCode: b.couponCode,
+            coupon: b.coupon
+              ? {
+                code: b.coupon.code,
+                type: b.coupon.type,
+                value: b.coupon.value,
+              }
+              : null,
+          }))
+          .filter((b) => Boolean(b.id && b.title && b.imageUrl));
 
-          const normalized: HomeBanner[] = rows
-            .map((b) => {
-              const bb = (typeof b === "object" && b !== null ? (b as Record<string, unknown>) : {}) as Record<
-                string,
-                unknown
-              >;
-              const couponRaw = bb.coupon;
-              const couponObj =
-                typeof couponRaw === "object" && couponRaw !== null
-                  ? (couponRaw as Record<string, unknown>)
-                  : null;
-
-              const couponTypeRaw = couponObj ? couponObj["type"] : null;
-              const couponType =
-                couponTypeRaw === "PERCENT" || couponTypeRaw === "FIXED" ? couponTypeRaw : "PERCENT";
-
-              return {
-                id: String(bb.id ?? ""),
-                title: String(bb.title ?? ""),
-                highlightText: (bb.highlightText as string | null | undefined) ?? null,
-                subtitle: (bb.subtitle as string | null | undefined) ?? null,
-                imageUrl: String(bb.imageUrl ?? ""),
-                ctaText: (bb.ctaText as string | null | undefined) ?? null,
-                ctaHref: (bb.ctaHref as string | null | undefined) ?? null,
-                sortOrder: Number(bb.sortOrder ?? 0),
-                couponCode: (bb.couponCode as string | null | undefined) ?? null,
-                coupon: couponObj
-                  ? {
-                      code: String(couponObj["code"] ?? ""),
-                      type: couponType,
-                      value: Number(couponObj["value"] ?? 0),
-                    }
-                  : null,
-              } satisfies HomeBanner;
-            })
-            .filter((b) => Boolean(b.id && b.title && b.imageUrl));
-
-          return normalized.length ? normalized : fallback;
-        } catch {
-          return fallback;
-        }
-      })()
+        return normalized;
+      } catch {
+        return [];
+      }
+    })()
     : [];
 
-  const highlightCoupon = await (async () => {
-    const now = new Date();
-    return prisma.coupon.findFirst({
-      where: {
-        isActive: true,
-        isHighlighted: true,
-        AND: [
-          { OR: [{ startAt: null }, { startAt: { lte: now } }] },
-          { OR: [{ endAt: null }, { endAt: { gte: now } }] },
-        ],
-      },
-      select: { code: true, type: true, value: true },
-      orderBy: { updatedAt: "desc" },
-    });
-  })();
-  const highlightCode = highlightCoupon?.code ?? null;
-  const highlightDiscount = (() => {
-    if (!highlightCoupon) return null;
-
-    if (highlightCoupon.type === "PERCENT") {
-      const pct = Math.round(Number(highlightCoupon.value));
-      return { kind: "percent" as const, label: `${pct}% OFF` };
-    }
-
-    const amount = Math.round(Number(highlightCoupon.value));
-    const formatted = `₹${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })} OFF`;
-    return { kind: "fixed" as const, label: formatted };
-  })();
-
-  const [trending, offers, latest, brands] = showHomeSections
+  const [featured, trending, brands] = showHomeSections
     ? await Promise.all([
-        fetch(`${baseUrl}/api/products?mode=trending&limit=8`, {
-          cache: "no-store",
-        })
+        prisma.product.findMany({
+          where: { isActive: true, isFeatured: true, deletedAt: null },
+          take: 12,
+          include: {
+            category: true,
+            vendor: true,
+            images: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
+          },
+          orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+        }),
+        prisma.product.findMany({
+          where: { isActive: true, isTrending: true, deletedAt: null },
+          take: 12,
+          include: {
+            category: true,
+            vendor: true,
+            images: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
+          },
+          orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+        }),
+        // Brands
+        prisma.brand.findMany({
+          where: { isActive: true },
+          orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+          take: 40,
+          select: { id: true, name: true, slug: true, logoUrl: true, brandType: true },
+        }),
+      ])
+    : await Promise.all([
+        Promise.resolve([]),
+        fetch(`${baseUrl}/api/products?limit=12`, { cache: "no-store" })
           .then((r) => r.json().catch(() => ({})))
-          .then((d) =>
-            Array.isArray(d?.products) ? (d.products as Product[]) : []
-          ),
-        fetch(`${baseUrl}/api/products?mode=offers&limit=8`, {
-          cache: "no-store",
-        })
-          .then((r) => r.json().catch(() => ({})))
-          .then((d) =>
-            Array.isArray(d?.products) ? (d.products as Product[]) : []
-          ),
-        fetch(`${baseUrl}/api/products?mode=latest&limit=8`, {
-          cache: "no-store",
-        })
-          .then((r) => r.json().catch(() => ({})))
-          .then((d) =>
-            Array.isArray(d?.products) ? (d.products as Product[]) : []
-          ),
-        fetch(`${baseUrl}/api/brands?limit=12`, { cache: "no-store" })
+          .then((d) => (Array.isArray(d?.products) ? (d.products as Product[]) : [])),
+        fetch(`${baseUrl}/api/brands?limit=40`, { cache: "no-store" })
           .then((r) => r.json().catch(() => ({})))
           .then((d) => (Array.isArray(d?.brands) ? (d.brands as Brand[]) : [])),
-      ])
-    : [[], [], [], []];
+      ]);
+
+  type FilterOption = readonly [string, string];
+  type ColorFilterOption = readonly [string, string, string];
+  const cookieStore = await cookies();
+  const selectedCurrency = cookieStore.get("bohosaaz_currency")?.value === "USD" ? "USD" : "INR";
+  const mergeFilterOptions = (...groups: readonly FilterOption[][]): FilterOption[] => {
+    const seen = new Set<string>();
+    const merged: FilterOption[] = [];
+    for (const group of groups) {
+      for (const option of group) {
+        if (seen.has(option[0])) continue;
+        seen.add(option[0]);
+        merged.push(option);
+      }
+    }
+    return merged;
+  };
+
+  const popularBrands = brands.filter((brand) => brand.brandType !== "LUXURY");
+  const luxuryBrands = brands.filter((brand) => brand.brandType === "LUXURY");
+
+  const toTitleCase = (text: string) =>
+    text
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\w/g, (ch) => ch.toUpperCase());
+
+  const parseGroupedTag = (name: string, slug: string) => {
+    const nameMatch = name.match(/^\s*([^:|/]+)\s*[:|/]\s*(.+?)\s*$/);
+    if (nameMatch) {
+      return {
+        group: nameMatch[1].toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""),
+        label: nameMatch[2].trim(),
+        value: slug,
+      };
+    }
+
+    const slugMatch = slug.match(/^(occasion|recipient|availability)-(.+)$/);
+    if (!slugMatch) return null;
+    return {
+      group: slugMatch[1].replace("-", "_"),
+      label: toTitleCase(slugMatch[2]),
+      value: slug,
+    };
+  };
+
+  const tagRows = await prisma.tag.findMany({
+    where: { products: { some: { product: { isActive: true, deletedAt: null } } } },
+    orderBy: { name: "asc" },
+    select: { name: true, slug: true },
+  });
+
+  const groupedTagOptions = tagRows.reduce<Record<string, FilterOption[]>>((acc, tag) => {
+    const parsed = parseGroupedTag(tag.name, tag.slug);
+    if (!parsed) return acc;
+    acc[parsed.group] = acc[parsed.group] ?? [];
+    acc[parsed.group].push([parsed.value, parsed.label]);
+    return acc;
+  }, {});
+
+  const defaultOccasionOptions: FilterOption[] = DEFAULT_OCCASION_OPTIONS.map((option) => [option.value, option.label]);
+  const defaultRecipientOptions: FilterOption[] = DEFAULT_RECIPIENT_OPTIONS.map((option) => [option.value, option.label]);
+  const occasionOptions = mergeFilterOptions(defaultOccasionOptions, groupedTagOptions.occasion ?? []);
+  const recipientOptions = mergeFilterOptions(defaultRecipientOptions, groupedTagOptions.recipient ?? []);
+  const tagAvailabilityOptions = groupedTagOptions.availability ?? [];
+
+  const priceStats = await prisma.product.aggregate({
+    where: { isActive: true },
+    _min: { price: true },
+    _max: { price: true },
+  });
+  const minProductPrice = Math.max(0, Math.floor(Number(priceStats._min.price ?? 0)));
+  const maxProductPrice = Math.ceil(Number(priceStats._max.price ?? 0));
+  const budgetOptions: FilterOption[] = (() => {
+    if (!Number.isFinite(maxProductPrice) || maxProductPrice <= 0) return [];
+    const step = Math.max(500, Math.ceil((maxProductPrice - minProductPrice + 1) / 4 / 100) * 100);
+    const ranges: FilterOption[] = [];
+    let start = minProductPrice;
+    for (let i = 0; i < 4 && start <= maxProductPrice; i++) {
+      const end = Math.min(maxProductPrice, start + step - 1);
+      ranges.push([
+        `${start}-${end}`,
+        start === 0
+          ? `Under ${formatPriceInCurrency(end, "INR", selectedCurrency)}`
+          : `${formatPriceInCurrency(start, "INR", selectedCurrency)} - ${formatPriceInCurrency(end, "INR", selectedCurrency)}`,
+      ]);
+      start = end + 1;
+    }
+    if (start <= maxProductPrice) ranges.push([`${start}-`, `${formatPriceInCurrency(start, "INR", selectedCurrency)}+`]);
+    return ranges;
+  })();
+
+  const variantColors = await prisma.productVariant.findMany({
+    where: { isActive: true, color: { not: null }, product: { isActive: true, deletedAt: null } },
+    distinct: ["color"],
+    select: { color: true },
+    orderBy: { color: "asc" },
+    take: 24,
+  });
+  const colorFromProducts = await prisma.product.findMany({
+    where: { isActive: true, deletedAt: null, colorOptions: { not: null } },
+    distinct: ["colorOptions"],
+    select: { colorOptions: true },
+    take: 100,
+  });
+  const colorValues = Array.from(
+    new Set([
+      ...variantColors.map((row) => row.color).filter((v): v is string => Boolean(v)),
+      ...colorFromProducts.flatMap((row) =>
+        (row.colorOptions ?? "")
+          .split(/[,|/]/g)
+          .map((v) => v.trim())
+          .filter(Boolean),
+      ),
+    ]),
+  ).slice(0, 24);
+  const swatchClassForColor = (value: string) => {
+    const v = value.toLowerCase();
+    if (v.includes("white")) return "bg-white";
+    if (v.includes("black")) return "bg-black";
+    if (v.includes("gold")) return "bg-[#d4af37]";
+    if (v.includes("maroon")) return "bg-[#800000]";
+    if (v.includes("beige")) return "bg-[#d8c3a5]";
+    if (v.includes("multi")) return "bg-linear-to-br from-rose-400 via-amber-300 to-sky-400";
+    if (v.includes("pastel")) return "bg-[#f7c8e0]";
+    return "bg-muted";
+  };
+  const colorOptions: ColorFilterOption[] = colorValues.map((value) => [
+    value,
+    toTitleCase(value),
+    swatchClassForColor(value),
+  ]);
+
+  const newArrivalSince = new Date();
+  newArrivalSince.setDate(newArrivalSince.getDate() - 30);
+  const [inStockCount, discountedCount, newArrivalCount] = await Promise.all([
+    prisma.product.count({
+      where: {
+        isActive: true,
+        deletedAt: null,
+        OR: [{ stock: { gt: 0 } }, { variants: { some: { isActive: true, stock: { gt: 0 } } } }],
+      },
+    }),
+    prisma.product.count({ where: { isActive: true, deletedAt: null, salePrice: { not: null } } }),
+    prisma.product.count({ where: { isActive: true, deletedAt: null, createdAt: { gte: newArrivalSince } } }),
+  ]);
+  const availabilityOptions: FilterOption[] = [
+    ...(inStockCount > 0 ? [["in_stock", "In Stock"] as const] : []),
+    ...(newArrivalCount > 0 ? [["new_arrivals", "New Arrivals"] as const] : []),
+    ...(discountedCount > 0 ? [["discounted", "Discounted"] as const] : []),
+    ...tagAvailabilityOptions,
+  ].filter((option, index, all) => all.findIndex(([value]) => value === option[0]) === index);
+
+  const sortOptions = [
+    ["featured", "Featured"],
+    ["best_selling", "Best Selling"],
+    ["trending", "Trending"],
+    ["new_arrivals", "New Arrivals"],
+    ["price_asc", "Price: Low to High"],
+    ["price_desc", "Price: High to Low"],
+  ] as const;
+
+  const optionLabel = (items: readonly (readonly [string, string, ...unknown[]])[], value: string) =>
+    items.find(([v]) => v === value)?.[1] ?? value.replace(/[_-]+/g, " ");
+  const freeShippingLabel = `Free Shipping ${formatPriceInCurrency(999, "INR", selectedCurrency)}+`;
+  const premiumFilterFieldClass =
+    "mt-2 h-12 w-full rounded-2xl border border-primary/15 bg-background/80 px-4 text-sm text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_10px_30px_rgba(47,38,34,0.04)] outline-none transition focus:border-primary/35 focus:bg-background focus:ring-4 focus:ring-primary/10";
 
   return (
     <div className={rootClassName} data-home-theme={homeTheme}>
       {showHomeSections ? (
-        <div className="pt-8">
+        <div className="pt-2 sm:pt-8">
           <BannerCarousel lang={lang} banners={activeBanners} homeTheme={homeTheme} />
         </div>
       ) : null}
 
       {showHomeSections ? (
         <div className="mx-auto max-w-6xl px-4 mt-6">
-          <AdSlot placement="HOME_TOP" />
+          <AdSlot placement="HOME_TOP" langPrefix={`/${lang}`} />
         </div>
       ) : null}
 
@@ -906,9 +1147,9 @@ export default async function Home({
             {/* LEFT */}
             <div>
               <div className="flex flex-wrap items-center gap-2">
+                <Chip label="Thoughtful Gifts" className={theme.chip} dotClassName={theme.chipDot} />
                 <Chip label="Handcrafted" className={theme.chip} dotClassName={theme.chipDot} />
-                <Chip label="Luxury Feel" className={theme.chip} dotClassName={theme.chipDot} />
-                <Chip label="Trusted Vendors" className={theme.chip} dotClassName={theme.chipDot} />
+                <Chip label="Made with Love" className={theme.chip} dotClassName={theme.chipDot} />
               </div>
 
               <h1
@@ -923,43 +1164,35 @@ export default async function Home({
               <p
                 className={
                   theme.heroSubtitle ??
-                  "mt-4 text-base md:text-lg text-muted-foreground max-w-xl leading-relaxed"
+                  "mt-4 font-heading text-xl md:text-2xl tracking-tight text-primary/90 max-w-xl leading-snug"
                 }
               >
-                {t.home.subtitle}
+                Art of meaningful gifting
+              </p>
+
+              <p className="mt-4 text-sm md:text-base text-muted-foreground max-w-xl leading-relaxed">
+                Curated gifts for birthdays, anniversaries, festivals, and every special moment —
+                made to feel personal, thoughtful, and unforgettable.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
                 <a
-                  href={`/${lang}?sort=latest`}
-                  className={
-                    theme.heroPrimaryCta ??
-                    "h-12 inline-flex items-center justify-center rounded-2xl bg-primary px-8 text-sm font-semibold text-primary-foreground\n                  shadow-[0_18px_45px_rgba(0,0,0,0.10)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.14)] hover:-translate-y-px active:translate-y-0 transition\n                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  }
+                  href={`/${lang}/shop`}
+                  className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-9 text-sm font-semibold text-primary-foreground shadow-[0_18px_45px_rgba(0,0,0,0.12)] transition hover:-translate-y-px hover:shadow-[0_24px_60px_rgba(0,0,0,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
-                  Explore Latest
-                </a>
-
-                <a
-                  href={`/${lang}?sort=offer`}
-                  className={
-                    theme.heroSecondaryCta ??
-                    "h-12 inline-flex items-center justify-center rounded-2xl border border-border bg-background/75 px-8 text-sm font-semibold text-foreground\n                  shadow-sm hover:bg-muted/40 hover:-translate-y-px active:translate-y-0 transition\n                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  }
-                >
-                  Shop Offers
+                  Shop Now
                 </a>
               </div>
 
               <div className="mt-8 flex flex-wrap gap-3 text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
                 <span className="rounded-full border border-border bg-background/65 px-3 py-1 backdrop-blur">
-                  Free Shipping ₹999+
+                  Gift-Ready Packaging
                 </span>
                 <span className="rounded-full border border-border bg-background/65 px-3 py-1 backdrop-blur">
-                  Easy Returns
+                  Artisan Crafted
                 </span>
                 <span className="rounded-full border border-border bg-background/65 px-3 py-1 backdrop-blur">
-                  Premium Quality
+                  {freeShippingLabel}
                 </span>
               </div>
             </div>
@@ -979,14 +1212,24 @@ export default async function Home({
                 }
               />
 
-              <div className={heroRightCardClass}>
+              <div
+                className={`${heroRightCardClass} relative overflow-hidden`}
+                style={{
+                  background:
+                    "linear-gradient(145deg, color-mix(in srgb, var(--card) 92%, white), color-mix(in srgb, var(--bg) 76%, var(--primary) 8%))",
+                  boxShadow: "0 28px 90px rgba(47, 38, 34, 0.14)",
+                }}
+              >
+                <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-primary/12 blur-3xl" />
+                <div className="pointer-events-none absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-amber-500/12 blur-3xl" />
+                <div className="pointer-events-none absolute inset-0 opacity-[0.05] bg-[radial-gradient(circle_at_top,black_1px,transparent_1px)] bg-size-[18px_18px]" />
                 <div
                   className={
-                    theme.heroCardEyebrow ??
+                    `${theme.heroCardEyebrow ?? ""}` ||
                     "text-[11px] tracking-[0.22em] uppercase text-muted-foreground"
                   }
                 >
-                  Seasonal Collection
+                  Curated for Every Occasion
                 </div>
 
                 <div
@@ -995,7 +1238,7 @@ export default async function Home({
                     "mt-2 font-heading text-2xl md:text-4xl tracking-tight text-foreground"
                   }
                 >
-                  Classic Handmade Luxury
+                  Gifts That Speak From the Heart
                 </div>
 
                 <p
@@ -1004,84 +1247,30 @@ export default async function Home({
                     "mt-3 text-sm md:text-base text-muted-foreground leading-relaxed"
                   }
                 >
-                  Discover sarees, shawls, handcrafted decor & artisan creations —
-                  designed with timeless elegance.
+                  Every gift tells a story — find thoughtfully curated treasures for birthdays,
+                  anniversaries, festivals, and the people who matter most.
                 </p>
 
-                <div className="mt-8 grid grid-cols-3 gap-3 text-center">
+                <div className="mt-8 grid gap-3">
                   {[
-                    { k: "40%", v: "Sale Deals" },
-                    { k: "100+", v: "Vendors" },
-                    { k: "Top", v: "Quality" },
-                  ].map((x) => (
+                    "Personalised picks for every celebration",
+                    "Authentic artisan craftsmanship",
+                    "Beautifully packed, ready to gift",
+                  ].map((line) => (
                     <div
-                      key={x.v}
-                      className={
-                        theme.heroStatCard ??
-                        "rounded-2xl border border-border bg-background/60 px-4 py-4 shadow-sm\n                      hover:shadow-lg hover:-translate-y-px transition"
-                      }
+                      key={line}
+                      className="relative flex items-start gap-3 rounded-2xl bg-card/72 px-4 py-3 text-sm font-medium text-foreground/90 shadow-[0_12px_34px_rgba(47,38,34,0.08)] backdrop-blur"
                     >
-                      <div
-                        className={
-                          theme.heroStatValue ??
-                          "font-heading text-xl text-primary"
-                        }
-                      >
-                        {renderNumericRuns(x.k)}
-                      </div>
-                      <div
-                        className={
-                          theme.heroStatLabel ??
-                          "mt-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground"
-                        }
-                      >
-                        {x.v}
-                      </div>
+                      <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" aria-hidden />
+                      <span>{line}</span>
                     </div>
                   ))}
                 </div>
 
-                {highlightCode ? (
-                  <div
-                    className={
-                      theme.heroHighlightBox ??
-                      "mt-8 rounded-2xl border border-border bg-background/55 px-4 py-3 text-center text-sm text-muted-foreground backdrop-blur"
-                    }
-                  >
-                    <div>
-                      <span className="font-semibold text-primary">Use Code:</span>{" "}
-                      <span className="font-numeric tabular-nums">{highlightCode}</span> • Limited Offer
-                    </div>
-                    {highlightDiscount ? (
-                      <div
-                        className={
-                          theme.heroHighlightLine2 ??
-                          "mt-1 text-xs uppercase tracking-[0.18em] text-foreground"
-                        }
-                      >
-                        {renderNumericRuns(highlightDiscount.label)}
-                      </div>
-                    ) : null}
-                  </div>
-                ) : null}
-
-                <a
-                  href={`/${lang}/offers${
-                    highlightCode
-                      ? `?coupon=${encodeURIComponent(highlightCode)}`
-                      : ""
-                  }`}
-                  className={
-                    theme.heroSaleCta ??
-                    "mt-6 inline-flex w-full items-center justify-center rounded-2xl border border-border bg-primary/10 px-6 py-3 text-sm font-semibold text-primary\n                  shadow-sm hover:shadow-md hover:bg-primary/15 hover:-translate-y-px active:translate-y-0 transition\n                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  }
-                >
-                  View Sale Collection →
-                </a>
               </div>
 
               <div className="mt-6">
-                <AdSlot placement="HOME_SIDEBAR" />
+                <AdSlot placement="HOME_SIDEBAR" langPrefix={`/${lang}`} />
               </div>
             </div>
           </div>
@@ -1089,33 +1278,33 @@ export default async function Home({
       </section>
 
       {/* ✅ Category Quick Links */}
-      <section className={theme.categorySection ?? "mx-auto max-w-6xl px-4 py-7"}>
-        <div className="flex items-center justify-between gap-4">
+      <section className="mx-auto max-w-6xl px-4 py-9">
+        <div className="relative overflow-hidden rounded-[34px] border border-primary/15 bg-linear-to-br from-primary/10 via-card/80 to-amber-500/10 p-5 shadow-[0_22px_70px_rgba(47,38,34,0.08)] backdrop-blur-xl md:p-6">
+          <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-primary/15 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-16 h-56 w-56 rounded-full bg-amber-500/15 blur-3xl" />
+        <div className="relative flex items-center justify-between gap-4">
           <div>
-            <div className={theme.sectionEyebrow ?? "text-[11px] tracking-[0.22em] uppercase text-muted-foreground"}>
+            <div className="text-[11px] tracking-[0.24em] uppercase text-primary/80">
               Categories
             </div>
-            <div className={theme.sectionTitle ? theme.sectionTitle.replace("mt-2", "mt-1").replace("text-2xl md:text-3xl", "text-lg") : "mt-1 font-heading text-lg tracking-tight text-foreground"}>
+            <div className="mt-1 font-heading text-2xl tracking-tight text-foreground md:text-3xl">
               Quick picks
             </div>
           </div>
           <a
-            href={`/${lang}`}
-            className={theme.sectionAction ?? "text-sm text-muted-foreground hover:text-foreground transition underline-offset-4 hover:underline"}
+            href={`/${lang}/categories`}
+            className="rounded-full border border-border bg-background/75 px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:-translate-y-px hover:border-primary/30 hover:text-primary"
           >
             View all
           </a>
         </div>
 
-        <div className="mt-4 flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-2 mask-[linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+        <div className="relative mt-5 flex flex-wrap items-center gap-3 pb-1">
           {categories.slice(0, 12).map((c) => (
             <a
               key={c.id}
               href={`/${lang}?category=${encodeURIComponent(c.id)}`}
-              className={
-                theme.categoryPill ??
-                "inline-flex h-10 items-center gap-2 rounded-2xl border border-border bg-card/60 px-4 text-sm text-foreground\n              hover:bg-muted/40 hover:-translate-y-px transition"
-              }
+              className="quick-pick-chip group inline-flex h-12 items-center gap-2 rounded-2xl border border-primary/18 bg-background/80 px-4 text-sm font-semibold text-foreground shadow-sm transition hover:-translate-y-1 hover:border-primary/40 hover:bg-card hover:shadow-md"
             >
               {c.iconUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -1124,38 +1313,34 @@ export default async function Home({
                   alt=""
                   width={16}
                   height={16}
-                  className="h-4 w-4 opacity-80"
+                  className="h-5 w-5 rounded-lg bg-card object-contain opacity-90 transition group-hover:scale-110"
                 />
               ) : (
-                <IconByName name={c.iconName ?? undefined} className="h-4 w-4 opacity-80" aria-hidden />
+                <IconByName name={c.iconName ?? undefined} className="h-5 w-5 text-primary/80 transition group-hover:scale-110" aria-hidden />
               )}
               {c.name}
             </a>
           ))}
         </div>
+        </div>
       </section>
 
       {/* ✅ FILTER PANEL */}
       <section
-        className={
-          theme.filterSection ??
-          "border-b border-border bg-background/65 backdrop-blur-xl sticky top-17.5 z-40"
-        }
+        className="sticky top-17.5 z-40 border-y border-primary/10 bg-background/70 backdrop-blur-2xl"
       >
         <div className="mx-auto max-w-6xl px-4 py-6">
           <details
             open
-            className={
-              theme.filterShell ??
-              "group rounded-4xl border border-border bg-card/70 backdrop-blur-2xl shadow-[0_18px_65px_rgba(0,0,0,0.06)]"
-            }
+            className="group overflow-hidden rounded-[36px] border border-primary/15 bg-card/80 shadow-[0_24px_80px_rgba(47,38,34,0.10)] backdrop-blur-2xl"
           >
-            <summary className="cursor-pointer list-none px-6 py-4 flex items-center justify-between">
+            <summary className="relative cursor-pointer list-none px-6 py-5 flex items-center justify-between">
+              <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-primary/8 via-transparent to-amber-500/8" />
               <div>
-                <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+                <div className="relative text-[11px] uppercase tracking-[0.26em] text-primary/80">
                   Filters
                 </div>
-                <div className="text-sm font-semibold text-foreground">
+                <div className="relative mt-1 text-base font-semibold text-foreground">
                   Refine your results{" "}
                   {hasFilters ? (
                     <span className="ml-2 text-xs font-medium text-muted-foreground">
@@ -1165,166 +1350,149 @@ export default async function Home({
                 </div>
               </div>
 
-              <span className={theme.filterSummaryHint ?? "text-xs text-muted-foreground group-open:hidden"}>
+              <span className="relative rounded-full border border-border bg-background/70 px-3 py-1 text-xs text-muted-foreground group-open:hidden">
                 Tap to open
               </span>
-              <span className={theme.filterSummaryHint ?? "text-xs text-muted-foreground hidden group-open:block"}>
+              <span className="relative hidden rounded-full border border-border bg-background/70 px-3 py-1 text-xs text-muted-foreground group-open:block">
                 Tap to close
               </span>
             </summary>
 
             <div className="px-6 pb-6">
-              <form method="GET" className="grid gap-4">
-                {/* Row 1 */}
+              <form method="GET" className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_230px] lg:items-start">
+                <div className="rounded-[30px] border border-border/70 bg-linear-to-br from-background/80 via-card/70 to-muted/30 p-4 shadow-inner lg:col-start-1">
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.24em] text-primary/80">Step 1</div>
+                      <div className="font-heading text-xl tracking-tight text-foreground">Find the perfect match</div>
+                    </div>
+                    <span className="rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">Quick</span>
+                  </div>
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                  <div className="md:col-span-5">
-                    <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">
-                      Search
-                    </label>
+                  <div className="md:col-span-4">
+                    <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Search</label>
                     <input
                       name="q"
                       defaultValue={q}
-                      placeholder="Search products…"
-                      className={
-                        theme.filterInput ??
-                        "mt-2 h-12 w-full rounded-2xl border border-border bg-background/65 px-4 text-sm outline-none\n                      focus:ring-2 focus:ring-ring focus:bg-background transition"
-                      }
+                      placeholder="Search thoughtful gifts..."
+                      className={premiumFilterFieldClass}
                     />
                   </div>
 
-                  <div className="md:col-span-3">
-                    <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">
-                      Category
-                    </label>
-                    <select
-                      name="category"
-                      defaultValue={category}
-                      className={
-                        theme.filterSelect ??
-                        theme.filterInput ??
-                        "mt-2 h-12 w-full rounded-2xl border border-border bg-background/65 px-4 text-sm outline-none\n                      focus:ring-2 focus:ring-ring focus:bg-background transition"
-                      }
-                    >
-                      <option value="">All categories</option>
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
+                  <div className="md:col-span-2">
+                    <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Occasion</label>
+                    <select name="occasion" defaultValue={occasion} className={premiumFilterFieldClass}>
+                      <option value="">Any occasion</option>
+                      {occasionOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                     </select>
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">
-                      Sort
-                    </label>
-                    <select
-                      name="sort"
-                      defaultValue={sort}
-                      className={
-                        theme.filterSelect ??
-                        theme.filterInput ??
-                        "mt-2 h-12 w-full rounded-2xl border border-border bg-background/65 px-4 text-sm outline-none\n                      focus:ring-2 focus:ring-ring focus:bg-background transition"
-                      }
-                    >
+                    <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Recipient</label>
+                    <select name="recipient" defaultValue={recipient} className={premiumFilterFieldClass}>
+                      <option value="">For anyone</option>
+                      {recipientOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Budget</label>
+                    <select name="budget" defaultValue={budget} className={premiumFilterFieldClass}>
+                      <option value="">Any budget</option>
+                      {budgetOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Sort</label>
+                    <select name="sort" defaultValue={sort} className={premiumFilterFieldClass}>
                       <option value="latest">Latest</option>
-                      <option value="offer">Offers</option>
-                      <option value="price_asc">Price Low → High</option>
-                      <option value="price_desc">Price High → Low</option>
+                      {sortOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                     </select>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">
-                      Price
-                    </label>
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      <input
-                        name="minPrice"
-                        defaultValue={minPrice}
-                        inputMode="decimal"
-                        placeholder="Min"
-                        className={
-                          (theme.filterInput
-                            ? theme.filterInput.replace("px-4", "px-3")
-                            : undefined) ??
-                          "h-12 w-full rounded-2xl border border-border bg-background/65 px-3 text-sm outline-none\n                        focus:ring-2 focus:ring-ring focus:bg-background transition"
-                        }
-                      />
-                      <input
-                        name="maxPrice"
-                        defaultValue={maxPrice}
-                        inputMode="decimal"
-                        placeholder="Max"
-                        className={
-                          (theme.filterInput
-                            ? theme.filterInput.replace("px-4", "px-3")
-                            : undefined) ??
-                          "h-12 w-full rounded-2xl border border-border bg-background/65 px-3 text-sm outline-none\n                        focus:ring-2 focus:ring-ring focus:bg-background transition"
-                        }
-                      />
-                    </div>
                   </div>
                 </div>
+                </div>
 
-                {/* Row 2 */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                  <div className="md:col-span-6">
-                    <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">
-                      Attributes
-                    </label>
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      <input
-                        name="size"
-                        defaultValue={size}
-                        placeholder="Size (S/M/L)"
-                        className={
-                          (theme.filterInput
-                            ? theme.filterInput.replace("mt-2 ", "")
-                            : undefined) ??
-                          "h-12 w-full rounded-2xl border border-border bg-background/65 px-4 text-sm outline-none\n                        focus:ring-2 focus:ring-ring focus:bg-background transition"
-                        }
-                      />
-                      <input
-                        name="color"
-                        defaultValue={color}
-                        placeholder="Color"
-                        className={
-                          (theme.filterInput
-                            ? theme.filterInput.replace("mt-2 ", "")
-                            : undefined) ??
-                          "h-12 w-full rounded-2xl border border-border bg-background/65 px-4 text-sm outline-none\n                        focus:ring-2 focus:ring-ring focus:bg-background transition"
-                        }
-                      />
+                <div className="rounded-[30px] border border-primary/15 bg-linear-to-br from-primary/8 via-card/75 to-amber-500/8 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] lg:col-start-1">
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.24em] text-primary/80">Step 2</div>
+                      <div className="font-heading text-xl tracking-tight text-foreground">Fine tune results</div>
+                    </div>
+                    <span className="rounded-full border border-border bg-background/70 px-3 py-1 text-[11px] text-muted-foreground">Optional</span>
+                  </div>
+                  <div className="grid gap-5 lg:grid-cols-2">
+                    <div>
+                      <div className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Category</div>
+                      <select name="category" defaultValue={category} className={premiumFilterFieldClass}>
+                        <option value="">All categories</option>
+                        {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
                     </div>
 
-                    <div className="mt-3 flex flex-wrap items-center gap-4">
-                      <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-                        <input name="inStock" type="checkbox" defaultChecked={inStock} />
-                        <span>In stock</span>
-                      </label>
-                      <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-                        <input name="discountOnly" type="checkbox" defaultChecked={discountOnly} />
-                        <span>Discount only</span>
-                      </label>
+                    <div>
+                      <div className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Availability</div>
+                      <select name="availability" defaultValue={availability} className={premiumFilterFieldClass}>
+                        <option value="">Any status</option>
+                        {availabilityOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                      </select>
                     </div>
                   </div>
 
-                  <div className="md:col-span-6 flex flex-wrap gap-2 justify-start md:justify-end">
-                    <button
-                      className="h-12 rounded-2xl bg-primary px-8 text-sm font-semibold text-primary-foreground
-                      shadow-[0_18px_45px_rgba(0,0,0,0.10)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.14)] hover:-translate-y-px active:translate-y-0 transition
-                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                      Apply Filters
+                  {colorOptions.length ? (
+                    <div className="mt-5 rounded-[24px] border border-border/70 bg-background/45 p-3">
+                      <div className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Color</div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {colorOptions.map(([value, label, swatch]) => (
+                          <a key={value} href={buildHref({ color: color === value ? null : value })} className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition hover:-translate-y-px ${color === value ? "border-primary bg-primary/10 text-primary" : "border-border bg-card/70 hover:bg-muted/40"}`}>
+                            <span className={`h-4 w-4 rounded-full border border-border ${swatch}`} aria-hidden />
+                            {label}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                      {["Premium picks", "Gift ready", "Fast shortlist"].map((item) => (
+                        <div key={item} className="rounded-[20px] border border-border/70 bg-background/45 px-4 py-3 text-sm font-medium text-foreground/85 shadow-sm">
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {availability === "in_stock" ? <input type="hidden" name="inStock" value="1" /> : null}
+                {availability === "discounted" ? <input type="hidden" name="discountOnly" value="1" /> : null}
+
+                <div className="flex h-full flex-col rounded-[30px] border border-primary/15 bg-linear-to-br from-primary/12 via-card/85 to-background/80 p-4 shadow-[0_18px_55px_rgba(47,38,34,0.08)] lg:col-start-2 lg:row-span-2 lg:row-start-1">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-[0.24em] text-primary/80">Ready</div>
+                    <div className="mt-1 font-heading text-2xl tracking-tight text-foreground">Apply filters</div>
+                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                      Build a cleaner shortlist with your selected gifting preferences.
+                    </p>
+                  </div>
+
+                  <div className="mt-5 grid gap-2">
+                    {[
+                      ["Occasion", occasion ? optionLabel(occasionOptions, occasion) : "Any"],
+                      ["Recipient", recipient ? optionLabel(recipientOptions, recipient) : "Anyone"],
+                      ["Budget", budget ? optionLabel(budgetOptions, budget) : "Flexible"],
+                    ].map(([name, value]) => (
+                      <div key={name} className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-background/50 px-3 py-2 text-xs">
+                        <span className="text-muted-foreground">{name}</span>
+                        <span className="max-w-28 truncate font-semibold text-foreground">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-auto pt-5">
+                    <button className="h-12 w-full rounded-2xl bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-[0_18px_45px_rgba(0,0,0,0.10)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.14)] hover:-translate-y-px active:translate-y-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                      Find Gifts
                     </button>
 
-                    <a
-                      href={`/${lang}`}
-                      className="h-12 rounded-2xl border border-border bg-background/65 px-8 text-sm font-semibold inline-flex items-center justify-center
-                      hover:bg-muted/40 hover:-translate-y-px active:translate-y-0 transition
-                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
+                    <a href={`/${lang}`} className="mt-3 h-12 w-full rounded-2xl border border-border bg-background/65 px-8 text-sm font-semibold inline-flex items-center justify-center hover:bg-muted/40 hover:-translate-y-px active:translate-y-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                       Reset
                     </a>
                   </div>
@@ -1332,18 +1500,30 @@ export default async function Home({
 
                 {/* Active chips (removable) */}
                 {hasFilters ? (
-                  <div className="flex flex-wrap gap-2 pt-2">
+                  <div className="flex flex-wrap gap-2 rounded-[26px] border border-border/70 bg-background/55 p-3 pt-3 shadow-inner lg:col-span-2">
                     {q ? (
                       <FilterChip label={`Search: ${q}`} href={buildHref({ q: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
                     ) : null}
                     {category ? (
                       <FilterChip label={`Category`} href={buildHref({ category: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
                     ) : null}
-                    {size ? (
-                      <FilterChip label={`Size: ${size}`} href={buildHref({ size: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
+                    {occasion ? (
+                      <FilterChip label={`Occasion: ${optionLabel(occasionOptions, occasion)}`} href={buildHref({ occasion: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
                     ) : null}
-                    {color ? (
-                      <FilterChip label={`Color: ${color}`} href={buildHref({ color: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
+                    {recipient ? (
+                      <FilterChip label={`Recipient: ${optionLabel(recipientOptions, recipient)}`} href={buildHref({ recipient: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
+                    ) : null}
+                    {budget ? (
+                      <FilterChip label={`Budget: ${optionLabel(budgetOptions, budget)}`} href={buildHref({ budget: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
+                    ) : null}
+                    {availability ? (
+                      <FilterChip label={`Availability: ${optionLabel(availabilityOptions, availability)}`} href={buildHref({ availability: null, inStock: null, discountOnly: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
+                    ) : null}
+                    {!availability && inStock ? (
+                      <FilterChip label="In stock" href={buildHref({ inStock: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
+                    ) : null}
+                    {!availability && discountOnly ? (
+                      <FilterChip label="Discounted" href={buildHref({ discountOnly: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
                     ) : null}
                     {minPrice ? (
                       <FilterChip label={`Min ₹${minPrice}`} href={buildHref({ minPrice: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
@@ -1351,14 +1531,11 @@ export default async function Home({
                     {maxPrice ? (
                       <FilterChip label={`Max ₹${maxPrice}`} href={buildHref({ maxPrice: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
                     ) : null}
-                    {inStock ? (
-                      <FilterChip label={`In stock`} href={buildHref({ inStock: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
-                    ) : null}
-                    {discountOnly ? (
-                      <FilterChip label={`Discount only`} href={buildHref({ discountOnly: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
+                    {color ? (
+                      <FilterChip label={`Color: ${optionLabel(colorOptions, color)}`} href={buildHref({ color: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
                     ) : null}
                     {sort !== "latest" ? (
-                      <FilterChip label={`Sort: ${sort}`} href={buildHref({ sort: "latest" })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
+                      <FilterChip label={`Sort: ${optionLabel(sortOptions, sort)}`} href={buildHref({ sort: "latest" })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
                     ) : null}
                   </div>
                 ) : null}
@@ -1371,58 +1548,102 @@ export default async function Home({
       {/* ✅ Home Sections (no filters) */}
       {showHomeSections ? (
         <>
-          {/* Trending */}
-          <section className="mx-auto max-w-6xl px-4 py-12">
-            <SectionHeader
-              eyebrow="Trending"
-              title="Trending Products"
-              actionHref={`/${lang}?sort=latest`}
-              actionLabel="Browse all"
-              eyebrowClassName={theme.sectionEyebrow}
-              titleClassName={theme.sectionTitle}
-              actionClassName={theme.sectionAction}
-            />
-
-            <div className="mt-7 grid auto-rows-fr grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {trending.map((p) => (
-                <div
-                  key={p.id}
-                  className={
-                    theme.productWrapper ??
-                    "h-full transition hover:-translate-y-1 hover:shadow-lg"
-                  }
-                >
-                  <ProductCard
-                    langPrefix={`/${lang}`}
-                    enableImageSwipe
-                    product={{
-                      id: String(p.id),
-                      title: String(p.title || ""),
-                      slug: String(p.slug || ""),
-                      currency: (p.currency === "USD" ? "USD" : "INR") as "INR" | "USD",
-                      mrp: p.mrp == null ? null : Number(p.mrp),
-                      price: Number(p.price || 0),
-                      salePrice: p.salePrice == null ? null : Number(p.salePrice),
-                      createdAt: p.createdAt,
-                      images: Array.isArray(p.images) ? p.images : [],
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <div className="mx-auto max-w-6xl px-4">
-            <AdSlot placement="HOME_BETWEEN_SECTIONS" />
+          <div className="mx-auto max-w-7xl px-4 py-12">
+            <AdSlot placement="HOME_BETWEEN_SECTIONS" langPrefix={`/${lang}`} />
           </div>
 
-          {/* ✅ Brands (Premium Styled) */}
+          {/* Featured */}
+          {featured.length ? (
+            <section className="mx-auto max-w-6xl px-4 pb-12">
+              <SectionHeader
+                eyebrow="Featured"
+                title="Featured Products"
+                actionHref={`/${lang}/shop?sort=featured`}
+                actionLabel="Browse all"
+                eyebrowClassName={theme.sectionEyebrow}
+                titleClassName={theme.sectionTitle}
+                actionClassName={theme.sectionAction}
+              />
+
+              <div className="mt-5 grid auto-rows-fr grid-cols-2 gap-3 sm:mt-7 sm:gap-5 lg:grid-cols-4">
+                {featured.map((p) => (
+                  <div
+                    key={p.id}
+                    className={
+                      theme.productWrapper ??
+                      "h-full transition hover:-translate-y-1 hover:shadow-lg"
+                    }
+                  >
+                    <ProductCard
+                      langPrefix={`/${lang}`}
+                      enableImageSwipe
+                      product={{
+                        id: String(p.id),
+                        title: String(p.title || ""),
+                        slug: String(p.slug || ""),
+                        currency: (p.currency === "USD" ? "USD" : "INR") as "INR" | "USD",
+                        mrp: p.mrp == null ? null : Number(p.mrp),
+                        price: Number(p.price || 0),
+                        salePrice: p.salePrice == null ? null : Number(p.salePrice),
+                        createdAt: p.createdAt instanceof Date ? p.createdAt.toISOString() : p.createdAt,
+                        images: Array.isArray(p.images) ? p.images : [],
+                        vendorId: p.vendorId ?? p.vendor?.id ?? null,
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {/* Trending */}
+          {trending.length ? (
+            <section className="mx-auto max-w-6xl px-4 pb-12">
+              <SectionHeader
+                eyebrow="Trending"
+                title="Trending Products"
+                actionHref={`/${lang}/shop?sort=trending`}
+                actionLabel="Browse all"
+                eyebrowClassName={theme.sectionEyebrow}
+                titleClassName={theme.sectionTitle}
+                actionClassName={theme.sectionAction}
+              />
+
+              <div className="mt-5 grid auto-rows-fr grid-cols-2 gap-3 sm:mt-7 sm:gap-5 lg:grid-cols-4">
+                {trending.map((p) => (
+                  <div
+                    key={p.id}
+                    className={
+                      theme.productWrapper ??
+                      "h-full transition hover:-translate-y-1 hover:shadow-lg"
+                    }
+                  >
+                    <ProductCard
+                      langPrefix={`/${lang}`}
+                      enableImageSwipe
+                      product={{
+                        id: String(p.id),
+                        title: String(p.title || ""),
+                        slug: String(p.slug || ""),
+                        currency: (p.currency === "USD" ? "USD" : "INR") as "INR" | "USD",
+                        mrp: p.mrp == null ? null : Number(p.mrp),
+                        price: Number(p.price || 0),
+                        salePrice: p.salePrice == null ? null : Number(p.salePrice),
+                        createdAt: p.createdAt instanceof Date ? p.createdAt.toISOString() : p.createdAt,
+                        images: Array.isArray(p.images) ? p.images : [],
+                        vendorId: p.vendorId ?? p.vendor?.id ?? null,
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {/* Brands */}
           <section className="mx-auto max-w-6xl px-4 py-14">
             <div
-              className={
-                theme.brandsShell ??
-                "relative overflow-hidden rounded-[44px] border border-border bg-card/55 backdrop-blur-2xl shadow-[0_22px_90px_rgba(0,0,0,0.08)]"
-              }
+              className="relative overflow-hidden rounded-[48px] border border-primary/15 bg-linear-to-br from-card/85 via-background/75 to-primary/8 backdrop-blur-2xl shadow-[0_28px_100px_rgba(47,38,34,0.12)]"
             >
               {/* Glow / background */}
               <div
@@ -1443,207 +1664,114 @@ export default async function Home({
               <div className="relative px-7 md:px-10 py-10">
                 <SectionHeader
                   eyebrow="Brands"
-                  title="Popular Brands"
-                  actionHref={`/${lang}`}
-                  actionLabel="View all"
+                  title="Shop By Brand"
                   eyebrowClassName={theme.sectionEyebrow}
                   titleClassName={theme.sectionTitle}
                   actionClassName={theme.sectionAction}
                 />
 
                 <p className="mt-3 max-w-2xl text-sm md:text-base text-muted-foreground leading-relaxed">
-                  Discover premium vendors and artisan labels — curated for quality, authenticity and timeless style.
+                  Discover trusted labels by collection. Popular and luxury brands are fully managed from the admin panel.
                 </p>
 
-                {/* Luxe Scroll Wrapper */}
-                <div className="mt-8">
-                  <div className="relative">
-                    {/* Edge fades */}
-                    <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-linear-to-r from-card/95 to-transparent z-10" />
-                    <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-linear-to-l from-card/95 to-transparent z-10" />
-
-                    {/* Your existing BrandCarousel */}
-                    <div className="overflow-x-auto pb-2 mask-[linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
-                      <div className="min-w-max">
-                        <BrandCarousel brands={brands} langPrefix={`/${lang}`} />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Small hint */}
-                  <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="uppercase tracking-[0.22em]">Top Sellers</span>
-                    <span className="opacity-70">Scroll →</span>
-                  </div>
+                <div className="mt-8 grid gap-5">
+                  <BrandMarquee
+                    title="Popular Brands"
+                    eyebrow="Top Sellers"
+                    href={`/${lang}/brands/popular`}
+                    brands={popularBrands}
+                    duration="28s"
+                  />
+                  <BrandMarquee
+                    title="Luxury Brands"
+                    eyebrow="Premium Picks"
+                    href={`/${lang}/brands/luxury`}
+                    brands={luxuryBrands}
+                    duration="34s"
+                  />
                 </div>
+                <style>{`
+                  @keyframes brand-marquee {
+                    from { transform: translateX(0); }
+                    to { transform: translateX(-50%); }
+                  }
+                `}</style>
               </div>
             </div>
           </section>
 
-          {/* Latest + Offers */}
-          <section className="mx-auto max-w-6xl px-4 py-12">
-            <div className="grid gap-12 lg:grid-cols-2">
-              <div>
-                <SectionHeader
-                  eyebrow="New"
-                  title="Latest Products"
-                  actionHref={`/${lang}?sort=latest`}
-                  actionLabel="See more"
-                  eyebrowClassName={theme.sectionEyebrow}
-                  titleClassName={theme.sectionTitle}
-                  actionClassName={theme.sectionAction}
-                />
-                <div className="mt-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {latest.slice(0, 4).map((p) => (
-                    <div
-                      key={p.id}
-                      className={
-                        theme.productWrapper ??
-                        "h-full transition hover:-translate-y-1 hover:shadow-lg"
-                      }
-                    >
-                      <ProductCard
-                        langPrefix={`/${lang}`}
-                        enableImageSwipe
-                        product={{
-                          id: String(p.id),
-                          title: String(p.title || ""),
-                          slug: String(p.slug || ""),
-                          currency: (p.currency === "USD" ? "USD" : "INR") as "INR" | "USD",
-                          mrp: p.mrp == null ? null : Number(p.mrp),
-                          price: Number(p.price || 0),
-                          salePrice: p.salePrice == null ? null : Number(p.salePrice),
-                          createdAt: p.createdAt,
-                          images: Array.isArray(p.images) ? p.images : [],
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <SectionHeader
-                  eyebrow="Deals"
-                  title="Special Offers"
-                  actionHref={`/${lang}?sort=offer`}
-                  actionLabel="See all offers"
-                  eyebrowClassName={theme.sectionEyebrow}
-                  titleClassName={theme.sectionTitle}
-                  actionClassName={theme.sectionAction}
-                />
-                <div className="mt-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {offers.slice(0, 4).map((p) => (
-                    <div
-                      key={p.id}
-                      className={
-                        theme.productWrapper ??
-                        "h-full transition hover:-translate-y-1 hover:shadow-lg"
-                      }
-                    >
-                      <ProductCard
-                        langPrefix={`/${lang}`}
-                        enableImageSwipe
-                        product={{
-                          id: String(p.id),
-                          title: String(p.title || ""),
-                          slug: String(p.slug || ""),
-                          currency: (p.currency === "USD" ? "USD" : "INR") as "INR" | "USD",
-                          mrp: p.mrp == null ? null : Number(p.mrp),
-                          price: Number(p.price || 0),
-                          salePrice: p.salePrice == null ? null : Number(p.salePrice),
-                          createdAt: p.createdAt,
-                          images: Array.isArray(p.images) ? p.images : [],
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
         </>
       ) : null}
 
-      {/* ✅ PRODUCTS */}
-      <section className="mx-auto max-w-6xl px-4 py-14">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-          <div>
-            <div className={theme.sectionEyebrow ?? "text-[11px] tracking-[0.22em] uppercase text-muted-foreground"}>
-              Featured Products
-            </div>
-            <h2 className={theme.sectionTitle ? theme.sectionTitle.replace("md:text-3xl", "md:text-4xl") : "mt-2 font-heading text-2xl md:text-4xl tracking-tight text-foreground"}>
-              Curated pieces, crafted to last.
-            </h2>
-          </div>
-
-          <div className="text-sm text-muted-foreground">
+      {!showHomeSections ? (
+        <section className="mx-auto max-w-6xl px-4 py-14">
+          <div className="flex justify-end text-sm text-muted-foreground">
             {products.length} items found
           </div>
-        </div>
 
-        <Divider className={theme.dividerShell} glowClassName={theme.dividerGlow} />
+          <Divider className={theme.dividerShell} glowClassName={theme.dividerGlow} />
 
-        {q ? (
-          <div className="mt-6">
-            <AdSlot placement="SEARCH_TOP" />
+          {q ? (
+            <div className="mt-6">
+              <AdSlot placement="SEARCH_TOP" langPrefix={`/${lang}`} />
+            </div>
+          ) : null}
+
+          <div className="grid auto-rows-fr grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+            {products.map((p) => (
+              <div
+                key={p.id}
+                className={
+                  theme.productWrapper ??
+                  "h-full transition hover:-translate-y-1 hover:shadow-lg"
+                }
+              >
+                <ProductCard
+                  langPrefix={`/${lang}`}
+                  enableImageSwipe
+                  product={{
+                    id: String(p.id),
+                    title: String(p.title || ""),
+                    slug: String(p.slug || ""),
+                    currency: (p.currency === "USD" ? "USD" : "INR") as "INR" | "USD",
+                    mrp: p.mrp == null ? null : Number(p.mrp),
+                    price: Number(p.price || 0),
+                    salePrice: p.salePrice == null ? null : Number(p.salePrice),
+                    createdAt: p.createdAt,
+                    images: Array.isArray(p.images) ? p.images : [],
+                    vendorId: p.vendorId ?? p.vendor?.id ?? null,
+                  }}
+                />
+              </div>
+            ))}
           </div>
-        ) : null}
 
-        <div className="grid auto-rows-fr grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((p) => (
+          {products.length === 0 ? (
             <div
-              key={p.id}
               className={
-                theme.productWrapper ??
-                "h-full transition hover:-translate-y-1 hover:shadow-lg"
+                theme.emptyStateShell ??
+                "mt-20 rounded-[42px] border border-border bg-card/70 backdrop-blur-2xl p-12 text-center shadow-[0_18px_70px_rgba(0,0,0,0.08)]"
               }
             >
-              <ProductCard
-                langPrefix={`/${lang}`}
-                enableImageSwipe
-                product={{
-                  id: String(p.id),
-                  title: String(p.title || ""),
-                  slug: String(p.slug || ""),
-                          currency: (p.currency === "USD" ? "USD" : "INR") as "INR" | "USD",
-                          mrp: p.mrp == null ? null : Number(p.mrp),
-                          price: Number(p.price || 0),
-                          salePrice: p.salePrice == null ? null : Number(p.salePrice),
-                  createdAt: p.createdAt,
-                  images: Array.isArray(p.images) ? p.images : [],
-                }}
-              />
-            </div>
-          ))}
-        </div>
+              <div className="font-heading text-2xl md:text-3xl text-foreground">
+                No products found
+              </div>
+              <p className="mt-2 text-sm md:text-base text-muted-foreground">
+                Try adjusting filters or reset to explore all products.
+              </p>
 
-        {/* Empty State */}
-        {products.length === 0 ? (
-          <div
-            className={
-              theme.emptyStateShell ??
-              "mt-20 rounded-[42px] border border-border bg-card/70 backdrop-blur-2xl p-12 text-center shadow-[0_18px_70px_rgba(0,0,0,0.08)]"
-            }
-          >
-            <div className="font-heading text-2xl md:text-3xl text-foreground">
-              No products found
+              <a
+                href={`/${lang}`}
+                className="mt-7 inline-flex h-12 items-center justify-center rounded-2xl bg-primary px-8 text-sm font-semibold text-primary-foreground
+                shadow-[0_18px_45px_rgba(0,0,0,0.10)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.14)] hover:-translate-y-px active:translate-y-0 transition
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Reset Filters
+              </a>
             </div>
-            <p className="mt-2 text-sm md:text-base text-muted-foreground">
-              Try adjusting filters or reset to explore all products.
-            </p>
-
-            <a
-              href={`/${lang}`}
-              className="mt-7 inline-flex h-12 items-center justify-center rounded-2xl bg-primary px-8 text-sm font-semibold text-primary-foreground
-              shadow-[0_18px_45px_rgba(0,0,0,0.10)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.14)] hover:-translate-y-px active:translate-y-0 transition
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              Reset Filters
-            </a>
-          </div>
-        ) : null}
-      </section>
+          ) : null}
+        </section>
+      ) : null}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Script from "next/script";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -20,6 +20,21 @@ declare global {
   }
 }
 
+type CartItem = { product?: { currency?: string | null; forceCodOnly?: boolean | null } | null };
+type SavedAddress = {
+  id: string;
+  label: string | null;
+  fullName: string;
+  phone: string;
+  address1: string;
+  address2: string | null;
+  city: string;
+  state: string;
+  pincode: string;
+  kind: string;
+  isDefault: boolean;
+};
+
 export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) {
   const lp = langPrefix || "";
   const router = useRouter();
@@ -29,21 +44,22 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
   const [placing, setPlacing] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [subtotal, setSubtotal] = useState<number>(0);
-  const [discount, setDiscount] = useState<number>(0);
   const [total, setTotal] = useState<number>(0);
   const [orderCurrency, setOrderCurrency] = useState<"INR" | "USD">("INR");
-  const [couponCode, setCouponCode] = useState<string | null>(null);
-  const [couponInput, setCouponInput] = useState<string>("");
-  const [couponBusy, setCouponBusy] = useState(false);
-  const { currency: userCurrency } = useCurrency();
-
-  const displaySubtotal = useMemo(() => getPriceInCurrency(subtotal, orderCurrency, userCurrency), [subtotal, orderCurrency, userCurrency]);
-  const displayDiscount = useMemo(() => getPriceInCurrency(discount, orderCurrency, userCurrency), [discount, orderCurrency, userCurrency]);
-  const displayTotal = useMemo(() => getPriceInCurrency(total, orderCurrency, userCurrency), [total, orderCurrency, userCurrency]);
-
-  const autoAppliedRef = useRef(false);
-
-  const [paymentMethod, setPaymentMethod] = useState<"RAZORPAY" | "COD">("RAZORPAY");
+  const [itemsData, setItemsData] = useState<CartItem[]>([]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"COD" | "RAZORPAY">("RAZORPAY");
+  const { currency: selectedCurrency } = useCurrency();
+  const displayCurrency = selectedCurrency;
+  const displayAmount = (value: number) => getPriceInCurrency(Number(value || 0), orderCurrency, displayCurrency);
+  const hasCodOnlyProducts = useMemo(
+    () => itemsData.some((item) => item?.product?.forceCodOnly === true),
+    [itemsData],
+  );
+  const codAvailable = useMemo(
+    () => orderCurrency === "INR" && itemsData.length > 0 && itemsData.every((item) => item?.product?.forceCodOnly === true),
+    [itemsData, orderCurrency],
+  );
+  const paymentMethod = selectedPaymentMethod;
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -52,6 +68,8 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [pincode, setPincode] = useState("");
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
 
   function validateShipping(): string | null {
     if (fullName.trim().length < 2) return "Enter your full name";
@@ -73,10 +91,9 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
     if (!res.ok) {
       setMsg(data?.error || "Failed to load cart");
       setSubtotal(0);
-      setDiscount(0);
       setTotal(0);
-      setCouponCode(null);
-      setCouponInput("");
+      setOrderCurrency("INR");
+      setItemsData([]);
       setLoading(false);
       return;
     }
@@ -84,100 +101,51 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
     if (!order || !order.items?.length) {
       setMsg("Cart is empty");
       setSubtotal(0);
-      setDiscount(0);
       setTotal(0);
       setOrderCurrency("INR");
-      setCouponCode(null);
-      setCouponInput("");
+      setItemsData([]);
     } else {
-      const inferredCurrency = (() => {
-        const items: any[] = Array.isArray(order.items) ? order.items : [];
-        const currencies = new Set<string>();
-        for (const it of items) {
-          const c = it?.product?.currency;
-          if (c === "USD" || c === "INR") currencies.add(c);
-        }
-        if (currencies.size === 1) return Array.from(currencies)[0] as "INR" | "USD";
-        if (currencies.size === 0) return "INR" as const;
-        return "MIXED" as const;
-      })();
+      const inferredCurrency = order.currency === "USD" ? "USD" : "INR";
+      const nextItems = Array.isArray(order.items) ? order.items : [];
 
-      if (inferredCurrency === "MIXED") {
-        setMsg("Cart has mixed currencies. Please checkout INR and USD items separately.");
+      // Store items data for payment method detection
+      setItemsData(nextItems);
+      if (inferredCurrency !== "INR" || !nextItems.length || !nextItems.every((item: CartItem) => item?.product?.forceCodOnly === true)) {
+        setSelectedPaymentMethod("RAZORPAY");
       }
 
-      setOrderCurrency(inferredCurrency === "MIXED" ? "INR" : inferredCurrency);
+      setOrderCurrency(inferredCurrency);
       setSubtotal(Number(order.subtotal ?? order.total ?? 0));
-      setDiscount(Number(order.couponDiscount ?? 0));
       setTotal(Number(order.total || 0));
-      setCouponCode((order.couponCode as string | null) ?? null);
-      setCouponInput(String(order.couponCode || ""));
-      if (inferredCurrency !== "MIXED") setMsg(null);
+      setMsg(null);
     }
     setLoading(false);
   }, []);
 
+  const applyAddress = useCallback((address: SavedAddress) => {
+    setSelectedAddressId(address.id);
+    setFullName(address.fullName);
+    setPhone(address.phone);
+    setAddress1(address.address1);
+    setAddress2(address.address2 || "");
+    setCity(address.city);
+    setState(address.state);
+    setPincode(address.pincode);
+  }, []);
+
+  const loadAddresses = useCallback(async () => {
+    const res = await fetch("/api/addresses", { credentials: "include", cache: "no-store" });
+    const data = await res.json().catch(() => ({}));
+    const rows = Array.isArray(data?.addresses) ? (data.addresses as SavedAddress[]) : [];
+    setAddresses(rows);
+    const preferred = rows.find((row) => row.isDefault) ?? rows[0];
+    if (preferred) applyAddress(preferred);
+  }, [applyAddress]);
+
   useEffect(() => {
     void loadCart();
-  }, [loadCart]);
-
-  const applyCoupon = useCallback(
-    async (code: string) => {
-      setMsg(null);
-      setCouponBusy(true);
-      try {
-        const res = await fetch("/api/checkout/apply-coupon", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          const error = data?.error || "Coupon could not be applied";
-          setMsg(error);
-          toast({ variant: "danger", title: "Coupon", message: error });
-          return;
-        }
-        toast({ variant: "success", title: "Coupon", message: data?.code ? `Applied ${data.code}` : "Removed" });
-        await loadCart();
-      } finally {
-        setCouponBusy(false);
-      }
-    },
-    [loadCart, toast],
-  );
-
-  useEffect(() => {
-    if (loading) return;
-    if (autoAppliedRef.current) return;
-    if (couponCode) return;
-
-    const key = "bohosaaz_preferred_coupon_code";
-    const preferred = (() => {
-      try {
-        const v = localStorage.getItem(key);
-        return v ? v.trim().toUpperCase() : "";
-      } catch {
-        return "";
-      }
-    })();
-
-    if (!preferred) return;
-    autoAppliedRef.current = true;
-
-    void (async () => {
-      try {
-        await applyCoupon(preferred);
-      } finally {
-        try {
-          localStorage.removeItem(key);
-        } catch {
-          // ignore
-        }
-      }
-    })();
-  }, [applyCoupon, couponCode, loading]);
+    void loadAddresses();
+  }, [loadCart, loadAddresses]);
 
   async function placeCOD() {
     setMsg(null);
@@ -204,7 +172,7 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
       toast({
         variant: "success",
         title: "Order placed",
-        message: `COD order created • Total ${formatMoney(userCurrency, Number(data.total || 0))}`,
+        message: `COD order created • Total ${formatMoney(displayCurrency, displayAmount(Number(data.total || 0)))}`,
       });
       router.push(`${lp}/order/${data.orderId}` || `/order/${data.orderId}`);
     } catch (e: unknown) {
@@ -238,9 +206,7 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
         state,
         pincode,
       };
-      if (orderCurrency === userCurrency) {
-        payload.currency = userCurrency;
-      }
+      payload.currency = orderCurrency;
 
       const res = await fetch("/api/checkout/create", {
         method: "POST",
@@ -294,6 +260,7 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
 
           if (!rOrderId || !rPaymentId || !rSignature) {
             setMsg("Payment response missing required fields");
+            setPlacing(false);
             return;
           }
 
@@ -315,11 +282,21 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
             const err = (verifyData?.error as string) || "Payment verification failed";
             setMsg(err);
             toast({ variant: "danger", title: "Payment failed", message: err });
+            setPlacing(false);
             return;
           }
 
           toast({ variant: "success", title: "Payment successful", message: "Order marked as PAID" });
           router.push(`${lp}/order/${orderId}` || `/order/${orderId}`);
+          setPlacing(false);
+        },
+        modal: {
+          ondismiss: () => {
+            const message = "Payment cancelled. Your order was not placed.";
+            setMsg(message);
+            setPlacing(false);
+            toast({ variant: "warning", title: "Payment cancelled", message });
+          },
         },
       };
 
@@ -330,23 +307,25 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
       toast({ variant: "danger", title: "Payment failed", message });
       setMsg(message);
     } finally {
-      setPlacing(false);
+      // Razorpay success/cancel callbacks clear the placing state after the modal closes.
     }
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 md:py-10">
+    <div className="site-container mobile-bottom-safe py-5 md:py-10">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
 
-      <div className="flex items-end justify-between gap-4">
+      <div className="rounded-[24px] border border-border/70 bg-card/65 p-4 shadow-[0_18px_60px_rgba(47,38,34,0.06)] backdrop-blur-xl md:rounded-[34px] md:p-7">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Checkout</div>
           <h1 className="mt-2 font-heading text-3xl md:text-4xl tracking-tight text-foreground">Secure checkout</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Choose Razorpay or Cash on Delivery and complete your order.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Online payment is the default. COD appears only for admin-enabled COD products.</p>
         </div>
         <Link className="text-sm text-muted-foreground hover:text-foreground transition" href={backToCartHref}>
           ← Back to cart
         </Link>
+      </div>
       </div>
 
       {msg ? (
@@ -359,7 +338,7 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
           <Skeleton className="h-64" />
         </div>
       ) : total <= 0 ? (
-        <Card className="mt-6 overflow-hidden">
+        <Card className="mt-6 overflow-hidden bg-card/85 shadow-premium">
           <div className="p-8">
             <div className="font-heading text-2xl">Cart is empty</div>
             <div className="mt-2 text-sm text-muted-foreground">Add items before checking out.</div>
@@ -371,16 +350,47 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
           </div>
         </Card>
       ) : (
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="mt-5 grid grid-cols-1 gap-5 lg:mt-8 lg:grid-cols-3 lg:gap-6">
           <div className="lg:col-span-2">
-            <Card className="overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+            <Card className="overflow-hidden bg-card/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
               <div className="border-b border-border bg-muted/25 px-5 py-4">
                 <div className="font-heading text-lg text-foreground">Shipping address</div>
                 <div className="mt-1 text-sm text-muted-foreground">We’ll use this for delivery updates.</div>
               </div>
 
-              <div className="p-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="p-4 sm:p-5">
+                {addresses.length ? (
+                  <div className="mb-5 rounded-2xl border border-border bg-muted/20 p-3">
+                    <div className="text-sm font-semibold text-foreground">Saved addresses</div>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {addresses.map((address) => (
+                        <button
+                          key={address.id}
+                          type="button"
+                          className={`rounded-2xl border px-3 py-3 text-left text-sm transition ${
+                            selectedAddressId === address.id ? "border-primary bg-primary/10 text-foreground" : "border-border bg-card/70 hover:bg-muted/35"
+                          }`}
+                          onClick={() => applyAddress(address)}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="font-semibold">{address.label || address.fullName}</span>
+                            <span className="rounded-full bg-background/70 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                              {address.isDefault ? "Default" : address.kind || "Secondary"}
+                            </span>
+                          </div>
+                          <div className="mt-1 text-xs text-muted-foreground">
+                            {address.address1}, {address.city}, {address.state} - {address.pincode}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    <Link href={`${lp}/account/profile`} className="mt-3 inline-block text-xs font-semibold text-primary underline underline-offset-4">
+                      Manage addresses
+                    </Link>
+                  </div>
+                ) : null}
+
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   <Input placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
                   <Input placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
                 </div>
@@ -390,7 +400,7 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
                   <Input placeholder="Address line 2 (optional)" value={address2} onChange={(e) => setAddress2(e.target.value)} />
                 </div>
 
-                <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
                   <Input placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
                   <Input placeholder="State" value={state} onChange={(e) => setState(e.target.value)} />
                   <Input placeholder="Pincode" value={pincode} onChange={(e) => setPincode(e.target.value)} />
@@ -403,70 +413,61 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
             </Card>
           </div>
 
-          <div className="lg:sticky lg:top-24 h-fit">
-            <Card className="overflow-hidden shadow-premium">
+          <div className="h-fit lg:sticky lg:top-24">
+            <Card className="overflow-hidden bg-card/90 shadow-premium">
               <div className="border-b border-border bg-muted/25 px-5 py-4">
                 <div className="font-heading text-lg text-foreground">Order summary</div>
                 <div className="mt-1 text-sm text-muted-foreground">Choose payment method</div>
               </div>
 
-              <div className="p-5">
-                {/* Payment selection removed — defaulting to Razorpay. */}
-
-                <div className="grid gap-3">
-                  <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Coupon</div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value)}
-                      placeholder="Enter coupon code"
-                      disabled={couponBusy}
-                    />
-                    <Button
-                      variant="outline"
-                      className="h-11"
-                      disabled={couponBusy}
-                      onClick={() => applyCoupon(couponInput)}
-                    >
-                      Apply
-                    </Button>
-                  </div>
-                  {couponCode ? (
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Applied: {couponCode}</span>
-                      <button
-                        className="underline underline-offset-4 hover:text-foreground transition"
-                        disabled={couponBusy}
-                        onClick={() => applyCoupon("")}
-                      >
-                        Remove
-                      </button>
+              <div className="p-4 sm:p-5">
+                <div className="mb-4 rounded-2xl border border-border bg-card p-3 text-sm text-foreground">
+                  <div className="mb-3 font-medium">Payment options</div>
+                  {hasCodOnlyProducts && !codAvailable ? (
+                    <div className="mb-3 rounded-lg border border-yellow-200/50 bg-yellow-50/50 p-2 text-xs text-yellow-900">
+                      COD is enabled only when every item in the cart is admin-approved for COD and the order currency is INR.
                     </div>
                   ) : null}
+                  <div className="space-y-2">
+                    <label className="flex min-h-14 items-center gap-3 rounded-(--radius) border border-border px-3 py-3">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="RAZORPAY"
+                        checked={selectedPaymentMethod === "RAZORPAY"}
+                        onChange={() => setSelectedPaymentMethod("RAZORPAY")}
+                      />
+                      <span>Pay with Razorpay</span>
+                    </label>
+                    {codAvailable ? (
+                      <label className="flex min-h-14 items-center gap-3 rounded-(--radius) border border-border px-3 py-3">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="COD"
+                          checked={selectedPaymentMethod === "COD"}
+                          onChange={() => setSelectedPaymentMethod("COD")}
+                        />
+                        <span>Cash on Delivery</span>
+                      </label>
+                    ) : null}
+                  </div>
                 </div>
-
-                <div className="mt-5 h-px bg-border" />
 
                 <div className="flex items-center justify-between text-sm">
                   <div className="text-muted-foreground">Subtotal</div>
-                  <Price value={displaySubtotal} currency={userCurrency} size="sm" className="text-foreground" />
+                  <Price value={displayAmount(subtotal)} currency={displayCurrency} size="sm" className="text-foreground" />
                 </div>
-                {discount > 0 ? (
-                  <div className="mt-2 flex items-center justify-between text-sm">
-                    <div className="text-muted-foreground">Discount</div>
-                    <Price value={-displayDiscount} currency={userCurrency} size="sm" className="text-foreground" />
-                  </div>
-                ) : null}
 
                 <div className="mt-3 flex items-center justify-between">
                   <div className="text-sm text-muted-foreground">Total</div>
-                  <Price value={displayTotal} currency={userCurrency} size="lg" />
+                  <Price value={displayAmount(total)} currency={displayCurrency} size="lg" />
                 </div>
 
                 <Button
                   disabled={placing}
                   onClick={paymentMethod === "COD" ? placeCOD : payWithRazorpay}
-                  className="mt-5 w-full h-11 uppercase tracking-[0.12em]"
+                  className="mt-5 h-12 w-full uppercase tracking-[0.12em]"
                   variant="primary"
                 >
                   {placing ? "PROCESSING..." : paymentMethod === "COD" ? "PLACE ORDER (COD)" : "PAY WITH RAZORPAY"}

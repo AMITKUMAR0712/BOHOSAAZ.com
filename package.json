@@ -9,6 +9,8 @@
     "start": "node server.js",
     "lint": "eslint",
     "seed": "prisma db seed",
+    "import:ramhari": "tsx scripts/import-ramhari-products.ts",
+    "seo:slugs": "tsx scripts/seo-slugs.ts",
     "set-password": "tsx scripts/set-user-password.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate:deploy": "prisma migrate deploy",

@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { JwtPayload, verifyToken } from "@/lib/auth";
 import { bumpLiveVersion } from "@/lib/live";
+import { getCustomerUnitPrice } from "@/lib/customer-pricing";
+import { recomputePendingOrderTotals } from "@/lib/orderTotals";
 
 export async function PATCH(
   req: NextRequest,
@@ -41,9 +43,17 @@ export async function PATCH(
   }
   const finalQty = Math.min(quantity, maxQty);
 
-  const unitPrice = item.variant
+  const orderCurrency = item.order.currency === "USD" ? "USD" : "INR";
+  const baseUnitPrice = item.variant
     ? Number(item.variant.salePrice ?? item.variant.price)
     : Number(item.product.salePrice ?? item.product.price);
+  const productCurrency = item.product.currency === "USD" ? "USD" : "INR";
+  const unitPrice = getCustomerUnitPrice({
+    basePrice: baseUnitPrice,
+    productCurrency,
+    displayCurrency: orderCurrency,
+    isVendorProduct: Boolean(item.product.vendorId),
+  });
 
   await prisma.orderItem.update({
     where: { id: itemId },
@@ -59,7 +69,7 @@ export async function PATCH(
   const items = await prisma.orderItem.findMany({ where: { orderId: item.orderId } });
   const total = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
 
-  await prisma.order.update({ where: { id: item.orderId }, data: { total } });
+  await prisma.order.update({ where: { id: item.orderId }, data: { subtotal: total, total } });
 
   await bumpLiveVersion({ kind: "user", userId: payload.sub });
 
@@ -92,14 +102,20 @@ export async function DELETE(
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  await prisma.orderItem.delete({ where: { id: itemId } });
-
-  const items = await prisma.orderItem.findMany({ where: { orderId: item.orderId } });
-  const total = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
-
-  await prisma.order.update({ where: { id: item.orderId }, data: { total } });
+  const totals = await prisma.$transaction(async (tx) => {
+    await tx.orderItem.delete({ where: { id: itemId } });
+    const remaining = await tx.orderItem.count({ where: { orderId: item.orderId } });
+    if (remaining <= 0) {
+      await tx.order.update({
+        where: { id: item.orderId },
+        data: { subtotal: 0, total: 0, couponId: null, couponCode: null, couponDiscount: 0 },
+      });
+      return { total: 0 };
+    }
+    return recomputePendingOrderTotals(tx, item.orderId);
+  });
 
   await bumpLiveVersion({ kind: "user", userId: payload.sub });
 
-  return Response.json({ ok: true, total });
+  return Response.json({ ok: true, total: totals.total });
 }

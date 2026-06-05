@@ -6,8 +6,22 @@ import { audit } from "@/lib/audit";
 import { jsonError, jsonOk } from "@/lib/api";
 import { getIpFromRequest, getUserAgentFromRequest } from "@/lib/requestMeta";
 
+const imageUrlSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .refine((value) => {
+    if (value.startsWith("/uploads/")) return true;
+    try {
+      const url = new URL(value);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+      return false;
+    }
+  }, "Invalid image URL");
+
 const addSchema = z.object({
-  url: z.string().trim().url(),
+  url: imageUrlSchema,
 });
 
 export async function GET(

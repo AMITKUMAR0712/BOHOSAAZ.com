@@ -105,6 +105,24 @@ export default function CategoriesClient({
     await reload();
   }
 
+  async function deleteCategory(category: Category) {
+    if (!window.confirm(`Delete category "${category.name}"?`)) return;
+
+    const res = await fetch(`/api/admin/categories/${encodeURIComponent(category.id)}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) {
+      toast.error(data?.error || "Delete failed");
+      return;
+    }
+
+    if (selectedId === category.id) setSelectedId(null);
+    toast.success("Category deleted");
+    await reload();
+  }
+
   return (
     <div className="p-6 md:p-10">
       <Card className="max-w-3xl">
@@ -154,6 +172,9 @@ export default function CategoriesClient({
                 <Button onClick={() => setSelectedId(null)} variant="outline">
                   Cancel
                 </Button>
+                <Button onClick={() => deleteCategory(selected)} variant="danger">
+                  Delete
+                </Button>
                 <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
                   <CategoryIcon iconName={editIconName} iconUrl={editIconUrl} />
                   <span>Preview</span>
@@ -170,6 +191,7 @@ export default function CategoriesClient({
                   <TH>Name</TH>
                   <TH>Slug</TH>
                   <TH>ID</TH>
+                  <TH>Action</TH>
                 </TR>
               </THead>
               <tbody>
@@ -185,6 +207,18 @@ export default function CategoriesClient({
                     <TD className="font-semibold">{c.name}</TD>
                     <TD>{c.slug}</TD>
                     <TD className="text-xs text-muted-foreground">{c.id}</TD>
+                    <TD>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void deleteCategory(c);
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </TD>
                   </TR>
                 ))}
               </tbody>

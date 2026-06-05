@@ -76,22 +76,17 @@ export async function POST(
       if (item.vendorOrderId) {
         const voItems = await tx.orderItem.findMany({
           where: { vendorOrderId: item.vendorOrderId },
-          include: { product: { include: { vendor: true } } },
         });
 
       const subtotal = voItems
         .filter((it) => it.status !== "REFUNDED")
         .reduce((sum, it) => sum + it.price * it.quantity, 0);
 
-      const vendor = voItems[0]?.product?.vendor;
-      const commissionPct = Number(vendor?.commission ?? 0);
-      const rate = commissionPct > 1 ? commissionPct / 100 : commissionPct;
-      const commission = +(subtotal * rate).toFixed(2);
-      const payout = +(subtotal - commission).toFixed(2);
+      const payout = +subtotal.toFixed(2);
 
         await tx.vendorOrder.update({
           where: { id: item.vendorOrderId },
-          data: { subtotal, commission, payout },
+          data: { subtotal, commission: 0, payout },
         });
       }
 

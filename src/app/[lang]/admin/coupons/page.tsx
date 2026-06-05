@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { isLocale } from "@/lib/i18n";
 import CouponsClient from "./CouponsClient";
 
 export default async function AdminCouponsPage({
@@ -12,6 +13,9 @@ export default async function AdminCouponsPage({
   if (!admin) redirect("/403");
 
   const { lang } = await params;
+  if (!isLocale(lang)) {
+    redirect("/en");
+  }
 
   const rowsRaw = await prisma.coupon.findMany({
     orderBy: { createdAt: "desc" },

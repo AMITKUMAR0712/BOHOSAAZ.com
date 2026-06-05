@@ -87,8 +87,8 @@ const ClientSchema = z.object({
   gstin: z.string().trim().optional().nullable(),
   aadhaarLast4: z.string().trim().regex(/^\d{4}$/).optional().nullable(),
   bankAccountName: z.string().trim().min(2),
-  bankAccountNumber: z.string().trim().min(6),
-  ifsc: z.string().trim().min(6),
+  bankAccountNumber: z.string().trim().min(6, "Account number must be at least 6 characters"),
+  ifsc: z.string().trim().min(6, "IFSC must be at least 6 characters"),
   bankName: z.string().trim().min(2),
   upiId: z.string().trim().optional().nullable(),
 
@@ -434,7 +434,7 @@ export default function VendorApplyPage() {
       const appJson = await appRes.json().catch(() => null);
       if (appRes.ok && appJson?.ok) setApp(appJson as Application);
 
-      router.refresh();
+      router.replace(`${lp}/seller`);
     } catch (e) {
       setMsg(`❌ ${e instanceof Error ? e.message : "Submit failed"}`);
     } finally {
@@ -787,9 +787,13 @@ export default function VendorApplyPage() {
 
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="text-xs text-muted-foreground">
-              {loadingApp ? "Loading your application..." : ""}
+              {loadingApp
+                ? "Loading your application..."
+                : !readyToSubmit
+                  ? "Click Submit to see which required fields need correction."
+                  : "Ready to submit."}
             </div>
-            <Button onClick={submit} disabled={submitting || busyKey !== null || !readyToSubmit}>
+            <Button onClick={submit} disabled={submitting || busyKey !== null}>
               {submitting ? "Submitting..." : "Submit Application"}
             </Button>
           </div>

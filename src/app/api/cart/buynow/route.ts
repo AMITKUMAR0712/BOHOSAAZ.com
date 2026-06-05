@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { JwtPayload, verifyToken } from "@/lib/auth";
 import { z } from "zod";
 import { bumpLiveVersion } from "@/lib/live";
+import { getCurrencyFromCookie, getCustomerUnitPrice } from "@/lib/customer-pricing";
 
 const bodySchema = z.object({
   productId: z.string().trim().min(1),
@@ -29,6 +30,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { productId, variantId, qty } = parsed.data;
+    const orderCurrency = getCurrencyFromCookie(req.cookies.get("bohosaaz_currency")?.value);
 
     const product = await prisma.product.findUnique({
       where: { id: productId },
@@ -60,10 +62,17 @@ export async function POST(req: NextRequest) {
     if (maxQty <= 0) return Response.json({ error: "Out of stock" }, { status: 400 });
     const finalQty = Math.min(qty, maxQty);
 
-    const unitPrice = pickedVariant ? Number(pickedVariant.salePrice ?? pickedVariant.price) : Number(product.salePrice ?? product.price);
+    const baseUnitPrice = pickedVariant ? Number(pickedVariant.salePrice ?? pickedVariant.price) : Number(product.salePrice ?? product.price);
+    const productCurrency = product.currency === "USD" ? "USD" : "INR";
+    const unitPrice = getCustomerUnitPrice({
+      basePrice: baseUnitPrice,
+      productCurrency,
+      displayCurrency: orderCurrency,
+      isVendorProduct: Boolean(product.vendorId),
+    });
 
     // Create a NEW pending order for buy-now (do not reuse existing cart)
-    const order = await prisma.order.create({ data: { userId: payload.sub, status: "PENDING", total: 0 } });
+    const order = await prisma.order.create({ data: { userId: payload.sub, status: "PENDING", currency: orderCurrency, subtotal: 0, total: 0 } });
 
     await prisma.orderItem.create({
       data: {
@@ -81,7 +90,7 @@ export async function POST(req: NextRequest) {
     // compute total and update
     const items = await prisma.orderItem.findMany({ where: { orderId: order.id } });
     const total = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
-    await prisma.order.update({ where: { id: order.id }, data: { total } });
+    await prisma.order.update({ where: { id: order.id }, data: { subtotal: total, total } });
 
     await bumpLiveVersion({ kind: "user", userId: payload.sub });
 

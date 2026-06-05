@@ -22,7 +22,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
             { href: "/account", label: "Dashboard", match: "exact" },
             { href: "/account/orders", label: "My Orders" },
             { href: "/account/returns", label: "Returns/Refunds" },
-            { href: "/account/wallet", label: "Wallet" },
+            { href: "/account/wishlist", label: "Wishlist" },
             { href: "/account/support", label: "Support" },
             { href: "/account/profile", label: "Profile" },
           ],
