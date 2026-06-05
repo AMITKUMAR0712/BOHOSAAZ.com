@@ -73,9 +73,12 @@ export const metadata: Metadata = {
 
   // Browser tab logo / favicon
   icons: {
-    icon: "/logo copy.jpeg",
-    shortcut: "/logo copy.jpeg",
-    apple: "/logo copy.jpeg",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
   },
 
   // Social sharing preview

@@ -37,6 +37,8 @@ export function BannerCarousel({
 }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [failedMedia, setFailedMedia] = useState<Record<string, true>>({});
+  const [readyMedia, setReadyMedia] = useState<Record<string, true>>({});
   const hoveredRef = useRef(false);
 
   const safeBanners = useMemo(() => banners.filter(Boolean), [banners]);
@@ -65,6 +67,8 @@ export function BannerCarousel({
 
   const storyUrl = current?.videoUrl?.trim() || null;
   const isAnimatedSvgStory = Boolean(storyUrl?.toLowerCase().split("?")[0]?.endsWith(".svg"));
+  const mediaFailed = storyUrl ? Boolean(failedMedia[storyUrl]) : false;
+  const mediaReady = storyUrl ? Boolean(readyMedia[storyUrl]) : false;
 
   const chrome = (() => {
     if (homeTheme !== "commerce") {
@@ -111,38 +115,47 @@ export function BannerCarousel({
         }}
       >
         <div className="relative min-h-[280px] w-full sm:aspect-16/7 sm:min-h-0">
-          {storyUrl ? (
+          {current?.imageUrl ? (
+            <img
+              src={current.imageUrl}
+              alt={current?.title || "Banner"}
+              className="absolute inset-0 h-full w-full object-cover"
+              loading={storyUrl ? "eager" : "lazy"}
+            />
+          ) : (
+            <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-card to-amber-500/10" />
+          )}
+
+          {storyUrl && !mediaFailed ? (
             isAnimatedSvgStory ? (
               <img
                 src={storyUrl}
                 alt={current?.title || "Bohosaaz gifting story"}
                 className="absolute inset-0 h-full w-full object-cover"
                 loading="eager"
+                onError={() => setFailedMedia((prev) => ({ ...prev, [storyUrl]: true }))}
               />
             ) : (
             <video
               key={storyUrl}
               src={storyUrl}
               poster={current.imageUrl || undefined}
-              className="absolute inset-0 h-full w-full object-cover"
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+                mediaReady ? "opacity-100" : "opacity-0"
+              }`}
               autoPlay
               muted
               playsInline
               preload="auto"
               onLoadedData={(event) => {
+                setReadyMedia((prev) => ({ ...prev, [storyUrl]: true }));
                 event.currentTarget.currentTime = 0;
                 void event.currentTarget.play().catch(() => undefined);
               }}
+              onError={() => setFailedMedia((prev) => ({ ...prev, [storyUrl]: true }))}
             />
             )
-          ) : (
-            <img
-              src={current?.imageUrl}
-              alt={current?.title || "Banner"}
-              className="absolute inset-0 h-full w-full object-cover"
-              loading="lazy"
-            />
-          )}
+          ) : null}
           <div className={chrome.overlay} />
 
           <div className="relative z-10 h-full" />
