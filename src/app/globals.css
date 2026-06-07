@@ -439,9 +439,8 @@ textarea::placeholder {
     transform: translateY(-38rem);
   }
 
-  .shop-page-content > .site-container:first-of-type {
-    margin-bottom: -8rem;
-    transform: translateY(-8rem);
+  .shop-page-content {
+    margin-top: 0;
   }
 }
 
@@ -450,9 +449,8 @@ textarea::placeholder {
     padding-top: 1.25rem;
   }
 
-  .shop-page-content > .site-container:first-of-type {
-    margin-bottom: -37rem;
-    transform: translateY(-37rem);
+  .shop-page-content {
+    margin-top: -37rem;
   }
 
   .compact-content-page > .site-container:first-of-type,
@@ -463,9 +461,8 @@ textarea::placeholder {
 }
 
 @media (min-width: 1280px) {
-  .shop-page-content > .site-container:first-of-type {
-    margin-bottom: -36rem;
-    transform: translateY(-36rem);
+  .shop-page-content {
+    margin-top: -36rem;
   }
 
   .compact-content-page > .site-container:first-of-type,
