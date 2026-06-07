@@ -20,6 +20,7 @@ type WalletTransactionDelegate = {
 };
 
 const bodySchema = z.object({
+  orderId: z.string().trim().min(1).optional(),
   fullName: z.string().trim().min(2),
   phone: z.string().trim().min(8),
   address1: z.string().trim().min(5),
@@ -48,11 +49,13 @@ export async function POST(req: NextRequest) {
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) return Response.json({ error: "Invalid payload" }, { status: 400 });
 
-  const { fullName, phone, address1, address2, city, state, pincode } = parsed.data;
+  const { orderId, fullName, phone, address1, address2, city, state, pincode } = parsed.data;
 
   const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const order = await tx.order.findFirst({
-      where: { userId: payload.sub, status: "PENDING" },
+      where: orderId
+        ? { id: orderId, userId: payload.sub, status: "PENDING" }
+        : { userId: payload.sub, status: "PENDING" },
       include: {
         items: {
           include: {

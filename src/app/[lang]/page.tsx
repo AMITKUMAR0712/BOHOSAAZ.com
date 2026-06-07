@@ -206,47 +206,51 @@ function BrandMarquee({
   const marqueeBrands = brands.length ? [...brands, ...brands] : [];
 
   return (
-    <div className="relative overflow-hidden rounded-[34px] border border-primary/15 bg-linear-to-br from-background/90 via-card/80 to-primary/5 p-5 shadow-[0_18px_60px_rgba(47,38,34,0.08)] backdrop-blur-xl">
-      <div className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full bg-primary/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-16 -left-12 h-44 w-44 rounded-full bg-amber-500/10 blur-3xl" />
-      <div className="relative flex items-end justify-between gap-4">
+    <div className="relative overflow-hidden rounded-[30px] bg-linear-to-br from-card/95 via-background/80 to-primary/10 p-3 shadow-[0_18px_60px_rgba(47,38,34,0.09)] ring-1 ring-primary/10 backdrop-blur-xl sm:p-4 lg:p-5">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(135,56,20,0.12),transparent_30%),radial-gradient(circle_at_85%_20%,rgba(184,134,50,0.14),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.22),transparent_45%)]" />
+      <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/14 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-20 -left-14 h-56 w-56 rounded-full bg-amber-500/14 blur-3xl" />
+      <div className="relative flex flex-col items-start gap-2.5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="text-[10px] uppercase tracking-[0.3em] text-primary/75">{eyebrow}</div>
-          <h3 className="mt-2 font-heading text-3xl tracking-tight text-foreground">{title}</h3>
+          <h3 className="mt-2 max-w-52 font-heading text-3xl leading-tight tracking-tight text-foreground sm:max-w-none sm:text-4xl lg:text-[2.65rem]">
+            {title}
+          </h3>
         </div>
         <Link
           href={href}
-          className="rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:border-primary/30 hover:text-primary"
+          className="inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-primary/15 bg-card/80 px-3 text-[11px] font-semibold text-muted-foreground shadow-sm transition hover:border-primary/30 hover:bg-background/80 hover:text-primary sm:h-8 sm:px-3"
         >
           View all
         </Link>
       </div>
 
       {brands.length ? (
-        <div className="relative mt-6 overflow-hidden">
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-linear-to-r from-background/95 to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-linear-to-l from-background/95 to-transparent" />
+        <div className="relative mt-4 overflow-hidden rounded-[24px]">
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-linear-to-r from-card/95 to-transparent sm:w-14" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-linear-to-l from-card/95 to-transparent sm:w-14" />
           <div
-            className="flex w-max gap-4 py-1 animate-[brand-marquee_linear_infinite] hover:[animation-play-state:paused]"
+            className="flex w-max gap-4 py-2 animate-[brand-marquee_linear_infinite] hover:[animation-play-state:paused] sm:gap-5 lg:gap-6"
             style={{ animationDuration: duration }}
           >
             {marqueeBrands.map((brand, index) => (
               <Link
                 key={`${brand.id}-${index}`}
                 href={href.replace(/\/brands\/(popular|luxury)$/, `/brand/${encodeURIComponent(brand.slug)}`)}
-                className="group grid h-36 w-40 shrink-0 place-items-center rounded-[28px] border border-border/80 bg-background/85 p-4 text-center shadow-[0_12px_35px_rgba(47,38,34,0.06)] transition hover:-translate-y-1.5 hover:border-primary/35 hover:bg-card hover:shadow-premium"
+                className="group relative grid h-48 w-52 shrink-0 place-items-center overflow-hidden rounded-[30px] border border-primary/12 bg-linear-to-br from-background/92 via-card/88 to-primary/8 p-3 text-center shadow-[0_14px_38px_rgba(47,38,34,0.08)] transition hover:-translate-y-1 hover:border-primary/35 hover:bg-card hover:shadow-premium sm:h-52 sm:w-60 sm:p-4 lg:h-56 lg:w-68"
               >
-                <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-[22px] border border-primary/10 bg-card shadow-sm transition group-hover:scale-105">
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.32),transparent_42%)] opacity-80" />
+                <div className="relative grid h-30 w-30 place-items-center overflow-hidden rounded-[28px] border border-primary/10 bg-card/95 shadow-[0_12px_35px_rgba(47,38,34,0.08)] transition group-hover:scale-105 sm:h-34 sm:w-34 lg:h-38 lg:w-38">
                   {brand.logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={brand.logoUrl} alt={brand.name} className="h-12 w-12 object-contain" />
+                    <img src={brand.logoUrl} alt={brand.name} className="h-24 w-24 object-contain sm:h-28 sm:w-28 lg:h-32 lg:w-32" />
                   ) : (
                     <span className="font-heading text-2xl text-primary">
                       {brand.name.trim().slice(0, 1).toUpperCase()}
                     </span>
                   )}
                 </div>
-                <div className="mt-3 line-clamp-2 text-sm font-semibold text-foreground transition group-hover:text-primary">
+                <div className="relative mt-3 line-clamp-2 text-base font-bold text-foreground transition group-hover:text-primary sm:text-lg">
                   {brand.name}
                 </div>
               </Link>
@@ -1359,16 +1363,9 @@ export default async function Home({
             </summary>
 
             <div className="px-6 pb-6">
-              <form method="GET" className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_230px] lg:items-start">
-                <div className="rounded-[30px] border border-border/70 bg-linear-to-br from-background/80 via-card/70 to-muted/30 p-4 shadow-inner lg:col-start-1">
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-[10px] uppercase tracking-[0.24em] text-primary/80">Step 1</div>
-                      <div className="font-heading text-xl tracking-tight text-foreground">Find the perfect match</div>
-                    </div>
-                    <span className="rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">Quick</span>
-                  </div>
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              <form method="GET" className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_230px] lg:items-start">
+                <div className="rounded-[30px] border border-primary/15 bg-linear-to-br from-background/90 via-card/75 to-primary/8 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_18px_55px_rgba(47,38,34,0.06)] lg:col-start-1">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
                   <div className="md:col-span-4">
                     <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Search</label>
                     <input
@@ -1411,17 +1408,8 @@ export default async function Home({
                     </select>
                   </div>
                 </div>
-                </div>
 
-                <div className="rounded-[30px] border border-primary/15 bg-linear-to-br from-primary/8 via-card/75 to-amber-500/8 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] lg:col-start-1">
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-[10px] uppercase tracking-[0.24em] text-primary/80">Step 2</div>
-                      <div className="font-heading text-xl tracking-tight text-foreground">Fine tune results</div>
-                    </div>
-                    <span className="rounded-full border border-border bg-background/70 px-3 py-1 text-[11px] text-muted-foreground">Optional</span>
-                  </div>
-                  <div className="grid gap-5 lg:grid-cols-2">
+                  <div className="mt-4 grid gap-4 lg:grid-cols-2">
                     <div>
                       <div className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Category</div>
                       <select name="category" defaultValue={category} className={premiumFilterFieldClass}>
@@ -1440,7 +1428,7 @@ export default async function Home({
                   </div>
 
                   {colorOptions.length ? (
-                    <div className="mt-5 rounded-[24px] border border-border/70 bg-background/45 p-3">
+                    <div className="mt-4 rounded-[24px] border border-border/70 bg-background/45 p-3">
                       <div className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Color</div>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {colorOptions.map(([value, label, swatch]) => (
@@ -1451,21 +1439,13 @@ export default async function Home({
                         ))}
                       </div>
                     </div>
-                  ) : (
-                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                      {["Premium picks", "Gift ready", "Fast shortlist"].map((item) => (
-                        <div key={item} className="rounded-[20px] border border-border/70 bg-background/45 px-4 py-3 text-sm font-medium text-foreground/85 shadow-sm">
-                          {item}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  ) : null}
                 </div>
 
                 {availability === "in_stock" ? <input type="hidden" name="inStock" value="1" /> : null}
                 {availability === "discounted" ? <input type="hidden" name="discountOnly" value="1" /> : null}
 
-                <div className="flex h-full flex-col rounded-[30px] border border-primary/15 bg-linear-to-br from-primary/12 via-card/85 to-background/80 p-4 shadow-[0_18px_55px_rgba(47,38,34,0.08)] lg:col-start-2 lg:row-span-2 lg:row-start-1">
+                <div className="flex flex-col rounded-[30px] border border-primary/15 bg-linear-to-br from-primary/12 via-card/85 to-background/80 p-4 shadow-[0_18px_55px_rgba(47,38,34,0.08)] lg:col-start-2 lg:row-start-1">
                   <div>
                     <div className="text-[10px] uppercase tracking-[0.24em] text-primary/80">Ready</div>
                     <div className="mt-1 font-heading text-2xl tracking-tight text-foreground">Apply filters</div>
@@ -1474,20 +1454,7 @@ export default async function Home({
                     </p>
                   </div>
 
-                  <div className="mt-5 grid gap-2">
-                    {[
-                      ["Occasion", occasion ? optionLabel(occasionOptions, occasion) : "Any"],
-                      ["Recipient", recipient ? optionLabel(recipientOptions, recipient) : "Anyone"],
-                      ["Budget", budget ? optionLabel(budgetOptions, budget) : "Flexible"],
-                    ].map(([name, value]) => (
-                      <div key={name} className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-background/50 px-3 py-2 text-xs">
-                        <span className="text-muted-foreground">{name}</span>
-                        <span className="max-w-28 truncate font-semibold text-foreground">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-auto pt-5">
+                  <div className="pt-5">
                     <button className="h-12 w-full rounded-2xl bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-[0_18px_45px_rgba(0,0,0,0.10)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.14)] hover:-translate-y-px active:translate-y-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                       Find Gifts
                     </button>
@@ -1661,20 +1628,20 @@ export default async function Home({
                 }
               />
 
-              <div className="relative px-7 md:px-10 py-10">
+              <div className="relative px-5 py-5 md:px-8 md:py-6">
                 <SectionHeader
                   eyebrow="Brands"
                   title="Shop By Brand"
                   eyebrowClassName={theme.sectionEyebrow}
-                  titleClassName={theme.sectionTitle}
+                  titleClassName="mt-1 font-heading text-2xl tracking-tight text-foreground md:text-3xl"
                   actionClassName={theme.sectionAction}
                 />
 
-                <p className="mt-3 max-w-2xl text-sm md:text-base text-muted-foreground leading-relaxed">
+                <p className="mt-2 max-w-xl text-xs leading-relaxed text-muted-foreground md:text-sm">
                   Discover trusted labels by collection. Popular and luxury brands are fully managed from the admin panel.
                 </p>
 
-                <div className="mt-8 grid gap-5">
+                <div className="mt-4 grid gap-3 md:mt-5">
                   <BrandMarquee
                     title="Popular Brands"
                     eyebrow="Top Sellers"

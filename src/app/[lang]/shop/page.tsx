@@ -357,10 +357,6 @@ export default async function ShopPage({
     "mt-2 h-12 w-full rounded-2xl border border-primary/15 bg-background/80 px-4 text-sm text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_10px_30px_rgba(47,38,34,0.04)] outline-none transition focus:border-primary/35 focus:bg-background focus:ring-4 focus:ring-primary/10";
   const intentFields = enabledFields.filter((field) => field.section === "intent");
   const refineFields = enabledFields.filter((field) => field.section === "refine");
-  const summaryFields = enabledFields
-    .filter((field) => field.key !== "q" && field.key !== "sort")
-    .slice(0, 3);
-
   const renderFilterField = (field: ShopFilterFieldConfig) => {
     const options = optionsByKey[field.key] ?? [];
 
@@ -420,7 +416,7 @@ export default async function ShopPage({
   };
 
   return (
-    <main className="compact-content-page shop-touch-header relative overflow-hidden bg-background mobile-bottom-safe">
+    <main className="compact-content-page shop-page-content relative overflow-hidden bg-background mobile-bottom-safe">
       <div className="pointer-events-none absolute -left-28 top-6 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-28 top-64 h-80 w-80 rounded-full bg-amber-500/10 blur-3xl" />
       <section className="site-container pt-3 sm:pt-4">
@@ -429,7 +425,7 @@ export default async function ShopPage({
           <div className="relative grid gap-6 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
             <div>
               <div className="inline-flex rounded-full border border-border bg-background/70 px-3 py-1 text-[11px] uppercase tracking-[0.28em] text-muted-foreground">Gift Finder</div>
-              <h1 className="mt-2 max-w-3xl font-heading text-3xl tracking-tight text-foreground md:text-4xl">
+              <h1 className="mt-2 max-w-3xl font-heading text-2xl tracking-tight text-foreground sm:text-3xl md:text-4xl">
                 Discover gifts by occasion, person and feeling.
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
@@ -445,7 +441,7 @@ export default async function ShopPage({
         </div>
       </section>
 
-      <section className="site-container py-4">
+      <section className="site-container py-3 sm:py-4">
         <details className="group overflow-hidden rounded-[26px] border border-primary/15 bg-card/85 shadow-[0_24px_80px_rgba(47,38,34,0.10)] backdrop-blur-2xl md:rounded-[38px]">
           <summary className="relative flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 md:px-6 md:py-5">
             <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-primary/8 via-transparent to-amber-500/8" />
@@ -462,38 +458,16 @@ export default async function ShopPage({
             <span className="relative hidden shrink-0 rounded-full border border-border bg-background/70 px-3 py-1 text-xs text-muted-foreground group-open:block">Close</span>
           </summary>
 
-          <form action={`/${lang}/shop`} className="grid gap-4 px-4 pb-4 md:gap-5 md:px-6 md:pb-6 lg:grid-cols-[minmax(0,1fr)_230px] lg:items-start">
-            {intentFields.length ? (
-              <div className="rounded-[22px] border border-border/70 bg-linear-to-br from-background/80 via-card/70 to-muted/30 p-3 shadow-inner md:rounded-[30px] md:p-4 lg:col-start-1">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.24em] text-primary/80">Step 1</div>
-                    <div className="font-heading text-lg tracking-tight text-foreground sm:text-xl">Find the perfect match</div>
-                  </div>
-                  <span className="rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">Quick</span>
-                </div>
+          <form action={`/${lang}/shop`} className="grid gap-4 px-4 pb-4 md:px-6 md:pb-6 lg:grid-cols-[minmax(0,1fr)_230px] lg:items-start">
+            {intentFields.length || refineFields.length ? (
+              <div className="rounded-[22px] border border-primary/15 bg-linear-to-br from-background/90 via-card/75 to-primary/8 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_18px_55px_rgba(47,38,34,0.06)] md:rounded-[30px] md:p-4 lg:col-start-1">
                 <div className="grid gap-3 md:grid-cols-12 md:gap-4">
-                  {intentFields.map(renderFilterField)}
+                  {[...intentFields, ...refineFields].map(renderFilterField)}
                 </div>
               </div>
             ) : null}
 
-            {refineFields.length ? (
-              <div className="rounded-[22px] border border-primary/15 bg-linear-to-br from-primary/8 via-card/75 to-amber-500/8 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] md:rounded-[30px] md:p-4 lg:col-start-1">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.24em] text-primary/80">Step 2</div>
-                    <div className="font-heading text-lg tracking-tight text-foreground sm:text-xl">Fine tune results</div>
-                  </div>
-                  <span className="rounded-full border border-border bg-background/70 px-3 py-1 text-[11px] text-muted-foreground">Optional</span>
-                </div>
-                <div className="grid gap-3 md:grid-cols-12 md:gap-5">
-                  {refineFields.map(renderFilterField)}
-                </div>
-              </div>
-            ) : null}
-
-            <div className="flex h-full flex-col rounded-[22px] border border-primary/15 bg-linear-to-br from-primary/12 via-card/85 to-background/80 p-3 shadow-[0_18px_55px_rgba(47,38,34,0.08)] md:rounded-[30px] md:p-4 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            <div className="flex flex-col rounded-[22px] border border-primary/15 bg-linear-to-br from-primary/12 via-card/85 to-background/80 p-3 shadow-[0_18px_55px_rgba(47,38,34,0.08)] md:rounded-[30px] md:p-4 lg:col-start-2 lg:row-start-1">
               <div>
                 <div className="text-[10px] uppercase tracking-[0.24em] text-primary/80">Ready</div>
                 <div className="mt-1 font-heading text-2xl tracking-tight text-foreground">Apply filters</div>
@@ -502,21 +476,7 @@ export default async function ShopPage({
                 </p>
               </div>
 
-              <div className="mt-5 grid gap-2">
-                {summaryFields.map((field) => {
-                  const value = selectedValues[field.key];
-                  const options = optionsByKey[field.key] ?? [];
-                  const label = value ? optionLabel(options, value) : field.placeholder;
-                  return (
-                    <div key={field.key} className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-background/50 px-3 py-2 text-xs">
-                      <span className="text-muted-foreground">{field.label}</span>
-                      <span className="max-w-28 truncate font-semibold text-foreground">{label}</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-auto pt-5">
+              <div className="pt-5">
                 <button className="h-12 w-full rounded-2xl bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-sm transition hover:-translate-y-px hover:brightness-95">
                   Find Gifts
                 </button>
@@ -529,7 +489,7 @@ export default async function ShopPage({
         </details>
       </section>
 
-      <section className="site-container pb-8">
+      <section className="site-container pb-8 pt-1 sm:pt-0">
         <div className="mb-4 flex flex-col gap-3 rounded-[24px] border border-border/70 bg-card/70 p-4 shadow-sm backdrop-blur md:mb-5 md:flex-row md:items-end md:justify-between md:rounded-[30px] md:p-5">
           <div>
             <div className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Results</div>

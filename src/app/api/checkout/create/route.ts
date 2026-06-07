@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => null);
     const paymentMethod = isRecord(body) ? (body.paymentMethod ?? body.method) : undefined;
     const method = normalizeMethod(paymentMethod);
+    const orderId = isRecord(body) && typeof body.orderId === "string" ? body.orderId.trim() : "";
 
     if (method === "RAZORPAY") {
       const token = req.cookies.get("token")?.value;
@@ -51,7 +52,9 @@ export async function POST(req: NextRequest) {
       }
 
       const order = await prisma.order.findFirst({
-        where: { userId: payload.sub, status: "PENDING" },
+        where: orderId
+          ? { id: orderId, userId: payload.sub, status: "PENDING" }
+          : { userId: payload.sub, status: "PENDING" },
         include: {
           items: {
             include: {

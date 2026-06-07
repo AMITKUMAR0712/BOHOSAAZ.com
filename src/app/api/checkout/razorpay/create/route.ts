@@ -8,6 +8,7 @@ import { recomputePendingOrderTotals } from "@/lib/orderTotals";
 import { amountToMinorUnits } from "@/lib/money";
 
 const bodySchema = z.object({
+  orderId: z.string().trim().min(1).optional(),
   fullName: z.string().trim().min(2),
   phone: z.string().trim().min(8),
   address1: z.string().trim().min(5),
@@ -72,12 +73,14 @@ export async function POST(req: NextRequest) {
 
   const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
 
-  const { fullName, phone, address1, address2, city, state, pincode, currency: requestedCurrency } = parsed.data;
+  const { orderId, fullName, phone, address1, address2, city, state, pincode, currency: requestedCurrency } = parsed.data;
 
   try {
     const result = await prisma.$transaction(async (tx) => {
     const order = await tx.order.findFirst({
-      where: { userId: payload.sub, status: "PENDING" },
+      where: orderId
+        ? { id: orderId, userId: payload.sub, status: "PENDING" }
+        : { userId: payload.sub, status: "PENDING" },
       include: {
         payment: true,
         items: {

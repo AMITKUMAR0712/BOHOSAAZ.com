@@ -102,15 +102,8 @@ export default async function CategoryPage({
           </div>
         </summary>
 
-        <form method="GET" className="grid gap-5 px-5 pb-5 md:px-6 md:pb-6 lg:grid-cols-[minmax(0,1fr)_230px] lg:items-start">
-          <div className="rounded-[30px] border border-border/70 bg-linear-to-br from-background/80 via-card/70 to-muted/30 p-4 shadow-inner lg:col-start-1">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.24em] text-primary/80">Step 1</div>
-              <div className="font-heading text-xl tracking-tight text-foreground">Search & price</div>
-            </div>
-            <span className="rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">Fast</span>
-          </div>
+        <form method="GET" className="grid gap-4 px-5 pb-5 md:px-6 md:pb-6 lg:grid-cols-[minmax(0,1fr)_230px] lg:items-start">
+          <div className="rounded-[30px] border border-primary/15 bg-linear-to-br from-background/90 via-card/75 to-primary/8 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_18px_55px_rgba(47,38,34,0.06)] lg:col-start-1">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div className="md:col-span-6">
               <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Search</label>
@@ -156,17 +149,8 @@ export default async function CategoryPage({
               </div>
             </div>
           </div>
-          </div>
 
-          <div className="rounded-[30px] border border-primary/15 bg-linear-to-br from-primary/8 via-card/75 to-amber-500/8 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] lg:col-start-1">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.24em] text-primary/80">Step 2</div>
-                <div className="font-heading text-xl tracking-tight text-foreground">Attributes</div>
-              </div>
-              <span className="rounded-full border border-border bg-background/70 px-3 py-1 text-[11px] text-muted-foreground">Optional</span>
-            </div>
-            <div>
+            <div className="mt-5">
               <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Attributes</label>
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <input
@@ -196,7 +180,7 @@ export default async function CategoryPage({
             </div>
           </div>
 
-            <div className="flex h-full flex-col rounded-[30px] border border-primary/15 bg-linear-to-br from-primary/12 via-card/85 to-background/80 p-4 shadow-[0_18px_55px_rgba(47,38,34,0.08)] lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            <div className="flex flex-col rounded-[30px] border border-primary/15 bg-linear-to-br from-primary/12 via-card/85 to-background/80 p-4 shadow-[0_18px_55px_rgba(47,38,34,0.08)] lg:col-start-2 lg:row-start-1">
               <div>
                 <div className="text-[10px] uppercase tracking-[0.24em] text-primary/80">Ready</div>
                 <div className="mt-1 font-heading text-2xl tracking-tight text-foreground">Apply filters</div>
@@ -205,20 +189,7 @@ export default async function CategoryPage({
                 </p>
               </div>
 
-              <div className="mt-5 grid gap-2">
-                {[
-                  ["Search", q || "All gifts"],
-                  ["Sort", sort === "latest" ? "Latest" : sort.replace(/[_-]+/g, " ")],
-                  ["Price", minPrice || maxPrice ? `${minPrice || "0"} - ${maxPrice || "Max"}` : "Any"],
-                ].map(([name, value]) => (
-                  <div key={name} className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-background/50 px-3 py-2 text-xs">
-                    <span className="text-muted-foreground">{name}</span>
-                    <span className="max-w-28 truncate font-semibold capitalize text-foreground">{value}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-auto pt-5">
+              <div className="pt-5">
                 <button className="h-12 w-full rounded-2xl bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-premium hover:brightness-95 transition">
                   Apply Filters
                 </button>

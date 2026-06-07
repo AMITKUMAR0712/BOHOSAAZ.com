@@ -35,10 +35,11 @@ type SavedAddress = {
   isDefault: boolean;
 };
 
-export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) {
+export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: string; orderId?: string | null }) {
   const lp = langPrefix || "";
   const router = useRouter();
   const { toast } = useToast();
+  const checkoutOrderId = orderId?.trim() || "";
 
   const [loading, setLoading] = useState(true);
   const [placing, setPlacing] = useState(false);
@@ -86,7 +87,8 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
 
   const loadCart = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/cart", { credentials: "include" });
+    const qs = checkoutOrderId ? `?orderId=${encodeURIComponent(checkoutOrderId)}` : "";
+    const res = await fetch(`/api/cart${qs}`, { credentials: "include" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       setMsg(data?.error || "Failed to load cart");
@@ -120,7 +122,7 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
       setMsg(null);
     }
     setLoading(false);
-  }, []);
+  }, [checkoutOrderId]);
 
   const applyAddress = useCallback((address: SavedAddress) => {
     setSelectedAddressId(address.id);
@@ -157,6 +159,7 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           paymentMethod: "COD",
+          ...(checkoutOrderId ? { orderId: checkoutOrderId } : {}),
           fullName,
           phone,
           address1,
@@ -198,6 +201,7 @@ export default function CheckoutClient({ langPrefix }: { langPrefix?: string }) 
     try {
       const payload: Record<string, unknown> = {
         paymentMethod: "RAZORPAY",
+        ...(checkoutOrderId ? { orderId: checkoutOrderId } : {}),
         fullName,
         phone,
         address1,

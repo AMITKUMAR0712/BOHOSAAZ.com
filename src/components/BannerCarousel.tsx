@@ -170,30 +170,7 @@ export function BannerCarousel({
 
         {safeBanners.length > 1 ? (
           <>
-            <button
-              type="button"
-              onClick={() => go(index - 1)}
-              className={
-                "absolute left-2 top-1/2 -translate-y-1/2 sm:left-3 " +
-                chrome.nav
-              }
-              aria-label="Previous banner"
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              onClick={() => go(index + 1)}
-              className={
-                "absolute right-2 top-1/2 -translate-y-1/2 sm:right-3 " +
-                chrome.nav
-              }
-              aria-label="Next banner"
-            >
-              ›
-            </button>
-
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2">
+            <div className="absolute bottom-3 left-1/2 hidden -translate-x-1/2 items-center gap-2 sm:flex">
               {safeBanners.map((b, i) => (
                 <button
                   key={b.id}

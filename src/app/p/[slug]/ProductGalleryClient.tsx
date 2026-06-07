@@ -31,13 +31,13 @@ export default function ProductGalleryClient({
 
   return (
     <div>
-      <div className="aspect-4/3 overflow-hidden bg-muted">
+      <div className="aspect-4/3 overflow-hidden bg-linear-to-br from-background via-card to-primary/8">
         {current ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={current}
             alt={title}
-            className="h-full w-full object-cover transition-transform duration-300 will-change-transform hover:scale-[1.02]"
+            className="h-full w-full object-contain p-4 transition-transform duration-300 will-change-transform hover:scale-[1.01]"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
@@ -67,7 +67,7 @@ export default function ProductGalleryClient({
                     src={img.url}
                     alt="thumbnail"
                     className={cn(
-                      "h-16 w-16 rounded-(--radius) border border-border object-cover",
+                      "h-16 w-16 rounded-(--radius) border border-border bg-background object-contain p-1",
                       selected ? "border-ring" : "",
                     )}
                   />

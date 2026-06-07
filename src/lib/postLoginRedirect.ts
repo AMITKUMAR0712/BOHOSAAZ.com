@@ -10,7 +10,7 @@ type MeResponse = {
 function roleHome(role: string | undefined, langPrefix: string, vendorStatus?: string | null) {
   if (role === "ADMIN") return `${langPrefix}/admin/dashboard`;
   if (role === "VENDOR") return vendorStatus === "APPROVED" ? `${langPrefix}/vendor/dashboard` : `${langPrefix}/seller`;
-  if (role === "USER") return `${langPrefix}/account`;
+  if (role === "USER") return langPrefix;
   return langPrefix;
 }
 
@@ -33,7 +33,7 @@ function isRoleAllowedNext(role: string | undefined, nextPath: string) {
     nextPath.startsWith("/checkout") ||
     nextPath.startsWith("/seller");
 
-  return nextPath.startsWith("/account") || isStorefront;
+  return isStorefront;
 }
 
 function detectLangFromPathname(pathname: string) {

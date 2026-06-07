@@ -38,8 +38,11 @@ export async function GET(req: NextRequest) {
   if (!payload) return Response.json({ order: null });
 
   try {
+    const orderId = req.nextUrl.searchParams.get("orderId")?.trim();
     const order = await prisma.order.findFirst({
-      where: { userId: payload.sub, status: "PENDING" },
+      where: orderId
+        ? { id: orderId, userId: payload.sub, status: "PENDING" }
+        : { userId: payload.sub, status: "PENDING" },
       orderBy: { updatedAt: "desc" },
       include: {
         items: {

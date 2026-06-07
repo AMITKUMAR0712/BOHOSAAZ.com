@@ -364,8 +364,6 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
     { label: "Home", href: lp },
     { label: "Shop", href: `${lp}/shop` },
     { label: "Categories", href: `${lp}/categories` },
-    { label: "Offers", href: `${lp}/offers` },
-    { label: "Latest", href: `${lp}/latest` },
     { label: "About Us", href: `${lp}/about` },
     { label: "Contact Us", href: `${lp}/contact` },
     { label: "Blogs", href: `${lp}/blog` },
@@ -804,8 +802,8 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
           <div className="grid grid-cols-3 gap-2">
             {[
               { label: "Shop", href: `${lp}/shop` },
-              { label: "Offers", href: `${lp}/offers` },
-              { label: "Latest", href: `${lp}/latest` },
+              { label: "Categories", href: `${lp}/categories` },
+              { label: "Contact", href: `${lp}/contact` },
             ].map((item) => (
               <Link
                 key={item.href}
@@ -981,10 +979,12 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
       </Drawer>
     </header>
     <nav
-        className="fixed inset-x-0 bottom-0 z-1000 border-t border-primary/20 bg-card/96 px-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] pt-2 shadow-[0_-20px_60px_rgba(47,38,34,0.18),0_0_0_1px_rgba(135,56,20,0.08)] backdrop-blur-2xl md:hidden"
+        className={`fixed inset-x-0 bottom-0 z-1000 border-t border-primary/20 bg-card/96 px-1.5 pb-[calc(env(safe-area-inset-bottom,0px)+0.35rem)] pt-1.5 shadow-[0_-20px_60px_rgba(47,38,34,0.18),0_0_0_1px_rgba(135,56,20,0.08)] backdrop-blur-2xl md:hidden ${
+          drawerOpen ? "hidden" : ""
+        }`}
         aria-label="Mobile quick navigation"
       >
-        <div className="mx-auto grid max-w-md grid-cols-5 gap-1.5 rounded-[26px] bg-background/55 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
+        <div className="mx-auto grid max-w-[min(26rem,calc(100vw-0.75rem))] grid-cols-5 gap-1 rounded-[22px] bg-background/55 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
           {[
             { label: "Home", href: lp, icon: "⌂" },
             { label: "Shop", href: `${lp}/shop`, icon: "⌕" },
@@ -1005,14 +1005,14 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
               <Link
                 key={item.label}
                 href={item.href}
-                className={`relative flex min-h-14 flex-col items-center justify-center rounded-[20px] px-1 text-[10px] font-bold transition ${
+                className={`relative flex min-h-12 flex-col items-center justify-center rounded-[17px] px-0.5 text-[9px] font-bold transition sm:min-h-14 sm:rounded-[20px] sm:px-1 sm:text-[10px] ${
                   active
                     ? "bg-primary text-primary-foreground shadow-[0_12px_30px_rgba(135,56,20,0.25)]"
                     : "bg-card/70 text-foreground/80 shadow-sm hover:bg-primary/10 hover:text-primary"
                 }`}
               >
                 <span
-                  className={`grid h-7 w-7 place-items-center rounded-full text-[17px] leading-none transition ${
+                  className={`grid h-6 w-6 place-items-center rounded-full text-[15px] leading-none transition sm:h-7 sm:w-7 sm:text-[17px] ${
                     active ? "bg-primary-foreground/18 text-primary-foreground" : "bg-primary/10 text-primary"
                   }`}
                   aria-hidden

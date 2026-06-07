@@ -193,7 +193,7 @@ export function ProductCard({
           }}
         >
           <div
-            className="relative aspect-square overflow-hidden bg-linear-to-br from-muted/70 via-card to-primary/10 sm:aspect-4/3"
+            className="relative aspect-square overflow-hidden bg-linear-to-br from-background via-card to-primary/8 sm:aspect-4/3"
             style={canSwipe ? ({ touchAction: "pan-y" } as React.CSSProperties) : undefined}
             onPointerDown={(e) => {
               if (!canSwipe) return;
@@ -221,9 +221,9 @@ export function ProductCard({
                 src={imageUrl}
                 alt={product.title}
                 className={cn(
-                  "absolute inset-0 h-full w-full transform-gpu object-cover transition-all duration-700 ease-out will-change-transform",
-                  index === imgIndex ? "opacity-100 scale-100" : "opacity-0 scale-[1.03]",
-                  "group-hover:scale-[1.08] group-hover:rotate-[0.25deg]",
+                  "absolute inset-0 h-full w-full transform-gpu object-contain p-3 transition-all duration-700 ease-out will-change-transform sm:p-4",
+                  index === imgIndex ? "opacity-100 scale-100" : "opacity-0 scale-[1.02]",
+                  "group-hover:scale-[1.025]",
                   canSwipe ? "select-none" : "",
                 )}
                 draggable={false}
@@ -270,7 +270,7 @@ export function ProductCard({
       </div>
 
       <div className="flex flex-1 flex-col p-3 sm:p-5">
-        <div className="h-10 overflow-hidden sm:h-11">
+        <div className="min-h-10 overflow-hidden sm:min-h-11">
           <Link
             href={`${langPrefix}/p/${product.slug}`}
             className="font-heading text-[14px] leading-snug text-foreground transition line-clamp-2 hover:text-primary sm:text-[15px]"
@@ -279,8 +279,8 @@ export function ProductCard({
           </Link>
         </div>
 
-        <div className="mt-1.5 min-h-10 flex items-end sm:mt-2 sm:min-h-11">
-          <div>
+        <div className="mt-2 min-h-[4.6rem] sm:mt-2 sm:min-h-[4.9rem]">
+          <div className="min-w-0">
             <PriceBlock
               price={displayConvertedPrice}
               salePrice={displayConvertedSale}
@@ -294,11 +294,11 @@ export function ProductCard({
           </div>
         </div>
 
-        <div className="mt-auto flex items-center gap-2 pt-3 sm:pt-5">
+        <div className="mt-auto grid grid-cols-[minmax(0,1fr)_2.25rem] items-center gap-1.5 pt-3 sm:grid-cols-[minmax(0,1fr)_2.5rem] sm:gap-2 sm:pt-5">
           <Button
             variant={inCart ? "outline" : "soft"}
             size="sm"
-            className="min-h-10 flex-1 rounded-2xl px-2 text-[11px] font-semibold normal-case tracking-wide transition-transform duration-300 hover:-translate-y-px sm:px-3 sm:text-xs"
+            className="min-w-0 overflow-hidden rounded-xl h-9! min-h-9! px-1.5 text-[10px] font-semibold normal-case tracking-wide transition-transform duration-300 hover:-translate-y-px sm:h-10! sm:min-h-10! sm:rounded-2xl sm:px-3 sm:text-xs"
             disabled={busy || inCart}
             onClick={async () => {
               setBusy(true);
@@ -327,7 +327,7 @@ export function ProductCard({
             {busy ? "Adding..." : inCart ? "Added" : "Add to cart"}
           </Button>
 
-          <WishlistButton productId={product.id} langPrefix={langPrefix} />
+          <WishlistButton productId={product.id} langPrefix={langPrefix} className="h-9 w-9 shrink-0 rounded-xl sm:h-10 sm:w-10 sm:rounded-(--radius)" />
         </div>
       </div>
     </div>

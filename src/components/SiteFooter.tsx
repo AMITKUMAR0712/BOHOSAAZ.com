@@ -42,10 +42,10 @@ export default function SiteFooter() {
     value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
   return (
-    <footer className="relative mt-10 overflow-hidden border-t border-primary/20 bg-linear-to-b from-card/65 to-background">
+    <footer className="relative mt-5 overflow-hidden bg-linear-to-b from-card/65 to-background pb-[calc(var(--mobileBottomNav)+env(safe-area-inset-bottom,0px)+1.5rem)] md:mt-6 md:pb-0">
       <div className="h-1 w-full bg-linear-to-r from-transparent via-primary/55 to-transparent" />
       <div className="mx-auto max-w-7xl px-4 py-6">
-        <div className="relative overflow-hidden rounded-[34px] border border-primary/15 bg-card/55 p-5 ring-1 ring-white/25 md:p-7">
+        <div className="relative overflow-hidden rounded-[34px] bg-card/55 p-5 ring-1 ring-white/25 md:p-7">
           <div className="relative grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
             <div className="max-w-2xl">
               <div className="font-heading text-2xl tracking-tight text-foreground md:text-3xl">
@@ -256,14 +256,14 @@ export default function SiteFooter() {
           </div>
 
         {/* ✅ Bottom bar */}
-        <div className="relative mt-4 pt-2 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-          <div>
+        <div className="relative mt-4 flex flex-col items-center justify-between gap-3 border-t border-border/60 pt-4 text-center text-xs text-muted-foreground md:flex-row md:text-left">
+          <div className="leading-relaxed">
             © {new Date().getFullYear()}{" "}
             <span className="font-semibold text-foreground">Bohosaaz</span>. All
             rights reserved.
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
             <Link href={`${lp}/terms`} className="hover:text-foreground transition underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
               Terms
             </Link>

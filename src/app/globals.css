@@ -438,11 +438,21 @@ textarea::placeholder {
     margin-bottom: -38rem;
     transform: translateY(-38rem);
   }
+
+  .shop-page-content > .site-container:first-of-type {
+    margin-bottom: -8rem;
+    transform: translateY(-8rem);
+  }
 }
 
 @media (min-width: 768px) {
   .compact-auth-page {
     padding-top: 1.25rem;
+  }
+
+  .shop-page-content > .site-container:first-of-type {
+    margin-bottom: -37rem;
+    transform: translateY(-37rem);
   }
 
   .compact-content-page > .site-container:first-of-type,
@@ -453,29 +463,15 @@ textarea::placeholder {
 }
 
 @media (min-width: 1280px) {
+  .shop-page-content > .site-container:first-of-type {
+    margin-bottom: -36rem;
+    transform: translateY(-36rem);
+  }
+
   .compact-content-page > .site-container:first-of-type,
   .compact-auth-page > .relative.mx-auto.grid {
     margin-bottom: -37rem;
     transform: translateY(-37rem);
-  }
-}
-
-.shop-touch-header > .site-container:first-of-type {
-  margin-bottom: -54rem;
-  transform: translateY(-54rem);
-}
-
-@media (min-width: 768px) {
-  .shop-touch-header > .site-container:first-of-type {
-    margin-bottom: -55rem;
-    transform: translateY(-55rem);
-  }
-}
-
-@media (min-width: 1280px) {
-  .shop-touch-header > .site-container:first-of-type {
-    margin-bottom: -53rem;
-    transform: translateY(-53rem);
   }
 }
 
@@ -638,12 +634,19 @@ small {
 }
 
 @media (max-width: 640px) {
+  :root {
+    --mobileBottomNav: 68px;
+    --siteGutter: 0.75rem;
+    --sectionY: 1.35rem;
+  }
+
   body {
     background-attachment: scroll;
   }
 
   main.site-content {
     --site-header-offset: 68px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--mobileBottomNav) + 0.75rem);
   }
 
   h1 {
@@ -660,11 +663,11 @@ small {
   }
 
   :where(h1) {
-    font-size: clamp(2rem, 10vw, 2.75rem);
+    font-size: clamp(1.75rem, 8.2vw, 2.35rem);
   }
 
   :where(h2) {
-    font-size: clamp(1.55rem, 7vw, 2.15rem);
+    font-size: clamp(1.35rem, 6vw, 1.9rem);
   }
 
   :where(input, select, textarea) {
@@ -672,11 +675,41 @@ small {
   }
 
   :where(button, a[class*="inline-flex"], a[role="button"]) {
-    min-height: 44px;
+    min-height: 40px;
   }
 
   :where(main) :where(.rounded-\[36px\], .rounded-\[34px\], .rounded-\[32px\]) {
     border-radius: 24px;
+  }
+
+  .site-container {
+    padding-inline: 0.75rem;
+  }
+
+  .mobile-bottom-safe {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--mobileBottomNav) + 0.75rem);
+  }
+}
+
+@media (max-width: 430px) {
+  :root {
+    --siteGutter: 0.625rem;
+  }
+
+  body {
+    font-size: 14px;
+  }
+
+  .site-container {
+    padding-inline: 0.625rem;
+  }
+
+  :where(main) :where(.grid-cols-2) {
+    gap: 0.65rem;
+  }
+
+  :where(input, select, textarea) {
+    min-height: 42px;
   }
 }
 

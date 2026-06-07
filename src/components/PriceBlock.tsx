@@ -34,22 +34,28 @@ export function PriceBlock({
 
   const priceCls =
     size === "sm"
-      ? "text-base"
+      ? "text-[15px] sm:text-base"
       : size === "lg"
         ? "text-2xl md:text-3xl"
         : "text-xl md:text-2xl";
+  const compareCls = size === "sm" ? "text-xs" : "text-sm";
+  const badgeCls =
+    size === "sm"
+      ? "whitespace-nowrap rounded-full px-2 py-1 text-[10px] leading-none tracking-[0.08em] sm:py-0.5 sm:text-[11px]"
+      : "rounded-full px-2 py-0.5 text-[11px] tracking-[0.12em]";
+  const savingsCls = size === "sm" ? "text-[11px] leading-snug" : "text-xs";
 
   return (
     <div className={cn("space-y-1", className)}>
-      <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
+      <div className={cn("flex gap-y-1", size === "sm" ? "flex-col items-start sm:flex-row sm:flex-wrap sm:items-end sm:gap-x-3" : "flex-wrap items-end gap-x-3")}>
         <div className={cn("font-heading tracking-tight text-primary", priceCls)}>
           {formatMoney(currency, current)}
         </div>
 
         {hasDiscount ? (
-          <div className="flex items-center gap-2">
-            <div className="text-sm text-muted-foreground line-through">{formatMoney(currency, compare)}</div>
-            <div className="inline-flex items-center rounded-full border border-border bg-accent/20 px-2 py-0.5 text-[11px] font-semibold tracking-[0.12em] text-foreground">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <div className={cn("text-muted-foreground line-through", compareCls)}>{formatMoney(currency, compare)}</div>
+            <div className={cn("inline-flex items-center border border-border bg-accent/20 font-semibold text-foreground", badgeCls)}>
               {discountPct}% OFF
             </div>
           </div>
@@ -57,7 +63,7 @@ export function PriceBlock({
       </div>
 
       {hasDiscount && showSavings ? (
-        <div className="text-xs text-muted-foreground">You save {formatMoney(currency, savings)}</div>
+        <div className={cn("text-muted-foreground", savingsCls)}>You save {formatMoney(currency, savings)}</div>
       ) : null}
     </div>
   );

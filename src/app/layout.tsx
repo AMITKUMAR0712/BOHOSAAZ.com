@@ -8,7 +8,7 @@ import { ToastProvider } from "@/components/ui/toast";
 import SonnerToaster from "@/components/SonnerToaster";
 import BackToTop from "@/components/BackToTop";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
-import ChatbotWidget from "@/components/ChatbotWidget";
+import ScrollToTop from "@/components/ScrollToTop";
 import { CurrencyProvider } from "@/lib/currency-context";
 import { requireUser } from "@/lib/auth";
 
@@ -199,6 +199,7 @@ export default async function RootLayout({
         <CurrencyProvider userId={user?.id}>
           <ToastProvider>
             <SonnerToaster />
+            <ScrollToTop />
 
             {/* Header */}
             <SiteHeader />
@@ -210,7 +211,6 @@ export default async function RootLayout({
             <SiteFooter />
             <BackToTop />
             <WhatsAppFloat />
-            <ChatbotWidget />
 
           </ToastProvider>
         </CurrencyProvider>

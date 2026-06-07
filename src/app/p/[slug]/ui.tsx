@@ -175,12 +175,12 @@ export default function PurchasePanel({
   }
 
   return (
-    <div className="space-y-4 sm:space-y-5">
-      <div className="rounded-[22px] border border-border bg-card p-4 sm:rounded-(--radius) sm:p-5">
-        <div className="flex items-start justify-between gap-4 sm:gap-6">
+    <div className="space-y-3 sm:space-y-5">
+      <div className="rounded-[20px] border border-border bg-card/92 p-3 shadow-sm sm:rounded-(--radius) sm:p-5">
+        <div className="flex items-start justify-between gap-3 sm:gap-6">
           <div>
-            <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Price</div>
-            <div className="mt-2">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:text-[11px] sm:tracking-[0.16em]">Price</div>
+            <div className="mt-1.5 sm:mt-2">
               {unitPrice == null ? (
                 <div className="font-heading text-2xl text-muted-foreground">—</div>
               ) : (
@@ -189,15 +189,15 @@ export default function PurchasePanel({
                   salePrice={hasVariants && selectedVariant?.salePrice ? getCustomerUnitPrice({ basePrice: selectedVariant.salePrice, productCurrency: displayCurrency, displayCurrency: userCurrency, isVendorProduct }) : convertedBaseSale}
                   mrp={hasVariants ? null : convertedBaseMrp}
                   currency={userCurrency}
-                  size="lg"
+                  size="md"
                 />
               )}
             </div>
           </div>
 
           <div className="text-right">
-            <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Availability</div>
-            <div className="mt-2 font-heading text-lg text-foreground">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:text-[11px] sm:tracking-[0.16em]">Availability</div>
+            <div className="mt-1.5 font-heading text-base text-foreground sm:mt-2 sm:text-lg">
               {availableStock > 0 ? availableStock : 0}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">
@@ -247,13 +247,19 @@ export default function PurchasePanel({
         </div>
       )}
 
-      <div className="rounded-[22px] border border-border bg-card p-4 sm:rounded-(--radius) sm:p-5">
+      <div className="rounded-[20px] border border-border bg-card/92 p-3 shadow-sm sm:rounded-(--radius) sm:p-5">
         <div className="flex items-center justify-between gap-3">
-          <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Quantity</div>
-          <QtyStepper value={qty} min={1} max={Math.max(1, availableStock || 1)} onChange={setQty} />
+          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:text-[11px] sm:tracking-[0.16em]">Quantity</div>
+          <QtyStepper
+            value={qty}
+            min={1}
+            max={Math.max(1, availableStock || 1)}
+            onChange={setQty}
+            className="[&>button]:w-9 [&>div]:w-10 sm:[&>button]:w-10 sm:[&>div]:w-12"
+          />
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="mt-3 grid min-w-0 grid-cols-2 gap-1.5 sm:mt-4 sm:gap-2">
           {forceCodOnly ? (
             <div className="col-span-2 mb-1 rounded-lg border border-yellow-200/50 bg-yellow-50/50 p-3 text-sm text-yellow-900">
               <span className="font-medium">Cash on Delivery:</span> This product prefers COD payment. 
@@ -261,13 +267,13 @@ export default function PurchasePanel({
           ) : null}
           <Button
              variant={inCart ? "outline" : "soft"}
-             className="h-12 rounded-2xl px-2 text-xs uppercase tracking-widest sm:text-sm sm:tracking-[0.12em]"
+             className="h-10! min-h-10! min-w-0 rounded-xl px-1.5 text-[9px] uppercase tracking-[0.08em] sm:h-12! sm:min-h-12! sm:rounded-2xl sm:px-2 sm:text-sm sm:tracking-[0.12em]"
              disabled={!canAdd || inCart}
              onClick={async () => {
                setMsg(null);
                setLoading(true);
                try {
-                 const res = await fetch("/api/cart/buynow", {
+                const res = await fetch("/api/cart/add", {
                    method: "POST",
                    credentials: "include",
                    headers: { "Content-Type": "application/json" },
@@ -282,7 +288,7 @@ export default function PurchasePanel({
                    redirectToLogin();
                    return;
                  }
-                 if (!res.ok) throw new Error(data?.error || "Add to cart failed");
+                if (!res.ok) throw new Error(data?.error || "Add to cart failed");
                  setInCart(true);
                  setMsg("Added to cart.");
                  window.dispatchEvent(new Event("bohosaaz-cart"));
@@ -299,13 +305,13 @@ export default function PurchasePanel({
            </Button>
  
            <Button
-            className="h-12 rounded-2xl px-2 text-xs uppercase tracking-widest sm:text-sm sm:tracking-[0.12em]"
+            className="h-10! min-h-10! min-w-0 rounded-xl px-1.5 text-[10px] uppercase tracking-[0.08em] sm:h-12! sm:min-h-12! sm:rounded-2xl sm:px-2 sm:text-sm sm:tracking-[0.12em]"
              disabled={!canAdd}
              onClick={async () => {
                setMsg(null);
                setLoading(true);
                try {
-                 const res = await fetch("/api/cart/add", {
+                const res = await fetch("/api/cart/buynow", {
                    method: "POST",
                    credentials: "include",
                    headers: { "Content-Type": "application/json" },
@@ -320,9 +326,11 @@ export default function PurchasePanel({
                    redirectToLogin();
                    return;
                  }
-                 if (!res.ok) throw new Error(data?.error || "Add to cart failed");
-                // If product is COD-only, the checkout page will auto-select COD payment.
-                window.location.href = checkoutHref;
+                if (!res.ok) throw new Error(data?.error || "Buy now failed");
+                const orderId = typeof data?.orderId === "string" ? data.orderId : "";
+                const qs = orderId ? `?orderId=${encodeURIComponent(orderId)}` : "";
+                // Buy Now checks out only the newly-created one-item order.
+                window.location.href = `${checkoutHref}${qs}`;
                } catch (e: unknown) {
                  const message = e instanceof Error ? e.message : "Error";
                  setMsg(message);
