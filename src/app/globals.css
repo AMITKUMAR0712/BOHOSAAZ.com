@@ -439,18 +439,11 @@ textarea::placeholder {
     transform: translateY(-38rem);
   }
 
-  .shop-page-content {
-    margin-top: 0;
-  }
 }
 
 @media (min-width: 768px) {
   .compact-auth-page {
     padding-top: 1.25rem;
-  }
-
-  .shop-page-content {
-    margin-top: -37rem;
   }
 
   .compact-content-page > .site-container:first-of-type,
@@ -461,10 +454,6 @@ textarea::placeholder {
 }
 
 @media (min-width: 1280px) {
-  .shop-page-content {
-    margin-top: -36rem;
-  }
-
   .compact-content-page > .site-container:first-of-type,
   .compact-auth-page > .relative.mx-auto.grid {
     margin-bottom: -37rem;
