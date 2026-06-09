@@ -38,7 +38,7 @@ export default function ReturnsClient({ initialReturns }: { initialReturns: Row[
     <div className="grid gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="text-xl font-semibold">Returns</div>
+          <div className="text-xl font-semibold">Return / Refund</div>
           <div className="mt-1 text-sm text-muted-foreground">Review return requests, schedule pickup, and process refunds.</div>
         </div>
         <ExportDropdown
@@ -58,7 +58,7 @@ export default function ReturnsClient({ initialReturns }: { initialReturns: Row[
       </div>
 
       <div className="rounded-2xl border overflow-hidden">
-        <div className="bg-muted/30 p-3 text-sm font-semibold">{filtered.length} return requests</div>
+        <div className="bg-muted/30 p-3 text-sm font-semibold">{filtered.length} return / refund requests</div>
         <div className="divide-y">
           {filtered.map((r) => {
             const amount = r.orderItem.price * r.orderItem.quantity;

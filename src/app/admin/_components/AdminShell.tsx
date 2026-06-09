@@ -15,6 +15,7 @@ import {
   Megaphone,
   Package,
   PlusSquare,
+  RotateCcw,
   Settings,
   ShoppingCart,
   Store,
@@ -50,6 +51,7 @@ export default function AdminShell({
     if (href.includes("/categories")) return <Tags className="h-4 w-4" />;
 
     if (href.includes("/orders")) return <ShoppingCart className="h-4 w-4" />;
+    if (href.includes("/returns") || href.includes("/refunds")) return <RotateCcw className="h-4 w-4" />;
     if (href.includes("/customers")) return <Users className="h-4 w-4" />;
 
     if (href.includes("/vendors")) return <Store className="h-4 w-4" />;
@@ -151,6 +153,12 @@ export default function AdminShell({
             label="Customer Orders"
             match="exact"
             icon={iconForHref("/admin/orders/customers")}
+          />
+          <SidebarItem
+            href="/admin/returns"
+            label="Return / Refund"
+            match="exact"
+            icon={iconForHref("/admin/returns")}
           />
           <SidebarItem
             href="/admin/customers"

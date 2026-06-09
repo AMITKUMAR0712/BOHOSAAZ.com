@@ -70,7 +70,7 @@ export default function AccountSidebar({
         <NavItem href={`${base}/cart`} label="Cart" icon={<ShoppingCart className="h-4 w-4" />} />
         <NavItem href={`${base}/wishlist`} label="Wishlist" icon={<Heart className="h-4 w-4" />} />
         <NavItem href={`${base}/orders`} label="Orders" icon={<Package className="h-4 w-4" />} />
-        <NavItem href={`${base}/returns`} label="Returns & Refunds" icon={<RotateCcw className="h-4 w-4" />} />
+        <NavItem href={`${base}/returns`} label="Return / Refund" icon={<RotateCcw className="h-4 w-4" />} />
         <NavItem href={`${base}/support`} label="Support" icon={<LifeBuoy className="h-4 w-4" />} />
         <NavItem href={`${base}/payments`} label="Payments" icon={<CircleDollarSign className="h-4 w-4" />} />
         <NavItem href={`${base}/security`} label="Settings" icon={<Settings className="h-4 w-4" />} />

@@ -117,7 +117,7 @@ export function DashboardCards({ role, basePath }: Props) {
         <KpiCard label="Cart Items" value={d?.cartItemsCount ?? 0} href={`${basePath}/cart`} icon={<CartIcon />} updatedText={updatedText} loading={loading} />
         <KpiCard label="Pending Orders" value={d?.pendingOrdersCount ?? 0} href={`${basePath}/account/orders`} icon={<OrdersIcon />} updatedText={updatedText} loading={loading} />
         <KpiCard label="Delivered Orders" value={d?.deliveredOrdersCount ?? 0} href={`${basePath}/account/orders`} icon={<OrdersIcon />} updatedText={updatedText} loading={loading} />
-        <KpiCard label="Active Returns / Refunds" value={d?.activeReturnsCount ?? 0} href={`${basePath}/account/returns`} icon={<ReturnIcon />} updatedText={updatedText} loading={loading} />
+        <KpiCard label="Active Return / Refund" value={d?.activeReturnsCount ?? 0} href={`${basePath}/account/returns`} icon={<ReturnIcon />} updatedText={updatedText} loading={loading} />
         <KpiCard label="Open Support Tickets" value={d?.openSupportTicketsCount ?? 0} href={`${basePath}/account/support`} icon={<TicketIcon />} updatedText={updatedText} loading={loading} />
       </div>
     );
@@ -132,7 +132,7 @@ export function DashboardCards({ role, basePath }: Props) {
         <KpiCard label="Pending Payout" value={formatInr(d?.pendingPayoutRupees ?? 0)} href={`${basePath}/vendor/payouts`} icon={<PayoutIcon />} updatedText={updatedText} loading={loading} />
         <KpiCard label="Settled Payout" value={formatInr(d?.settledPayoutRupees ?? 0)} href={`${basePath}/vendor/payouts`} icon={<PayoutIcon />} updatedText={updatedText} loading={loading} />
         <KpiCard label="Total Orders" value={d?.totalOrdersCount ?? 0} href={`${basePath}/vendor/orders`} icon={<OrdersIcon />} updatedText={updatedText} loading={loading} />
-        <KpiCard label="Total Returns" value={d?.totalReturnsCount ?? 0} href={`${basePath}/vendor/returns`} icon={<ReturnIcon />} updatedText={updatedText} loading={loading} />
+        <KpiCard label="Total Return / Refund" value={d?.totalReturnsCount ?? 0} href={`${basePath}/vendor/returns`} icon={<ReturnIcon />} updatedText={updatedText} loading={loading} />
       </div>
     );
   }
@@ -146,7 +146,7 @@ export function DashboardCards({ role, basePath }: Props) {
       <KpiCard label="Pending Vendor Approvals" value={d?.pendingVendorApprovalsCount ?? 0} href={`${basePath}/admin/vendors`} icon={<OrdersIcon />} updatedText={updatedText} loading={loading} />
       <KpiCard label="Pending Payout Settlements" value={d?.pendingPayoutSettlementsCount ?? 0} href={`${basePath}/admin/payouts`} icon={<PayoutIcon />} updatedText={updatedText} loading={loading} />
       <KpiCard label="Open Tickets" value={d?.openTicketsCount ?? 0} href={`${basePath}/admin/support`} icon={<TicketIcon />} updatedText={updatedText} loading={loading} />
-      <KpiCard label="Returns Pending Approval" value={d?.returnsPendingApprovalCount ?? 0} href={`${basePath}/admin/returns`} icon={<ReturnIcon />} updatedText={updatedText} loading={loading} />
+      <KpiCard label="Return / Refund Pending Approval" value={d?.returnsPendingApprovalCount ?? 0} href={`${basePath}/admin/returns`} icon={<ReturnIcon />} updatedText={updatedText} loading={loading} />
     </div>
   );
 }

@@ -36,6 +36,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           title: "Orders & Customers",
           items: [
             { href: "/admin/orders", label: "Orders" },
+            { href: "/admin/returns", label: "Return / Refund" },
             { href: "/admin/customers", label: "Customers" },
           ],
         },

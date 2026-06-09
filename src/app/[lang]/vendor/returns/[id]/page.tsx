@@ -74,7 +74,7 @@ export default function VendorReturnDetailPage({ params }: { params: { id: strin
     <div className="grid gap-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="text-xl font-semibold">Return</div>
+          <div className="text-xl font-semibold">Return / Refund</div>
           <div className="mt-1 text-sm text-muted-foreground">Approve requests and manage pickup.</div>
         </div>
         <Link className="text-sm underline" href="/vendor/returns">

@@ -61,7 +61,13 @@ export function useLiveMetrics(role: DashboardRole) {
       pollTimer = window.setInterval(() => void tick(), 8000);
     };
 
-    // Prefer SSE. If it errors (or is unsupported), fallback to polling.
+    // Load once immediately so dashboards never wait on a long-lived SSE connection
+    // before replacing skeletons with real values.
+    void fetchOnce().catch((e) => {
+      setError(e instanceof Error ? e.message : "Failed to load metrics");
+    });
+
+    // Prefer SSE for live updates. If it errors (or is unsupported), fallback to polling.
     if (typeof window !== "undefined" && "EventSource" in window) {
       try {
         es = new EventSource(`/api/live?role=${role}`, { withCredentials: true });

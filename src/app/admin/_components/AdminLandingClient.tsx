@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BadgePercent, LayoutDashboard, Megaphone, Package, Settings, Store, Tags, Users } from "lucide-react";
+import { BadgePercent, LayoutDashboard, Megaphone, Package, RotateCcw, Settings, Store, Tags, Users } from "lucide-react";
 import { DashboardCards } from "@/components/dashboard/DashboardCards";
 
 const SETTING_KEY = "adminLandingTheme";
@@ -25,6 +25,7 @@ const ACTIONS = [
   { href: "/admin/products", label: "All Products", icon: Package },
   { href: "/admin/categories", label: "Categories", icon: Tags },
   { href: "/admin/orders", label: "Orders", icon: LayoutDashboard },
+  { href: "/admin/returns", label: "Return / Refund", icon: RotateCcw },
   { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/coupons", label: "Coupons", icon: BadgePercent },
   { href: "/admin/ads", label: "Ads", icon: Megaphone },

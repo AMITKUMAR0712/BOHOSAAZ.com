@@ -86,9 +86,13 @@ export async function GET(req: Request) {
 
       // initial send
       void (async () => {
-        const metrics = await computeMetrics();
-        push("metrics", metrics);
-        lastVersion = await getLiveVersion(scope);
+        try {
+          const metrics = await computeMetrics();
+          push("metrics", metrics);
+          lastVersion = await getLiveVersion(scope);
+        } catch (e) {
+          push("error", { message: e instanceof Error ? e.message : "Stream error" });
+        }
       })();
 
       const interval = setInterval(() => void tick(), 2000);

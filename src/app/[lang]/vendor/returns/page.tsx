@@ -41,7 +41,7 @@ export default async function VendorReturnsPage() {
     <div className="grid gap-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="text-xl font-semibold">Returns</div>
+          <div className="text-xl font-semibold">Return / Refund</div>
           <div className="mt-1 text-sm text-muted-foreground">Approve requests and manage pickup. Customer contact details are hidden.</div>
         </div>
         <ExportDropdown
@@ -52,7 +52,7 @@ export default async function VendorReturnsPage() {
       </div>
 
       <div className="rounded-2xl border overflow-hidden">
-        <div className="bg-muted/30 p-3 text-sm font-semibold">{returns.length} requests</div>
+        <div className="bg-muted/30 p-3 text-sm font-semibold">{returns.length} return / refund requests</div>
         <div className="divide-y">
           {returns.map((r) => {
             const amount = r.orderItem.price * r.orderItem.quantity;

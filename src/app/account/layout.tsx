@@ -21,7 +21,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
           items: [
             { href: "/account", label: "Dashboard", match: "exact" },
             { href: "/account/orders", label: "My Orders" },
-            { href: "/account/returns", label: "Returns/Refunds" },
+            { href: "/account/returns", label: "Return / Refund" },
             { href: "/account/wishlist", label: "Wishlist" },
             { href: "/account/support", label: "Support" },
             { href: "/account/profile", label: "Profile" },

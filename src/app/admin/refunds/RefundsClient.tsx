@@ -52,7 +52,7 @@ export default function RefundsClient({
     <div className="p-6 md:p-10">
       <Card>
         <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle>Refund Requests</CardTitle>
+          <CardTitle>Return / Refund Requests</CardTitle>
           <Button variant="outline" size="sm" onClick={reload}>
             Refresh
           </Button>
@@ -86,7 +86,7 @@ export default function RefundsClient({
               {items.length === 0 ? (
                 <TR>
                   <TD colSpan={4} className="text-sm text-muted-foreground">
-                    No refund requests
+                    No return / refund requests
                   </TD>
                 </TR>
               ) : (

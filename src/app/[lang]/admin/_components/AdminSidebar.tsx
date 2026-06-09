@@ -51,7 +51,7 @@ export default function AdminSidebar({ lang }: { lang: string }) {
     { href: `/${lang}/admin/ads`, label: "Ads" },
     { href: `/${lang}/admin/categories`, label: "Categories" },
     { href: `/${lang}/admin/payouts`, label: "Payouts" },
-    { href: `/${lang}/admin/refunds`, label: "Refunds" },
+    { href: `/${lang}/admin/returns`, label: "Return / Refund" },
     { href: `/${lang}/admin/support/tickets`, label: "Support Tickets" },
     { href: `/${lang}/admin/user-tickets`, label: "User Tickets" },
     { href: `/${lang}/admin/contact`, label: "Contact" },
@@ -69,7 +69,7 @@ export default function AdminSidebar({ lang }: { lang: string }) {
     if (href.includes("/vendors") || href.includes("/brands") || href.includes("/payouts"))
       return <Store className="h-4 w-4" />;
     if (href.includes("/payouts")) return <HandCoins className="h-4 w-4" />;
-    if (href.includes("/refunds")) return <RotateCcw className="h-4 w-4" />;
+    if (href.includes("/refunds") || href.includes("/returns")) return <RotateCcw className="h-4 w-4" />;
     if (href.includes("/support") || href.includes("/tickets") || href.includes("/user-tickets"))
       return <LifeBuoy className="h-4 w-4" />;
     if (href.includes("/contact")) return <Mail className="h-4 w-4" />;
