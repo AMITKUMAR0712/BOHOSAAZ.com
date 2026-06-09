@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/auth";
 import { jsonError, jsonOk } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { getIpFromRequest, getUserAgentFromRequest } from "@/lib/requestMeta";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 function slugify(input: string) {
   return input
@@ -14,6 +15,29 @@ function slugify(input: string) {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+}
+
+function giftFilterWhere(term: string): PrismaType.ProductWhereInput {
+  const label = term
+    .replace(/^(occasion|recipient|availability)-/i, "")
+    .replace(/[_-]+/g, " ")
+    .trim();
+  const slugValue = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const slugCandidates = Array.from(
+    new Set([term, slugValue, `occasion-${slugValue}`, `recipient-${slugValue}`, `availability-${slugValue}`].filter(Boolean)),
+  );
+  const text = label || term.replace(/[_-]+/g, " ");
+
+  return {
+    OR: [
+      { tags: { some: { tag: { slug: { in: slugCandidates } } } } },
+      { tags: { some: { tag: { name: { contains: text } } } } },
+      { title: { contains: text } },
+      { shortDescription: { contains: text } },
+      { description: { contains: text } },
+      { category: { name: { contains: text } } },
+    ],
+  };
 }
 
 export async function GET(req: Request) {
@@ -26,6 +50,9 @@ export async function GET(req: Request) {
     .object({
       q: z.string().trim().min(1).max(191).optional(),
       active: z.enum(["true", "false"]).optional(),
+      occasion: z.string().trim().min(1).optional(),
+      recipient: z.string().trim().min(1).optional(),
+      availability: z.string().trim().min(1).optional(),
       take: z.coerce.number().int().min(1).max(100).optional(),
       cursor: z.string().trim().min(1).optional(),
     })
@@ -35,6 +62,9 @@ export async function GET(req: Request) {
         | "true"
         | "false"
         | undefined,
+      occasion: url.searchParams.get("occasion") ?? undefined,
+      recipient: url.searchParams.get("recipient") ?? undefined,
+      availability: url.searchParams.get("availability") ?? undefined,
       take: url.searchParams.get("take") ?? undefined,
       cursor: url.searchParams.get("cursor") ?? undefined,
     });
@@ -43,20 +73,30 @@ export async function GET(req: Request) {
 
   const take = parsed.data.take ?? 50;
 
-  const where: PrismaType.ProductWhereInput = {
-    deletedAt: null,
-    ...(parsed.data.q
-      ? {
-          OR: [
-            { title: { contains: parsed.data.q } },
-            { slug: { contains: parsed.data.q } },
-            { sku: { contains: parsed.data.q } },
-          ],
-        }
-      : {}),
-    ...(parsed.data.active === "true" ? { isActive: true } : {}),
-    ...(parsed.data.active === "false" ? { isActive: false } : {}),
-  };
+  const and: PrismaType.ProductWhereInput[] = [{ deletedAt: null }];
+
+  if (parsed.data.q) {
+    and.push({
+      OR: [
+        { title: { contains: parsed.data.q } },
+        { slug: { contains: parsed.data.q } },
+        { sku: { contains: parsed.data.q } },
+      ],
+    });
+  }
+  if (parsed.data.active === "true") and.push({ isActive: true });
+  if (parsed.data.active === "false") and.push({ isActive: false });
+  if (parsed.data.occasion) and.push(giftFilterWhere(parsed.data.occasion));
+  if (parsed.data.recipient) and.push(giftFilterWhere(parsed.data.recipient));
+  if (parsed.data.availability === "in_stock") {
+    and.push({ OR: [{ stock: { gt: 0 } }, { variants: { some: { isActive: true, stock: { gt: 0 } } } }] });
+  } else if (parsed.data.availability === "discounted") {
+    and.push({ salePrice: { not: null } });
+  } else if (parsed.data.availability) {
+    and.push(giftFilterWhere(parsed.data.availability));
+  }
+
+  const where: PrismaType.ProductWhereInput = { AND: and };
 
   const products = await prisma.product.findMany({
     where,
@@ -359,6 +399,11 @@ export async function POST(req: NextRequest) {
     ip: getIpFromRequest(req),
     userAgent: getUserAgentFromRequest(req),
   });
+
+  await bumpDashboardScopes([
+    { kind: "admin" },
+    { kind: "vendor", vendorId: created.vendorId },
+  ]);
 
   return jsonOk({ product: created }, { status: 201 });
 }

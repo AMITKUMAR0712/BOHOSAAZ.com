@@ -5,6 +5,7 @@ import { z } from "zod";
 import { audit } from "@/lib/audit";
 import { rateLimit } from "@/lib/rateLimit";
 import { Prisma } from "@prisma/client";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 function slugify(input: string) {
   return input
@@ -12,6 +13,29 @@ function slugify(input: string) {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+}
+
+function giftFilterWhere(term: string): Prisma.ProductWhereInput {
+  const label = term
+    .replace(/^(occasion|recipient|availability)-/i, "")
+    .replace(/[_-]+/g, " ")
+    .trim();
+  const slugValue = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const slugCandidates = Array.from(
+    new Set([term, slugValue, `occasion-${slugValue}`, `recipient-${slugValue}`, `availability-${slugValue}`].filter(Boolean)),
+  );
+  const text = label || term.replace(/[_-]+/g, " ");
+
+  return {
+    OR: [
+      { tags: { some: { tag: { slug: { in: slugCandidates } } } } },
+      { tags: { some: { tag: { name: { contains: text } } } } },
+      { title: { contains: text } },
+      { shortDescription: { contains: text } },
+      { description: { contains: text } },
+      { category: { name: { contains: text } } },
+    ],
+  };
 }
 
 export async function GET(req: NextRequest) {
@@ -33,28 +57,39 @@ export async function GET(req: NextRequest) {
   const categoryId = (url.searchParams.get("categoryId") || "").trim();
   const active = url.searchParams.get("active");
   const lowStock = url.searchParams.get("lowStock");
+  const occasion = (url.searchParams.get("occasion") || "").trim();
+  const recipient = (url.searchParams.get("recipient") || "").trim();
+  const availability = (url.searchParams.get("availability") || "").trim();
 
   const page = Math.max(1, Number(url.searchParams.get("page") || 1));
   const pageSize = Math.min(50, Math.max(5, Number(url.searchParams.get("pageSize") || 20)));
   const skip = (page - 1) * pageSize;
 
-  const where: Prisma.ProductWhereInput = {
-    vendorId: vendor.id,
-    deletedAt: null,
-    ...(q
-      ? {
-          OR: [
-            { title: { contains: q } },
-            { slug: { contains: q } },
-            { sku: { contains: q } },
-          ],
-        }
-      : {}),
-    ...(categoryId ? { categoryId } : {}),
-    ...(active === "true" ? { isActive: true } : {}),
-    ...(active === "false" ? { isActive: false } : {}),
-    ...(lowStock === "true" ? { stock: { lte: 5 } } : {}),
-  };
+  const and: Prisma.ProductWhereInput[] = [{ vendorId: vendor.id, deletedAt: null }];
+  if (q) {
+    and.push({
+      OR: [
+        { title: { contains: q } },
+        { slug: { contains: q } },
+        { sku: { contains: q } },
+      ],
+    });
+  }
+  if (categoryId) and.push({ categoryId });
+  if (active === "true") and.push({ isActive: true });
+  if (active === "false") and.push({ isActive: false });
+  if (lowStock === "true") and.push({ stock: { lte: 5 } });
+  if (occasion) and.push(giftFilterWhere(occasion));
+  if (recipient) and.push(giftFilterWhere(recipient));
+  if (availability === "in_stock") {
+    and.push({ OR: [{ stock: { gt: 0 } }, { variants: { some: { isActive: true, stock: { gt: 0 } } } }] });
+  } else if (availability === "discounted") {
+    and.push({ salePrice: { not: null } });
+  } else if (availability) {
+    and.push(giftFilterWhere(availability));
+  }
+
+  const where: Prisma.ProductWhereInput = { AND: and };
 
   const [total, products] = await Promise.all([
     prisma.product.count({ where }),
@@ -377,6 +412,11 @@ export async function POST(req: NextRequest) {
     },
     ip: req.headers.get("x-forwarded-for") || undefined,
   });
+
+  await bumpDashboardScopes([
+    { kind: "vendor", vendorId: vendor.id },
+    { kind: "admin" },
+  ]);
 
   return Response.json({ product }, { status: 201 });
 }

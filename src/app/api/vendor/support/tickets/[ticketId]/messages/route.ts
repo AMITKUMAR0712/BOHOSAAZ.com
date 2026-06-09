@@ -4,6 +4,7 @@ import { verifyToken, type JwtPayload } from "@/lib/auth";
 import { z } from "zod";
 import { rateLimit } from "@/lib/rateLimit";
 import { audit } from "@/lib/audit";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 const createSchema = z.object({
   message: z.string().min(1).max(191),
@@ -106,6 +107,11 @@ export async function POST(
     meta: { messageId: message.id },
     ip: req.headers.get("x-forwarded-for") || undefined,
   });
+
+  await bumpDashboardScopes([
+    { kind: "vendor", vendorId: vendor.id },
+    { kind: "admin" },
+  ]);
 
   return Response.json({ message }, { status: 201 });
 }

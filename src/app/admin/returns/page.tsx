@@ -21,7 +21,7 @@ export default async function AdminReturnsPage() {
           product: { select: { id: true, title: true } },
         },
       },
-      refundRecord: { select: { status: true } },
+      refundRecord: { select: { status: true, amount: true, method: true, provider: true } },
     },
     orderBy: { updatedAt: "desc" },
     take: 200,

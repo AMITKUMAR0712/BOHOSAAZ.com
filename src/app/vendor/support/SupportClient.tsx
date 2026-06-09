@@ -32,6 +32,7 @@ export default function SupportClient({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(true);
   const [msgLoading, setMsgLoading] = useState(false);
   const [newMsg, setNewMsg] = useState("");
+  const [sending, setSending] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
 
   // Create form state
@@ -69,6 +70,15 @@ export default function SupportClient({ userId }: { userId: string }) {
     loadTickets();
   }, []);
 
+  useEffect(() => {
+    if (!selectedTicket) return;
+    const interval = window.setInterval(() => {
+      void loadMessages(selectedTicket.id);
+      void loadTickets();
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, [selectedTicket]);
+
   async function createTicket() {
     if (!subject || !initialMessage) return;
     try {
@@ -90,12 +100,14 @@ export default function SupportClient({ userId }: { userId: string }) {
   }
 
   async function sendMessage() {
-    if (!newMsg || !selectedTicket) return;
+    const message = newMsg.trim();
+    if (!message || !selectedTicket) return;
+    setSending(true);
     try {
       const res = await fetch(`/api/vendor/support/${selectedTicket.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: newMsg }),
+        body: JSON.stringify({ message }),
       });
       if (res.ok) {
         setNewMsg("");
@@ -103,6 +115,8 @@ export default function SupportClient({ userId }: { userId: string }) {
       }
     } catch (error) {
       toast.error("Failed to send message");
+    } finally {
+      setSending(false);
     }
   }
 
@@ -245,7 +259,7 @@ export default function SupportClient({ userId }: { userId: string }) {
                     onChange={(e) => setNewMsg(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                   />
-                  <Button onClick={sendMessage} disabled={!newMsg}>
+                  <Button onClick={sendMessage} disabled={sending || !newMsg.trim() || selectedTicket.status === "CLOSED"}>
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>

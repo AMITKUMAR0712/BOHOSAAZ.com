@@ -19,6 +19,7 @@ type ReturnRequest = {
   pickupTrackingNumber: string | null;
   order: { id: string; createdAt: string; status: string; city: string | null; state: string | null; pincode: string | null };
   orderItem: { quantity: number; price: number; product: { title: string; slug: string } };
+  refundRecord: null | { status: string; amount: number; method: string; provider: string | null; providerRefundId: string | null };
   trackingEvents: ReturnTrackingEvent[];
 };
 
@@ -103,6 +104,13 @@ export default function VendorReturnDetailPage({ params }: { params: { id: strin
               {rr.pickupCourier || rr.pickupTrackingNumber ? (
                 <div>
                   Pickup: {rr.pickupCourier || "—"} • {rr.pickupTrackingNumber || "—"}
+                </div>
+              ) : null}
+              {rr.refundRecord ? (
+                <div>
+                  Refund: <b>{rr.refundRecord.status}</b> • ₹{rr.refundRecord.amount} • {rr.refundRecord.method}
+                  {rr.refundRecord.provider ? ` • ${rr.refundRecord.provider}` : ""}
+                  {rr.refundRecord.providerRefundId ? ` • ${rr.refundRecord.providerRefundId}` : ""}
                 </div>
               ) : null}
             </div>

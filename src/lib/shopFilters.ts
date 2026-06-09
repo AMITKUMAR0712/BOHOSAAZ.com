@@ -166,7 +166,6 @@ const fieldDefaults: Record<ShopFilterKey, ShopFilterFieldConfig> = {
     order: 70,
     options: [
       { value: "in_stock", label: "In Stock" },
-      { value: "new_arrivals", label: "New Arrivals" },
       { value: "discounted", label: "Discounted" },
     ],
   },

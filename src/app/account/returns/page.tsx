@@ -36,7 +36,7 @@ type ReturnRequestRow = {
     status: string;
     product: { title: string; slug: string; images?: { url: string }[] };
   };
-  refundRecord: null | { id: string; status: string; amount: number; method: string; provider: string | null };
+  refundRecord: null | { id: string; status: string; amount: number; method: string; provider: string | null; providerRefundId?: string | null };
 };
 
 const reasons = [
@@ -210,7 +210,22 @@ export default function AccountReturnsPage() {
                     <div className="mt-1 text-xs">
                       Status: <b>{rr.status}</b> • Updated: {new Date(rr.updatedAt).toLocaleString()}
                     </div>
-                    <div className="mt-1 text-xs text-gray-600">Refund amount: ₹{subtotal}</div>
+                    {rr.pickupCourier || rr.pickupTrackingNumber ? (
+                      <div className="mt-1 text-xs text-gray-600">
+                        Pickup: {rr.pickupCourier || "—"} • {rr.pickupTrackingNumber || "—"}
+                      </div>
+                    ) : null}
+                    <div className="mt-1 text-xs text-gray-600">
+                      Refund: {rr.refundRecord ? (
+                        <>
+                          <b>{rr.refundRecord.status}</b> • ₹{rr.refundRecord.amount} • {rr.refundRecord.method}
+                          {rr.refundRecord.provider ? ` • ${rr.refundRecord.provider}` : ""}
+                          {rr.refundRecord.providerRefundId ? ` • ${rr.refundRecord.providerRefundId}` : ""}
+                        </>
+                      ) : (
+                        <>not initiated • estimated ₹{subtotal}</>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

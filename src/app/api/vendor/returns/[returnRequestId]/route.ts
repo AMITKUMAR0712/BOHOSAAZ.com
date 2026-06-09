@@ -5,6 +5,7 @@ import { jsonError, jsonOk } from "@/lib/api";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import type { ReturnRequestStatus } from "@prisma/client";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 const PatchSchema = z
   .object({
@@ -40,6 +41,7 @@ export async function GET(
       order: { select: { id: true, createdAt: true, status: true, city: true, state: true, pincode: true } },
       orderItem: { select: { id: true, quantity: true, price: true, status: true, product: { select: { title: true, slug: true } } } },
       trackingEvents: { orderBy: { createdAt: "asc" } },
+      refundRecord: { select: { id: true, status: true, amount: true, method: true, provider: true, providerRefundId: true } },
     },
   });
 
@@ -140,6 +142,12 @@ export async function PATCH(
     ip: req.headers.get("x-forwarded-for") || undefined,
     userAgent: req.headers.get("user-agent") || undefined,
   });
+
+  await bumpDashboardScopes([
+    { kind: "vendor", vendorId: vendorUser.vendor!.id },
+    { kind: "user", userId: rr.userId },
+    { kind: "admin" },
+  ]);
 
   return jsonOk({ returnRequestId: updated.id });
 }

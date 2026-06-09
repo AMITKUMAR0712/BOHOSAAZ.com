@@ -6,6 +6,7 @@ import { getOrCreateUserWalletTx, postWalletTxn } from "@/lib/wallet";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import type { ReturnRequestStatus } from "@prisma/client";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 const PatchSchema = z
   .object({
@@ -229,6 +230,12 @@ export async function PATCH(
     ip: req.headers.get("x-forwarded-for") || undefined,
     userAgent: req.headers.get("user-agent") || undefined,
   });
+
+  await bumpDashboardScopes([
+    { kind: "admin" },
+    { kind: "user", userId: rr.userId },
+    { kind: "vendor", vendorId: rr.vendorId },
+  ]);
 
   return jsonOk({ returnRequestId: updated.id });
 }

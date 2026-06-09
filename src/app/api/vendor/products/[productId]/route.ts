@@ -5,6 +5,7 @@ import { z } from "zod";
 import { audit } from "@/lib/audit";
 import { rateLimit } from "@/lib/rateLimit";
 import { Prisma } from "@prisma/client";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 function slugify(input: string) {
   return input
@@ -392,6 +393,11 @@ export async function PATCH(
     ip: req.headers.get("x-forwarded-for") || undefined,
   });
 
+  await bumpDashboardScopes([
+    { kind: "vendor", vendorId: vendor.id },
+    { kind: "admin" },
+  ]);
+
   return Response.json({ product: result });
 }
 
@@ -435,6 +441,11 @@ export async function DELETE(
     meta: { title: product.title, slug: product.slug },
     ip: req.headers.get("x-forwarded-for") || undefined,
   });
+
+  await bumpDashboardScopes([
+    { kind: "vendor", vendorId: vendor.id },
+    { kind: "admin" },
+  ]);
 
   return Response.json({ ok: true });
 }

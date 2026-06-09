@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 const BodySchema = z.object({
   orderId: z.string().min(1),
@@ -99,12 +100,29 @@ export async function POST(req: Request) {
       data: { status: "PAID", paymentMethod: "RAZORPAY" },
     });
 
-    return { ok: true as const };
+    const vendorIds = await tx.orderItem.findMany({
+      where: { orderId: order.id },
+      select: { product: { select: { vendorId: true } } },
+    });
+
+    return {
+      ok: true as const,
+      vendorIds: vendorIds.map((item) => item.product.vendorId).filter((vendorId): vendorId is string => Boolean(vendorId)),
+    };
   });
 
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
+
+  const vendorIds = Array.isArray((result as { vendorIds?: string[] }).vendorIds)
+    ? (result as { vendorIds: string[] }).vendorIds
+    : [];
+  await bumpDashboardScopes([
+    { kind: "user", userId: me.id },
+    { kind: "admin" },
+    ...vendorIds.map((vendorId) => ({ kind: "vendor" as const, vendorId })),
+  ]);
 
   return NextResponse.json(result);
 }

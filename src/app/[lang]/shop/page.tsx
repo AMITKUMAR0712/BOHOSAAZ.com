@@ -289,9 +289,7 @@ export default async function ShopPage({
   ).slice(0, 24);
   const sizeOptions: FilterOption[] = sizeValues.map((value) => [value, toTitleCase(value)]);
 
-  const newArrivalSince = new Date();
-  newArrivalSince.setDate(newArrivalSince.getDate() - 30);
-  const [inStockCount, discountedCount, newArrivalCount] = await Promise.all([
+  const [inStockCount, discountedCount] = await Promise.all([
     prisma.product.count({
       where: {
         isActive: true,
@@ -300,11 +298,9 @@ export default async function ShopPage({
       },
     }),
     prisma.product.count({ where: { isActive: true, deletedAt: null, salePrice: { not: null } } }),
-    prisma.product.count({ where: { isActive: true, deletedAt: null, createdAt: { gte: newArrivalSince } } }),
   ]);
   const systemAvailabilityOptions: FilterOption[] = [
     ...(inStockCount > 0 ? [["in_stock", "In Stock"] as const] : []),
-    ...(newArrivalCount > 0 ? [["new_arrivals", "New Arrivals"] as const] : []),
     ...(discountedCount > 0 ? [["discounted", "Discounted"] as const] : []),
   ];
 

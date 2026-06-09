@@ -6,6 +6,7 @@ import { audit } from "@/lib/audit";
 import { jsonError, jsonOk } from "@/lib/api";
 import { getIpFromRequest, getUserAgentFromRequest } from "@/lib/requestMeta";
 import { OrderStatus } from "@prisma/client";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 const schema = z.object({
   status: z.enum([
@@ -40,7 +41,7 @@ export async function POST(
   const updated = await prisma.order.update({
     where: { id: orderId },
     data: { status: parsed.data.status as OrderStatus },
-    select: { id: true, status: true, updatedAt: true },
+    select: { id: true, status: true, updatedAt: true, userId: true },
   });
 
   await audit({
@@ -53,6 +54,11 @@ export async function POST(
     ip: getIpFromRequest(req),
     userAgent: getUserAgentFromRequest(req),
   });
+
+  await bumpDashboardScopes([
+    { kind: "admin" },
+    { kind: "user", userId: updated.userId },
+  ]);
 
   return jsonOk({ order: updated });
 }

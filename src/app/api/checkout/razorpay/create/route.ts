@@ -6,6 +6,8 @@ import { z } from "zod";
 import { rateLimit } from "@/lib/rateLimit";
 import { recomputePendingOrderTotals } from "@/lib/orderTotals";
 import { amountToMinorUnits } from "@/lib/money";
+import { reserveOrderStock } from "@/lib/stock";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 const bodySchema = z.object({
   orderId: z.string().trim().min(1).optional(),
@@ -164,45 +166,7 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // validate stock + recompute prices
-    for (const it of order.items) {
-      if (!it.product || !it.product.isActive) throw new Error("Some products are unavailable");
-      if (it.variantId) {
-        if (!it.variant || !it.variant.isActive || it.variant.productId !== it.productId) {
-          throw new Error(`Variant unavailable for "${it.product.title}"`);
-        }
-        if (it.quantity > it.variant.stock) {
-          throw new Error(`Insufficient stock for "${it.product.title}"`);
-        }
-      } else {
-        if (it.quantity > it.product.stock) {
-          throw new Error(`Insufficient stock for "${it.product.title}"`);
-        }
-      }
-    }
-
-    // decrement stock (safe)
-    for (const it of order.items) {
-      if (it.variantId) {
-        const v = await tx.productVariant.updateMany({
-          where: { id: it.variantId, productId: it.productId, stock: { gte: it.quantity } },
-          data: { stock: { decrement: it.quantity } },
-        });
-        if (v.count !== 1) throw new Error("Stock changed. Please try again.");
-
-        const p = await tx.product.updateMany({
-          where: { id: it.productId, stock: { gte: it.quantity } },
-          data: { stock: { decrement: it.quantity } },
-        });
-        if (p.count !== 1) throw new Error("Stock changed. Please try again.");
-      } else {
-        const updated = await tx.product.updateMany({
-          where: { id: it.productId, stock: { gte: it.quantity } },
-          data: { stock: { decrement: it.quantity } },
-        });
-        if (updated.count !== 1) throw new Error("Stock changed. Please try again.");
-      }
-    }
+    await reserveOrderStock(tx, order.items);
 
     // Keep cart item prices unchanged here. They were already converted to
     // order.currency when the item was added, and Razorpay must charge that same total.
@@ -319,8 +283,20 @@ export async function POST(req: NextRequest) {
       razorpayOrderId: rpOrder.id,
       amountPaise: amountMinor.toString(),
       currency: rpCurrency,
+      vendorIds: Object.keys(perVendor),
     };
     });
+
+    const vendorIds = Array.isArray((result as { vendorIds?: string[] }).vendorIds)
+      ? (result as { vendorIds: string[] }).vendorIds
+      : [];
+    if (vendorIds.length) {
+      await bumpDashboardScopes([
+        { kind: "user", userId: payload.sub },
+        { kind: "admin" },
+        ...vendorIds.map((vendorId) => ({ kind: "vendor" as const, vendorId })),
+      ]);
+    }
 
     return Response.json({ ok: true, ...result });
   } catch (e: unknown) {

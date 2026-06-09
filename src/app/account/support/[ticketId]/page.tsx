@@ -33,10 +33,13 @@ export default function AccountTicketDetailPage() {
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
   const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
 
-  async function load() {
-    setLoading(true);
-    setMsg(null);
+  async function load(options: { silent?: boolean } = {}) {
+    if (!options.silent) {
+      setLoading(true);
+      setMsg(null);
+    }
 
     const [tRes, mRes] = await Promise.all([
       fetch(`/api/user/tickets/${params.ticketId}`, { credentials: "include" }),
@@ -50,7 +53,7 @@ export default function AccountTicketDetailPage() {
       setMsg(tData?.error || "Failed");
       setTicket(null);
       setMessages([]);
-      setLoading(false);
+      if (!options.silent) setLoading(false);
       return;
     }
 
@@ -58,11 +61,13 @@ export default function AccountTicketDetailPage() {
     if (mRes.ok && mData?.ok) setMessages((mData.data?.messages || []) as Message[]);
     else setMessages([]);
 
-    setLoading(false);
+    if (!options.silent) setLoading(false);
   }
 
   useEffect(() => {
     void load();
+    const interval = window.setInterval(() => void load({ silent: true }), 5000);
+    return () => window.clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.ticketId]);
 
@@ -70,6 +75,7 @@ export default function AccountTicketDetailPage() {
     setMsg(null);
     const m = text.trim();
     if (!m) return;
+    setSending(true);
 
     const res = await fetch(`/api/user/tickets/${params.ticketId}/messages`, {
       method: "POST",
@@ -81,11 +87,13 @@ export default function AccountTicketDetailPage() {
     const data = await res.json().catch(() => null);
     if (!res.ok || !data?.ok) {
       setMsg(data?.error || "Send failed");
+      setSending(false);
       return;
     }
 
     setText("");
     await load();
+    setSending(false);
   }
 
   return (
@@ -141,10 +149,10 @@ export default function AccountTicketDetailPage() {
                 />
                 <button
                   className="w-fit rounded-xl bg-black px-4 py-2 text-sm text-white disabled:opacity-60"
-                  disabled={text.trim().length < 1 || ticket.status === "CLOSED"}
+                  disabled={sending || text.trim().length < 1 || ticket.status === "CLOSED"}
                   onClick={send}
                 >
-                  Send
+                  {sending ? "Sending..." : "Send"}
                 </button>
                 {ticket.status === "CLOSED" ? (
                   <div className="text-xs text-gray-600">This ticket is closed.</div>

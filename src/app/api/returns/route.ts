@@ -4,6 +4,7 @@ import { audit } from "@/lib/audit";
 import { jsonError, jsonOk } from "@/lib/api";
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 const CreateReturnSchema = z.object({
   orderItemId: z.string().min(1),
@@ -59,7 +60,7 @@ export async function GET() {
             },
           },
         },
-        refundRecord: { select: { id: true, status: true, amount: true, method: true, provider: true } },
+        refundRecord: { select: { id: true, status: true, amount: true, method: true, provider: true, providerRefundId: true } },
       },
       orderBy: { updatedAt: "desc" },
       take: 50,
@@ -130,6 +131,12 @@ export async function POST(req: NextRequest) {
       ip: req.headers.get("x-forwarded-for") || undefined,
       userAgent: req.headers.get("user-agent") || undefined,
     });
+
+    await bumpDashboardScopes([
+      { kind: "user", userId: user.id },
+      { kind: "vendor", vendorId: item.product.vendorId! },
+      { kind: "admin" },
+    ]);
 
     return jsonOk({ returnRequestId: created.id }, { status: 201 });
   } catch (e: unknown) {

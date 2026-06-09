@@ -105,6 +105,8 @@ export default function AccountReturnDetailPage({
               {data.refundRecord ? (
                 <div className="mt-2 text-xs text-gray-600">
                   Refund: {data.refundRecord.status} • ₹{data.refundRecord.amount} • {data.refundRecord.method}
+                  {data.refundRecord.provider ? ` • ${data.refundRecord.provider}` : ""}
+                  {data.refundRecord.providerRefundId ? ` • ${data.refundRecord.providerRefundId}` : ""}
                 </div>
               ) : null}
               {data.rejectReason ? <div className="mt-2 text-xs text-gray-600">Rejection: {data.rejectReason}</div> : null}

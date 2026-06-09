@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Ticket = {
   id: string;
@@ -31,11 +31,11 @@ export default function TicketClient({
   const [text, setText] = useState("");
   const [isInternal, setIsInternal] = useState(false);
   const [status, setStatus] = useState<Ticket["status"]>(ticket.status);
+  const [sending, setSending] = useState(false);
 
   const sorted = useMemo(() => messages, [messages]);
 
   async function reload() {
-    setMsg(null);
     const res = await fetch(`/api/admin/support/tickets/${ticket.id}/messages`, {
       credentials: "include",
     });
@@ -44,10 +44,17 @@ export default function TicketClient({
     setMessages((data.data?.messages || []) as Message[]);
   }
 
+  useEffect(() => {
+    const interval = window.setInterval(() => void reload(), 5000);
+    return () => window.clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticket.id]);
+
   async function send() {
     setMsg(null);
     const m = text.trim();
     if (!m) return;
+    setSending(true);
 
     const res = await fetch(`/api/admin/support/tickets/${ticket.id}/messages`, {
       method: "POST",
@@ -56,9 +63,13 @@ export default function TicketClient({
       body: JSON.stringify({ message: m, isInternal }),
     });
     const data = await res.json().catch(() => null);
-    if (!res.ok || !data?.ok) return setMsg(data?.error || "Send failed");
+    if (!res.ok || !data?.ok) {
+      setSending(false);
+      return setMsg(data?.error || "Send failed");
+    }
     setText("");
     await reload();
+    setSending(false);
   }
 
   async function setTicketStatus(next: Ticket["status"]) {
@@ -131,8 +142,8 @@ export default function TicketClient({
             />
             internal
           </label>
-          <button className="rounded-lg bg-black text-white px-4 py-2 text-sm" onClick={send}>
-            Send
+          <button className="rounded-lg bg-black text-white px-4 py-2 text-sm disabled:opacity-60" onClick={send} disabled={sending || text.trim().length < 1 || status === "CLOSED"}>
+            {sending ? "Sending..." : "Send"}
           </button>
         </div>
       </div>

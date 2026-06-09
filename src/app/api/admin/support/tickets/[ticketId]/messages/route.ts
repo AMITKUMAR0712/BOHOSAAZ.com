@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { jsonError, jsonOk } from "@/lib/api";
 import { getIpFromRequest, getUserAgentFromRequest } from "@/lib/requestMeta";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 const createSchema = z.object({
   message: z.string().trim().min(1).max(191),
@@ -81,6 +82,11 @@ export async function POST(
     ip: getIpFromRequest(req),
     userAgent: getUserAgentFromRequest(req),
   });
+
+  await bumpDashboardScopes([
+    { kind: "admin" },
+    { kind: "vendor", vendorId: ticket.vendorId },
+  ]);
 
   return jsonOk({ message: created }, { status: 201 });
 }

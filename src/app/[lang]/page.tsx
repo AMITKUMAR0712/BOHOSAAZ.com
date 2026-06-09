@@ -11,6 +11,7 @@ import { AdSlot } from "@/components/ads/AdSlot";
 import IconByName from "@/components/IconByName";
 import { DEFAULT_OCCASION_OPTIONS, DEFAULT_RECIPIENT_OPTIONS } from "@/lib/shopFilters";
 import { formatPriceInCurrency } from "@/lib/currency-utils";
+import { AutoScrollRow } from "@/components/AutoScrollRow";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -206,10 +207,7 @@ function BrandMarquee({
   const marqueeBrands = brands.length ? [...brands, ...brands] : [];
 
   return (
-    <div className="relative overflow-hidden rounded-[30px] bg-linear-to-br from-card/95 via-background/80 to-primary/10 p-3 shadow-[0_18px_60px_rgba(47,38,34,0.09)] ring-1 ring-primary/10 backdrop-blur-xl sm:p-4 lg:p-5">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(135,56,20,0.12),transparent_30%),radial-gradient(circle_at_85%_20%,rgba(184,134,50,0.14),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.22),transparent_45%)]" />
-      <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/14 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-20 -left-14 h-56 w-56 rounded-full bg-amber-500/14 blur-3xl" />
+    <div className="relative overflow-hidden rounded-[30px] border border-border/60 bg-transparent p-0">
       <div className="relative flex flex-col items-start gap-2.5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="text-[10px] uppercase tracking-[0.3em] text-primary/75">{eyebrow}</div>
@@ -226,43 +224,110 @@ function BrandMarquee({
       </div>
 
       {brands.length ? (
-        <div className="relative mt-4 overflow-hidden rounded-[24px]">
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-linear-to-r from-card/95 to-transparent sm:w-14" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-linear-to-l from-card/95 to-transparent sm:w-14" />
-          <div
-            className="flex w-max gap-4 py-2 animate-[brand-marquee_linear_infinite] hover:[animation-play-state:paused] sm:gap-5 lg:gap-6"
-            style={{ animationDuration: duration }}
-          >
+        <AutoScrollRow
+          ariaLabel={title}
+          className="mt-4 rounded-[24px] py-2"
+          contentClassName="gap-4 py-2 sm:gap-5 lg:gap-6"
+          step={340}
+          speed={duration === "28s" ? 0.22 : 0.18}
+        >
             {marqueeBrands.map((brand, index) => (
               <Link
                 key={`${brand.id}-${index}`}
                 href={href.replace(/\/brands\/(popular|luxury)$/, `/brand/${encodeURIComponent(brand.slug)}`)}
-                className="group relative grid h-48 w-52 shrink-0 place-items-center overflow-hidden rounded-[30px] border border-primary/12 bg-linear-to-br from-background/92 via-card/88 to-primary/8 p-3 text-center shadow-[0_14px_38px_rgba(47,38,34,0.08)] transition hover:-translate-y-1 hover:border-primary/35 hover:bg-card hover:shadow-premium sm:h-52 sm:w-60 sm:p-4 lg:h-56 lg:w-68"
+                className="group relative grid h-56 w-60 shrink-0 place-items-center overflow-hidden rounded-[28px] border border-border/70 bg-card/75 p-4 text-center shadow-[0_14px_38px_rgba(47,38,34,0.08)] transition hover:-translate-y-1 hover:border-primary/25 hover:bg-card hover:shadow-premium sm:h-64 sm:w-72 sm:p-5 lg:h-72 lg:w-80"
               >
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.32),transparent_42%)] opacity-80" />
-                <div className="relative grid h-30 w-30 place-items-center overflow-hidden rounded-[28px] border border-primary/10 bg-card/95 shadow-[0_12px_35px_rgba(47,38,34,0.08)] transition group-hover:scale-105 sm:h-34 sm:w-34 lg:h-38 lg:w-38">
+                <div className="relative grid h-34 w-34 place-items-center overflow-hidden rounded-[24px] border border-border/60 bg-background/80 shadow-[0_12px_35px_rgba(47,38,34,0.08)] transition group-hover:scale-105 sm:h-40 sm:w-40 lg:h-44 lg:w-44">
                   {brand.logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={brand.logoUrl} alt={brand.name} className="h-24 w-24 object-contain sm:h-28 sm:w-28 lg:h-32 lg:w-32" />
+                    <img src={brand.logoUrl} alt={brand.name} className="h-28 w-28 object-contain sm:h-34 sm:w-34 lg:h-38 lg:w-38" />
                   ) : (
-                    <span className="font-heading text-2xl text-primary">
+                    <span className="font-heading text-3xl text-primary sm:text-4xl">
                       {brand.name.trim().slice(0, 1).toUpperCase()}
                     </span>
                   )}
                 </div>
-                <div className="relative mt-3 line-clamp-2 text-base font-bold text-foreground transition group-hover:text-primary sm:text-lg">
+                <div className="relative mt-4 line-clamp-2 text-lg font-bold text-foreground transition group-hover:text-primary sm:text-xl">
                   {brand.name}
                 </div>
               </Link>
             ))}
-          </div>
-        </div>
+        </AutoScrollRow>
       ) : (
         <div className="mt-6 rounded-2xl border border-dashed border-border bg-card/60 px-4 py-6 text-sm text-muted-foreground">
           No brands yet
         </div>
       )}
     </div>
+  );
+}
+
+type MarqueeProduct = {
+  id: string;
+  title: string;
+  slug: string;
+  currency?: string;
+  mrp?: number | null;
+  price: number;
+  salePrice?: number | null;
+  createdAt?: string | Date;
+  images?: ProductImage[];
+  vendorId?: string | null;
+  vendor?: { id?: string | null } | null;
+};
+
+function normalizeProductForCard(product: MarqueeProduct) {
+  return {
+    id: String(product.id),
+    title: String(product.title || ""),
+    slug: String(product.slug || ""),
+    currency: (product.currency === "USD" ? "USD" : "INR") as "INR" | "USD",
+    mrp: product.mrp == null ? null : Number(product.mrp),
+    price: Number(product.price || 0),
+    salePrice: product.salePrice == null ? null : Number(product.salePrice),
+    createdAt: product.createdAt instanceof Date ? product.createdAt.toISOString() : product.createdAt,
+    images: Array.isArray(product.images) ? product.images : [],
+    vendorId: product.vendorId ?? product.vendor?.id ?? null,
+  };
+}
+
+function ProductMarquee({
+  products,
+  lang,
+  duration,
+  wrapperClassName,
+}: {
+  products: MarqueeProduct[];
+  lang: string;
+  duration: string;
+  wrapperClassName?: string;
+}) {
+  const marqueeProducts = products.length ? [...products, ...products] : [];
+
+  return (
+    <AutoScrollRow
+      ariaLabel={duration === "32s" ? "Featured products" : "Trending products"}
+      className="mt-5 rounded-[30px] sm:mt-7"
+      contentClassName="gap-3 py-2 sm:gap-5"
+      step={300}
+      speed={duration === "32s" ? 0.2 : 0.18}
+      arrowClassName="top-[42%] sm:top-1/2"
+    >
+        {marqueeProducts.map((p, index) => (
+          <div
+            key={`${p.id}-${index}`}
+            className={`w-[220px] shrink-0 sm:w-[255px] lg:w-[272px] ${
+              wrapperClassName ?? "transition hover:-translate-y-1 hover:shadow-lg"
+            }`}
+          >
+            <ProductCard
+              langPrefix={`/${lang}`}
+              enableImageSwipe
+              product={normalizeProductForCard(p)}
+            />
+          </div>
+        ))}
+    </AutoScrollRow>
   );
 }
 
@@ -1532,34 +1597,12 @@ export default async function Home({
                 actionClassName={theme.sectionAction}
               />
 
-              <div className="mt-5 grid auto-rows-fr grid-cols-2 gap-3 sm:mt-7 sm:gap-5 lg:grid-cols-4">
-                {featured.map((p) => (
-                  <div
-                    key={p.id}
-                    className={
-                      theme.productWrapper ??
-                      "h-full transition hover:-translate-y-1 hover:shadow-lg"
-                    }
-                  >
-                    <ProductCard
-                      langPrefix={`/${lang}`}
-                      enableImageSwipe
-                      product={{
-                        id: String(p.id),
-                        title: String(p.title || ""),
-                        slug: String(p.slug || ""),
-                        currency: (p.currency === "USD" ? "USD" : "INR") as "INR" | "USD",
-                        mrp: p.mrp == null ? null : Number(p.mrp),
-                        price: Number(p.price || 0),
-                        salePrice: p.salePrice == null ? null : Number(p.salePrice),
-                        createdAt: p.createdAt instanceof Date ? p.createdAt.toISOString() : p.createdAt,
-                        images: Array.isArray(p.images) ? p.images : [],
-                        vendorId: p.vendorId ?? p.vendor?.id ?? null,
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
+              <ProductMarquee
+                products={featured}
+                lang={lang}
+                duration="32s"
+                wrapperClassName={theme.productWrapper}
+              />
             </section>
           ) : null}
 
@@ -1576,94 +1619,44 @@ export default async function Home({
                 actionClassName={theme.sectionAction}
               />
 
-              <div className="mt-5 grid auto-rows-fr grid-cols-2 gap-3 sm:mt-7 sm:gap-5 lg:grid-cols-4">
-                {trending.map((p) => (
-                  <div
-                    key={p.id}
-                    className={
-                      theme.productWrapper ??
-                      "h-full transition hover:-translate-y-1 hover:shadow-lg"
-                    }
-                  >
-                    <ProductCard
-                      langPrefix={`/${lang}`}
-                      enableImageSwipe
-                      product={{
-                        id: String(p.id),
-                        title: String(p.title || ""),
-                        slug: String(p.slug || ""),
-                        currency: (p.currency === "USD" ? "USD" : "INR") as "INR" | "USD",
-                        mrp: p.mrp == null ? null : Number(p.mrp),
-                        price: Number(p.price || 0),
-                        salePrice: p.salePrice == null ? null : Number(p.salePrice),
-                        createdAt: p.createdAt instanceof Date ? p.createdAt.toISOString() : p.createdAt,
-                        images: Array.isArray(p.images) ? p.images : [],
-                        vendorId: p.vendorId ?? p.vendor?.id ?? null,
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
+              <ProductMarquee
+                products={trending}
+                lang={lang}
+                duration="36s"
+                wrapperClassName={theme.productWrapper}
+              />
             </section>
           ) : null}
 
           {/* Brands */}
           <section className="mx-auto max-w-6xl px-4 py-14">
-            <div
-              className="relative overflow-hidden rounded-[48px] border border-primary/15 bg-linear-to-br from-card/85 via-background/75 to-primary/8 backdrop-blur-2xl shadow-[0_28px_100px_rgba(47,38,34,0.12)]"
-            >
-              {/* Glow / background */}
-              <div
-                className={
-                  theme.brandsGlow ??
-                  "absolute inset-0 bg-linear-to-br from-primary/10 via-transparent to-muted/30"
-                }
+            <SectionHeader
+              eyebrow="Brands"
+              title="Shop By Brand"
+              eyebrowClassName={theme.sectionEyebrow}
+              titleClassName={theme.sectionTitle}
+              actionClassName={theme.sectionAction}
+            />
+
+            <p className="mt-2 max-w-xl text-xs leading-relaxed text-muted-foreground md:text-sm">
+              Discover trusted labels by collection. Popular and luxury brands are fully managed from the admin panel.
+            </p>
+
+            <div className="mt-5 grid gap-8 sm:mt-7">
+              <BrandMarquee
+                title="Popular Brands"
+                eyebrow="Top Sellers"
+                href={`/${lang}/brands/popular`}
+                brands={popularBrands}
+                duration="28s"
               />
-              <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-              <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-muted/40 blur-3xl" />
-              <div
-                className={
-                  theme.brandsDot ??
-                  "absolute inset-0 opacity-[0.05] bg-[radial-gradient(circle_at_top,black_1px,transparent_1px)] bg-size-[22px_22px]"
-                }
+              <BrandMarquee
+                title="Luxury Brands"
+                eyebrow="Premium Picks"
+                href={`/${lang}/brands/luxury`}
+                brands={luxuryBrands}
+                duration="34s"
               />
-
-              <div className="relative px-5 py-5 md:px-8 md:py-6">
-                <SectionHeader
-                  eyebrow="Brands"
-                  title="Shop By Brand"
-                  eyebrowClassName={theme.sectionEyebrow}
-                  titleClassName="mt-1 font-heading text-2xl tracking-tight text-foreground md:text-3xl"
-                  actionClassName={theme.sectionAction}
-                />
-
-                <p className="mt-2 max-w-xl text-xs leading-relaxed text-muted-foreground md:text-sm">
-                  Discover trusted labels by collection. Popular and luxury brands are fully managed from the admin panel.
-                </p>
-
-                <div className="mt-4 grid gap-3 md:mt-5">
-                  <BrandMarquee
-                    title="Popular Brands"
-                    eyebrow="Top Sellers"
-                    href={`/${lang}/brands/popular`}
-                    brands={popularBrands}
-                    duration="28s"
-                  />
-                  <BrandMarquee
-                    title="Luxury Brands"
-                    eyebrow="Premium Picks"
-                    href={`/${lang}/brands/luxury`}
-                    brands={luxuryBrands}
-                    duration="34s"
-                  />
-                </div>
-                <style>{`
-                  @keyframes brand-marquee {
-                    from { transform: translateX(0); }
-                    to { transform: translateX(-50%); }
-                  }
-                `}</style>
-              </div>
             </div>
           </section>
 

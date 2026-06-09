@@ -9,6 +9,7 @@ import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import ExportDropdown from "@/components/ExportDropdown";
+import { DEFAULT_OCCASION_OPTIONS, DEFAULT_RECIPIENT_OPTIONS } from "@/lib/shopFilters";
 
 type Category = { id: string; name: string };
 
@@ -144,6 +145,9 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
   const [rowImageUrls, setRowImageUrls] = useState<Record<string, string>>({});
+  const [occasionFilter, setOccasionFilter] = useState("");
+  const [recipientFilter, setRecipientFilter] = useState("");
+  const [availabilityFilter, setAvailabilityFilter] = useState("");
 
   // create form
   const [title, setTitle] = useState("");
@@ -213,7 +217,11 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
   const [editVariants, setEditVariants] = useState<VariantRow[]>([]);
 
   async function loadProducts() {
-    const res = await fetch("/api/vendor/products", { credentials: "include" });
+    const params = new URLSearchParams();
+    if (occasionFilter) params.set("occasion", occasionFilter);
+    if (recipientFilter) params.set("recipient", recipientFilter);
+    if (availabilityFilter) params.set("availability", availabilityFilter);
+    const res = await fetch(`/api/vendor/products${params.toString() ? `?${params}` : ""}`, { credentials: "include" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data?.error || "Failed to load products");
     const raw = Array.isArray(data?.products) ? data.products : [];
@@ -263,6 +271,15 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (mode !== "all") return;
+    void loadProducts().catch((e) => {
+      const message = e instanceof Error ? e.message : "Load failed";
+      setMsg(`❌ ${message}`);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, occasionFilter, recipientFilter, availabilityFilter]);
 
   async function createProduct() {
     setMsg(null);
@@ -1002,6 +1019,52 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
               <CardDescription>Upload images, set primary, enable/disable, or delete.</CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="mb-4 grid gap-3">
+                <div className="grid gap-2 md:grid-cols-3">
+                  <label className="grid gap-1">
+                    <span className="text-xs text-muted-foreground">Occasion</span>
+                    <Select value={occasionFilter} onChange={(event) => setOccasionFilter(event.target.value)}>
+                      <option value="">All occasions</option>
+                      {DEFAULT_OCCASION_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </Select>
+                  </label>
+                  <label className="grid gap-1">
+                    <span className="text-xs text-muted-foreground">Recipient</span>
+                    <Select value={recipientFilter} onChange={(event) => setRecipientFilter(event.target.value)}>
+                      <option value="">All recipients</option>
+                      {DEFAULT_RECIPIENT_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </Select>
+                  </label>
+                  <label className="grid gap-1">
+                    <span className="text-xs text-muted-foreground">Availability</span>
+                    <Select value={availabilityFilter} onChange={(event) => setAvailabilityFilter(event.target.value)}>
+                      <option value="">Any availability</option>
+                      <option value="in_stock">In Stock</option>
+                      <option value="discounted">Discounted</option>
+                    </Select>
+                  </label>
+                </div>
+                {(occasionFilter || recipientFilter || availabilityFilter) ? (
+                  <div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setOccasionFilter("");
+                        setRecipientFilter("");
+                        setAvailabilityFilter("");
+                      }}
+                    >
+                      Clear filters
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+
               {loading ? (
                 <div className="text-sm text-muted-foreground">Loading...</div>
               ) : items.length === 0 ? (

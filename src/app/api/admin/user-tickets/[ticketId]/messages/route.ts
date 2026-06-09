@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { jsonError, jsonOk } from "@/lib/api";
 import { getIpFromRequest, getUserAgentFromRequest } from "@/lib/requestMeta";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 const CreateSchema = z.object({
   message: z.string().trim().min(1).max(4000),
@@ -58,7 +59,7 @@ export async function POST(
   const result = await prisma.$transaction(async (tx) => {
     const ticket = await tx.userTicket.findUnique({
       where: { id: ticketId },
-      select: { id: true, status: true },
+      select: { id: true, status: true, userId: true },
     });
 
     if (!ticket) return { ok: false as const, error: "Not found", status: 404 as const };
@@ -89,7 +90,7 @@ export async function POST(
       select: { id: true },
     });
 
-    return { ok: true as const, created };
+    return { ok: true as const, created, userId: ticket.userId };
   });
 
   if (result.ok === false) return jsonError(result.error, result.status);
@@ -104,6 +105,11 @@ export async function POST(
     ip: getIpFromRequest(req),
     userAgent: getUserAgentFromRequest(req),
   });
+
+  await bumpDashboardScopes([
+    { kind: "admin" },
+    { kind: "user", userId: result.userId },
+  ]);
 
   return jsonOk(
     {

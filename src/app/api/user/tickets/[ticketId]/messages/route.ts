@@ -4,6 +4,7 @@ import { audit } from "@/lib/audit";
 import { jsonError, jsonOk } from "@/lib/api";
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 const CreateMessageSchema = z.object({
   message: z.string().min(1).max(4000),
@@ -87,6 +88,11 @@ export async function POST(
     ip: req.headers.get("x-forwarded-for") || undefined,
     userAgent: req.headers.get("user-agent") || undefined,
   });
+
+  await bumpDashboardScopes([
+    { kind: "user", userId: user.id },
+    { kind: "admin" },
+  ]);
 
   return jsonOk({ messageId: msg.id }, { status: 201 });
 }

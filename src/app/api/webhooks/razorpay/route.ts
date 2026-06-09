@@ -1,6 +1,8 @@
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { restoreOrderStock } from "@/lib/stock";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === "object" ? (value as Record<string, unknown>) : null;
@@ -75,10 +77,20 @@ export async function POST(req: Request) {
       const razorpayPaymentId: string | null = typeof payment?.id === "string" ? payment.id : null;
 
       if (orderId && razorpayOrderId) {
-        await prisma.$transaction(async (tx) => {
+        const bumpScopes = await prisma.$transaction(async (tx) => {
           const op = await tx.orderPayment.findUnique({
             where: { orderId },
             select: { id: true, status: true, razorpayOrderId: true },
+          });
+
+          const order = await tx.order.findUnique({
+            where: { id: orderId },
+            select: {
+              id: true,
+              userId: true,
+              status: true,
+              items: { select: { product: { select: { vendorId: true } } } },
+            },
           });
 
           if (op && op.razorpayOrderId === razorpayOrderId) {
@@ -99,6 +111,9 @@ export async function POST(req: Request) {
                 data: { status: "PAID", paymentMethod: "RAZORPAY" },
               });
             } else {
+              if (op.status !== "FAILED" && order?.status === "PENDING") {
+                await restoreOrderStock(tx, orderId);
+              }
               await tx.orderPayment.update({
                 where: { id: op.id },
                 data: {
@@ -110,7 +125,19 @@ export async function POST(req: Request) {
               });
             }
           }
+
+          const vendorIds = Array.from(
+            new Set((order?.items ?? []).map((item) => item.product.vendorId).filter((vendorId): vendorId is string => Boolean(vendorId))),
+          );
+          return order
+            ? [
+                { kind: "user" as const, userId: order.userId },
+                { kind: "admin" as const },
+                ...vendorIds.map((vendorId) => ({ kind: "vendor" as const, vendorId })),
+              ]
+            : [];
         });
+        await bumpDashboardScopes(bumpScopes);
       }
     }
 

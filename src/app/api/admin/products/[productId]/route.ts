@@ -6,6 +6,7 @@ import { audit } from "@/lib/audit";
 import { jsonError, jsonOk } from "@/lib/api";
 import { getIpFromRequest, getUserAgentFromRequest } from "@/lib/requestMeta";
 import { Prisma } from "@prisma/client";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 function slugify(input: string) {
   return input
@@ -373,6 +374,11 @@ export async function PATCH(
     userAgent: getUserAgentFromRequest(req),
   });
 
+  await bumpDashboardScopes([
+    { kind: "admin" },
+    { kind: "vendor", vendorId: updated.vendorId },
+  ]);
+
   return jsonOk({ product: updated });
 }
 
@@ -403,6 +409,11 @@ export async function DELETE(
       ip: getIpFromRequest(req),
       userAgent: getUserAgentFromRequest(req),
     });
+
+    await bumpDashboardScopes([
+      { kind: "admin" },
+      { kind: "vendor", vendorId: deleted.vendorId },
+    ]);
 
     return jsonOk({ deleted: true });
   } catch {

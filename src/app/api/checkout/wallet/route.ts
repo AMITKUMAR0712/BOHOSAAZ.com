@@ -6,6 +6,8 @@ import { z } from "zod";
 import { rateLimit } from "@/lib/rateLimit";
 import { rupeesToPaise } from "@/lib/money";
 import { recomputePendingOrderTotals } from "@/lib/orderTotals";
+import { reserveOrderStock } from "@/lib/stock";
+import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 
 type WalletAccountDelegate = {
   upsert(args: unknown): Promise<unknown>;
@@ -79,48 +81,7 @@ export async function POST(req: NextRequest) {
       throw new Error("Wallet checkout is only available for INR orders.");
     }
 
-    // validate stock + recompute prices
-    for (const it of order.items) {
-      if (!it.product || !it.product.isActive) throw new Error("Some products are unavailable");
-      if (it.variantId) {
-        if (!it.variant || !it.variant.isActive || it.variant.productId !== it.productId) {
-          throw new Error(`Variant unavailable for "${it.product.title}"`);
-        }
-        if (it.quantity > it.variant.stock) {
-          throw new Error(`Insufficient stock for "${it.product.title}"`);
-        }
-      } else {
-        if (it.quantity > it.product.stock) {
-          throw new Error(`Insufficient stock for "${it.product.title}"`);
-        }
-      }
-    }
-
-    // decrement stock (safe)
-    for (const it of order.items) {
-      if (it.variantId) {
-        const v = await tx.productVariant.updateMany({
-          where: { id: it.variantId, productId: it.productId, stock: { gte: it.quantity } },
-          data: { stock: { decrement: it.quantity } },
-        });
-        if (v.count !== 1) throw new Error("Stock changed. Please try again.");
-
-        // keep product.stock in sync with variant totals
-        const p = await tx.product.updateMany({
-          where: { id: it.productId, stock: { gte: it.quantity } },
-          data: { stock: { decrement: it.quantity } },
-        });
-        if (p.count !== 1) throw new Error("Stock changed. Please try again.");
-      } else {
-        const updated = await tx.product.updateMany({
-          where: { id: it.productId, stock: { gte: it.quantity } },
-          data: { stock: { decrement: it.quantity } },
-        });
-        if (updated.count !== 1) {
-          throw new Error("Stock changed. Please try again.");
-        }
-      }
-    }
+    await reserveOrderStock(tx, order.items);
 
     // Keep cart item prices unchanged here. They were already converted to order.currency.
 
@@ -278,8 +239,14 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return { orderId: finalized.id, total: finalized.total };
+    return { orderId: finalized.id, total: finalized.total, vendorIds: Object.keys(perVendor) };
   });
+
+  await bumpDashboardScopes([
+    { kind: "user", userId: payload.sub },
+    { kind: "admin" },
+    ...result.vendorIds.map((vendorId) => ({ kind: "vendor" as const, vendorId })),
+  ]);
 
   return Response.json({ ok: true, ...result });
 }

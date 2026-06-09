@@ -13,11 +13,11 @@ type Row = {
   user: { id: string; email: string; name: string | null };
   vendor: { id: string; shopName: string };
   orderItem: { id: string; quantity: number; price: number; status: string; product: { id: string; title: string } };
-  refundRecord: null | { status: string };
+  refundRecord: null | { status: string; amount: number; method: string; provider: string | null };
 };
 
 export default function ReturnsClient({ initialReturns }: { initialReturns: Row[] }) {
-  const [rows, setRows] = useState<Row[]>(initialReturns);
+  const [rows] = useState<Row[]>(initialReturns);
   const [q, setQ] = useState("");
 
   const filtered = useMemo(() => {
@@ -79,6 +79,14 @@ export default function ReturnsClient({ initialReturns }: { initialReturns: Row[
                 <div className="text-xs">
                   Status: <b>{r.status}</b> • User: {r.user.email} • Vendor: {r.vendor.shopName}
                 </div>
+                {r.refundRecord ? (
+                  <div className="text-xs text-muted-foreground">
+                    Refund: <b>{r.refundRecord.status}</b> • ₹{r.refundRecord.amount} • {r.refundRecord.method}
+                    {r.refundRecord.provider ? ` • ${r.refundRecord.provider}` : ""}
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground">Refund: not initiated</div>
+                )}
 
                 <div className="text-xs text-muted-foreground">Updated: {new Date(r.updatedAt).toLocaleString()}</div>
               </div>

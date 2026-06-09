@@ -28,10 +28,13 @@ export default function VendorTicketDetailPage() {
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
   const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
 
-  async function load() {
-    setLoading(true);
-    setMsg(null);
+  async function load(options: { silent?: boolean } = {}) {
+    if (!options.silent) {
+      setLoading(true);
+      setMsg(null);
+    }
 
     const [tRes, mRes] = await Promise.all([
       fetch(`/api/vendor/support/tickets/${params.ticketId}`, { credentials: "include" }),
@@ -45,60 +48,42 @@ export default function VendorTicketDetailPage() {
       setMsg(tData?.error || "Failed");
       setTicket(null);
       setMessages([]);
-      setLoading(false);
+      if (!options.silent) setLoading(false);
       return;
     }
 
     setTicket(tData.ticket || null);
     setMessages(mRes.ok ? mData.messages || [] : []);
-    setLoading(false);
+    if (!options.silent) setLoading(false);
   }
 
   useEffect(() => {
-    let ignore = false;
-    (async () => {
-      const [tRes, mRes] = await Promise.all([
-        fetch(`/api/vendor/support/tickets/${params.ticketId}`, { credentials: "include" }),
-        fetch(`/api/vendor/support/tickets/${params.ticketId}/messages`, { credentials: "include" }),
-      ]);
-
-      const tData = await tRes.json().catch(() => ({}));
-      const mData = await mRes.json().catch(() => ({}));
-
-      if (ignore) return;
-
-      if (!tRes.ok) {
-        setMsg(tData?.error || "Failed");
-        setTicket(null);
-        setMessages([]);
-        setLoading(false);
-        return;
-      }
-
-      setTicket(tData.ticket || null);
-      setMessages(mRes.ok ? mData.messages || [] : []);
-      setLoading(false);
-    })();
-    return () => {
-      ignore = true;
-    };
+    void load();
+    const interval = window.setInterval(() => void load({ silent: true }), 5000);
+    return () => window.clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.ticketId]);
 
   async function send() {
     setMsg(null);
+    const m = text.trim();
+    if (!m) return;
+    setSending(true);
     const res = await fetch(`/api/vendor/support/tickets/${params.ticketId}/messages`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text }),
+      body: JSON.stringify({ message: m }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       setMsg(data?.error || "Send failed");
+      setSending(false);
       return;
     }
     setText("");
     await load();
+    setSending(false);
   }
 
   return (
@@ -150,11 +135,14 @@ export default function VendorTicketDetailPage() {
                 />
                 <button
                   className="w-fit rounded-xl bg-black px-4 py-2 text-sm text-white disabled:opacity-60"
-                  disabled={text.trim().length < 1}
+                  disabled={sending || text.trim().length < 1 || ticket.status === "CLOSED"}
                   onClick={send}
                 >
-                  Send
+                  {sending ? "Sending..." : "Send"}
                 </button>
+                {ticket.status === "CLOSED" ? (
+                  <div className="text-xs text-gray-600">This ticket is closed.</div>
+                ) : null}
               </div>
             </div>
           </div>

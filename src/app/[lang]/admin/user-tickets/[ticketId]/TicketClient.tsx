@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 type Ticket = {
@@ -35,11 +35,11 @@ export default function TicketClient({
   const [msg, setMsg] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [status, setStatus] = useState<Ticket["status"]>(ticket.status);
+  const [sending, setSending] = useState(false);
 
   const sorted = useMemo(() => messages, [messages]);
 
   async function reload() {
-    setMsg(null);
     const res = await fetch(`/api/admin/user-tickets/${ticket.id}/messages`, {
       credentials: "include",
     });
@@ -48,10 +48,17 @@ export default function TicketClient({
     setMessages((data.data?.messages || []) as Message[]);
   }
 
+  useEffect(() => {
+    const interval = window.setInterval(() => void reload(), 5000);
+    return () => window.clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticket.id]);
+
   async function send() {
     setMsg(null);
     const m = text.trim();
     if (!m) return;
+    setSending(true);
 
     const res = await fetch(`/api/admin/user-tickets/${ticket.id}/messages`, {
       method: "POST",
@@ -61,9 +68,13 @@ export default function TicketClient({
     });
 
     const data = await res.json().catch(() => null);
-    if (!res.ok || !data?.ok) return setMsg(data?.error || "Send failed");
+    if (!res.ok || !data?.ok) {
+      setSending(false);
+      return setMsg(data?.error || "Send failed");
+    }
     setText("");
     await reload();
+    setSending(false);
   }
 
   async function setTicketStatus(next: Ticket["status"]) {
@@ -147,9 +158,9 @@ export default function TicketClient({
           <button
             className="rounded-lg bg-black text-white px-4 py-2 text-sm disabled:opacity-60"
             onClick={send}
-            disabled={status === "CLOSED" || text.trim().length < 1}
+            disabled={sending || status === "CLOSED" || text.trim().length < 1}
           >
-            Send
+            {sending ? "Sending..." : "Send"}
           </button>
         </div>
       </div>
