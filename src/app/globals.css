@@ -192,7 +192,7 @@ main {
 }
 
 main.site-content {
-  --site-header-offset: 166px;
+  --site-header-offset: 252px;
   padding-top: var(--site-header-offset);
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--mobileBottomNav));
 }
@@ -203,14 +203,14 @@ main.site-content > :where(main, div, section):first-child {
 
 @media (min-width: 768px) {
   main.site-content {
-    --site-header-offset: 156px;
+    --site-header-offset: 222px;
     padding-bottom: 0;
   }
 }
 
 @media (min-width: 1280px) {
   main.site-content {
-    --site-header-offset: 150px;
+    --site-header-offset: 218px;
   }
 }
 
@@ -631,7 +631,7 @@ small {
   }
 
   main.site-content {
-    --site-header-offset: 68px;
+    --site-header-offset: 202px;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--mobileBottomNav) + 0.75rem);
   }
 
@@ -699,9 +699,9 @@ small {
   }
 }
 
-@media (min-width: 641px) and (max-width: 1024px) {
+@media (min-width: 641px) and (max-width: 767px) {
   main.site-content {
-    --site-header-offset: 150px;
+    --site-header-offset: 252px;
   }
 }
 

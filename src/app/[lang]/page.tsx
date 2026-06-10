@@ -1297,7 +1297,7 @@ export default async function Home({
                   ].map((line) => (
                     <div
                       key={line}
-                      className="relative flex items-start gap-3 rounded-2xl bg-card/72 px-4 py-3 text-sm font-medium text-foreground/90 shadow-[0_12px_34px_rgba(47,38,34,0.08)] backdrop-blur"
+                      className="relative flex items-start gap-3 rounded-2xl bg-card/72 px-4 py-3 text-sm leading-relaxed text-muted-foreground shadow-[0_12px_34px_rgba(47,38,34,0.08)] backdrop-blur md:text-base"
                     >
                       <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" aria-hidden />
                       <span>{line}</span>

@@ -476,30 +476,37 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
       }`}
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/35 to-transparent" />
-      {/* ✅ MAIN ROW (Brand + Search + Actions) */}
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 lg:flex-nowrap">
-        {/* Brand */}
-        <Link href={lp} className="flex shrink-0 items-center gap-2 group">
-          <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-full border-2 border-primary/25 bg-card/95 shadow-[0_12px_34px_rgba(135,56,20,0.20),0_0_0_5px_rgba(184,134,50,0.09)] transition duration-300 ease-out group-hover:scale-105 group-hover:border-primary/45 group-hover:shadow-premium sm:h-18 sm:w-18">
-            <Image
-              src="/logo copy.jpeg"
-              alt="Bohosaaz"
-              width={72}
-              height={72}
-              className="h-12 w-12 rounded-full object-contain sm:h-16 sm:w-16"
-              priority
-            />
-          </div>
-          <div className="hidden leading-tight sm:block">
-            <div className="font-heading text-base tracking-tight group-hover:text-primary transition">
-              Bohosaaz
-            </div>
-            <div className="text-[11px] text-muted-foreground -mt-0.5">
-              Art of meaningful gifting
-            </div>
-          </div>
+      <section className="border-b border-primary/10 bg-card/35 px-3 py-2 backdrop-blur-xl sm:px-4 sm:py-2.5">
+        <Link
+          href={lp}
+          className="group mx-auto flex w-fit max-w-full flex-col items-center justify-center rounded-4xl border border-primary/12 bg-background/65 px-4 py-2 shadow-[0_10px_30px_rgba(47,38,34,0.08)] transition hover:-translate-y-px hover:border-primary/28 hover:bg-background/85 hover:shadow-[0_14px_38px_rgba(47,38,34,0.12)] sm:rounded-[2.4rem] sm:px-7 sm:py-2.5"
+          aria-label="Boho Saaz home"
+        >
+          <span className="flex items-center justify-center gap-3 sm:gap-5">
+            <span className="font-heading text-[1.08rem] font-semibold uppercase tracking-[0.22em] text-foreground transition group-hover:text-primary sm:text-[1.45rem]">
+              Boho
+            </span>
+            <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full border border-primary/25 bg-card shadow-[0_8px_22px_rgba(135,56,20,0.18)] sm:h-20 sm:w-20">
+              <Image
+                src="/logo copy.jpeg"
+                alt="Boho Saaz"
+                width={96}
+                height={96}
+                className="h-15 w-15 rounded-full object-contain sm:h-19 sm:w-19"
+                priority
+              />
+            </span>
+            <span className="font-heading text-[1.08rem] font-semibold uppercase tracking-[0.22em] text-foreground transition group-hover:text-primary sm:text-[1.45rem]">
+              Saaz
+            </span>
+          </span>
+          <span className="mt-1 text-[9px] font-semibold uppercase tracking-[0.28em] text-muted-foreground sm:text-[10px]">
+            Art of meaningful gifting
+          </span>
         </Link>
-
+      </section>
+      {/* ✅ MAIN ROW (Category + Search + Actions) */}
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 lg:flex-nowrap">
         {/* Category Dropdown */}
         <div
           className="relative hidden shrink-0 lg:block"

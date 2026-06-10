@@ -155,14 +155,14 @@ export default function SiteFooter() {
           <div className="relative grid gap-8 lg:grid-cols-12">
           {/* Left */}
           <div className="lg:col-span-4">
-            <Link href={lp} className="flex items-center gap-3 group">
-              <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-full border-2 border-primary/25 bg-card shadow-[0_12px_34px_rgba(135,56,20,0.20),0_0_0_5px_rgba(184,134,50,0.09)] transition duration-300 ease-out group-hover:scale-105 group-hover:border-primary/45 group-hover:shadow-premium">
+            <Link href={lp} className="flex items-center gap-4 group">
+              <div className="grid h-18 w-18 place-items-center overflow-hidden rounded-full border-2 border-primary/25 bg-card shadow-[0_12px_34px_rgba(135,56,20,0.20),0_0_0_5px_rgba(184,134,50,0.09)] transition duration-300 ease-out group-hover:scale-105 group-hover:border-primary/45 group-hover:shadow-premium sm:h-20 sm:w-20">
                 <Image
                   src="/logo copy.jpeg"
                   alt="Bohosaaz"
-                  width={80}
-                  height={80}
-                  className="h-10 w-10 rounded-full object-contain"
+                  width={112}
+                  height={112}
+                  className="h-16 w-16 rounded-full object-contain sm:h-18 sm:w-18"
                 />
               </div>
               <div>
@@ -175,11 +175,9 @@ export default function SiteFooter() {
               </div>
             </Link>
 
-            <p className="mt-2 text-xs text-foreground/72 max-w-sm leading-relaxed">
-            Bohosaaz will take you on this journey <span className="font-semibold text-primary">elevating your gifting experience </span>,{" "}
-              <span className="font-semibold text-primary">Where every
-              </span>gift holds an emotional journey thoughtfully chosen to celebrate your loved ones. 
-
+            <p className="mt-3 max-w-sm text-xs font-bold leading-relaxed text-foreground/85">
+              Bohosaaz will take you on this journey elevating your gifting experience, where every gift holds an
+              emotional journey thoughtfully chosen to celebrate your loved ones.
             </p>
           </div>
 
