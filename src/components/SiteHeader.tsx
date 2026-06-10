@@ -480,13 +480,13 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 lg:flex-nowrap">
         {/* Brand */}
         <Link href={lp} className="flex shrink-0 items-center gap-2 group">
-          <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-full border-2 border-primary/25 bg-card/95 shadow-[0_12px_34px_rgba(135,56,20,0.20),0_0_0_5px_rgba(184,134,50,0.09)] transition duration-300 ease-out group-hover:scale-105 group-hover:border-primary/45 group-hover:shadow-premium sm:h-16 sm:w-16">
+          <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-full border-2 border-primary/25 bg-card/95 shadow-[0_12px_34px_rgba(135,56,20,0.20),0_0_0_5px_rgba(184,134,50,0.09)] transition duration-300 ease-out group-hover:scale-105 group-hover:border-primary/45 group-hover:shadow-premium sm:h-18 sm:w-18">
             <Image
               src="/logo copy.jpeg"
               alt="Bohosaaz"
               width={72}
               height={72}
-              className="h-10 w-10 rounded-full object-contain sm:h-14 sm:w-14"
+              className="h-12 w-12 rounded-full object-contain sm:h-16 sm:w-16"
               priority
             />
           </div>
