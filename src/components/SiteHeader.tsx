@@ -362,8 +362,8 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
 
   const navLinks = [
     { label: "Home", href: lp },
-    { label: "Shop", href: `${lp}/shop` },
-    { label: "Categories", href: `${lp}/categories` },
+    { label: "Shop All", href: `${lp}/shop` },
+    { label: "Gift Categories", href: `${lp}/categories` },
     { label: "About Us", href: `${lp}/about` },
     { label: "Contact Us", href: `${lp}/contact` },
     { label: "Blogs", href: `${lp}/blog` },
@@ -476,17 +476,6 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
       }`}
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/35 to-transparent" />
-      {/* ✅ Compact Top Strip */}
-      <div className="hidden border-b border-primary/10 bg-card/35 md:block">
-        <div className="mx-auto max-w-6xl px-4 py-1.5 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-          <div className="flex items-center gap-3">
-            <span className="font-semibold text-foreground/80">Bohosaaz</span>
-            <span className="opacity-50">•</span>
-            <span className="tracking-[0.12em]">Crafted with care</span>
-          </div>
-        </div>
-      </div>
-
       {/* ✅ MAIN ROW (Brand + Search + Actions) */}
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 lg:flex-nowrap">
         {/* Brand */}

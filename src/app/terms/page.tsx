@@ -8,7 +8,7 @@ export default function TermsPage() {
         </h1>
 
         <p className="mt-6 text-gray-700 leading-relaxed">
-          This website is owned and operated by Bohosaaz (“the Company”), www.bohosaaz.com, having its Registered and Corporate Office at 1/769, Vikas Nagar, Lucknow – 226022, India.
+          This website is owned and operated by Bohosaaz (“the Company”), www.bohosaaz.com, having its Registered and Corporate Office at Sector-1, Vikas Nagar, Lucknow-226022.
         </p>
 
         <p className="mt-4 text-gray-700 leading-relaxed">

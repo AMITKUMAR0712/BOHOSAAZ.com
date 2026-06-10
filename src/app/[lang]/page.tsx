@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { dict } from "@/lib/dict";
 import { isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -208,7 +207,7 @@ function BrandMarquee({
 
   return (
     <div className="relative overflow-hidden rounded-[30px] border border-border/60 bg-transparent p-0">
-      <div className="relative flex flex-col items-start gap-2.5 sm:flex-row sm:items-end sm:justify-between">
+      <div className="relative flex flex-col items-start gap-2.5 px-4 pt-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="text-[10px] uppercase tracking-[0.3em] text-primary/75">{eyebrow}</div>
           <h3 className="mt-2 max-w-52 font-heading text-3xl leading-tight tracking-tight text-foreground sm:max-w-none sm:text-4xl lg:text-[2.65rem]">
@@ -792,8 +791,6 @@ export default async function Home({
   const inStock = toBool(sp.inStock);
   const discountOnly = toBool(sp.discountOnly);
 
-  const t = dict[lang];
-
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   // Helper: build href with updated search params
@@ -1186,7 +1183,6 @@ export default async function Home({
 
   const optionLabel = (items: readonly (readonly [string, string, ...unknown[]])[], value: string) =>
     items.find(([v]) => v === value)?.[1] ?? value.replace(/[_-]+/g, " ");
-  const freeShippingLabel = `Free Shipping ${formatPriceInCurrency(999, "INR", selectedCurrency)}+`;
   const premiumFilterFieldClass =
     "mt-2 h-12 w-full rounded-2xl border border-primary/15 bg-background/80 px-4 text-sm text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_10px_30px_rgba(47,38,34,0.04)] outline-none transition focus:border-primary/35 focus:bg-background focus:ring-4 focus:ring-primary/10";
 
@@ -1227,7 +1223,7 @@ export default async function Home({
                   "mt-6 font-heading text-4xl md:text-6xl tracking-tight text-foreground leading-[1.02]"
                 }
               >
-                {t.home.title}
+                Bohosaaz Editions
               </h1>
 
               <p
@@ -1236,12 +1232,16 @@ export default async function Home({
                   "mt-4 font-heading text-xl md:text-2xl tracking-tight text-primary/90 max-w-xl leading-snug"
                 }
               >
-                Art of meaningful gifting
+                Elevate your gifting experience with Bohosaaz&apos;s gifting editions.
               </p>
 
               <p className="mt-4 text-sm md:text-base text-muted-foreground max-w-xl leading-relaxed">
-                Curated gifts for birthdays, anniversaries, festivals, and every special moment —
-                made to feel personal, thoughtful, and unforgettable.
+                Each gift is handpicked with care so that every gift resonates with your emotions
+                and narrates a story of its own.
+              </p>
+
+              <p className="mt-4 text-sm md:text-base text-muted-foreground max-w-xl leading-relaxed">
+                Click on &quot;Shop Now&quot; to discover the perfect gift.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -1259,9 +1259,6 @@ export default async function Home({
                 </span>
                 <span className="rounded-full border border-border bg-background/65 px-3 py-1 backdrop-blur">
                   Artisan Crafted
-                </span>
-                <span className="rounded-full border border-border bg-background/65 px-3 py-1 backdrop-blur">
-                  {freeShippingLabel}
                 </span>
               </div>
             </div>
@@ -1292,39 +1289,11 @@ export default async function Home({
                 <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-primary/12 blur-3xl" />
                 <div className="pointer-events-none absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-amber-500/12 blur-3xl" />
                 <div className="pointer-events-none absolute inset-0 opacity-[0.05] bg-[radial-gradient(circle_at_top,black_1px,transparent_1px)] bg-size-[18px_18px]" />
-                <div
-                  className={
-                    `${theme.heroCardEyebrow ?? ""}` ||
-                    "text-[11px] tracking-[0.22em] uppercase text-muted-foreground"
-                  }
-                >
-                  Curated for Every Occasion
-                </div>
-
-                <div
-                  className={
-                    theme.heroCardTitle ??
-                    "mt-2 font-heading text-2xl md:text-4xl tracking-tight text-foreground"
-                  }
-                >
-                  Gifts That Speak From the Heart
-                </div>
-
-                <p
-                  className={
-                    theme.heroCardBody ??
-                    "mt-3 text-sm md:text-base text-muted-foreground leading-relaxed"
-                  }
-                >
-                  Every gift tells a story — find thoughtfully curated treasures for birthdays,
-                  anniversaries, festivals, and the people who matter most.
-                </p>
-
-                <div className="mt-8 grid gap-3">
+                <div className="grid gap-3">
                   {[
                     "Personalised picks for every celebration",
                     "Authentic artisan craftsmanship",
-                    "Beautifully packed, ready to gift",
+                    "Packaging Designed to Delight and Elevate the Unboxing Experience",
                   ].map((line) => (
                     <div
                       key={line}
@@ -1632,26 +1601,26 @@ export default async function Home({
           <section className="mx-auto max-w-6xl px-4 py-14">
             <SectionHeader
               eyebrow="Brands"
-              title="Shop By Brand"
+              title="The BohoSaaz Collection"
               eyebrowClassName={theme.sectionEyebrow}
               titleClassName={theme.sectionTitle}
               actionClassName={theme.sectionAction}
             />
 
             <p className="mt-2 max-w-xl text-xs leading-relaxed text-muted-foreground md:text-sm">
-              Discover trusted labels by collection. Popular and luxury brands are fully managed from the admin panel.
+              Discover our distinctive collections from celebrated makers and premium brands, curated to inspire thoughtful gifting.
             </p>
 
             <div className="mt-5 grid gap-8 sm:mt-7">
               <BrandMarquee
-                title="Popular Brands"
+                title="Popular Collection"
                 eyebrow="Top Sellers"
                 href={`/${lang}/brands/popular`}
                 brands={popularBrands}
                 duration="28s"
               />
               <BrandMarquee
-                title="Luxury Brands"
+                title="Luxury Collection"
                 eyebrow="Premium Picks"
                 href={`/${lang}/brands/luxury`}
                 brands={luxuryBrands}

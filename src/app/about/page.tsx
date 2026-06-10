@@ -21,27 +21,27 @@ export default function AboutPage() {
             Our story
           </div>
           <h1 className="mt-4 max-w-3xl font-heading text-4xl tracking-tight text-foreground md:text-6xl">
-            Crafted heritage, curated for meaningful gifting.
+          The Art of Meaningful Gifting: Moments wrapped in the warmth of love.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
-            Bohosaaz brings together handcrafted pieces, premium hampers, decor and keepsakes for people who want gifts to feel thoughtful, personal and celebration-ready.
+          At Bohosaaz, we believe gifts are more than products, they are expressions of love, gratitude, and celebration. That&apos;s why we partner with talented artisans and independent creators, helping their craftsmanship reach those seeking gifts with purpose and meaning.
           </p>
 
           <div className="mt-8 grid gap-3 sm:grid-cols-3">
             <div className="rounded-[28px] border border-border bg-card/80 backdrop-blur-xl p-5">
               <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Since</div>
-              <div className="mt-2 font-heading text-2xl">Curated</div>
-              <div className="mt-1 text-sm text-muted-foreground">Gift-first collections for every moment.</div>
+              <div className="mt-2 font-heading text-2xl">Thoughtfully Curated</div>
+              <div className="mt-1 text-sm text-muted-foreground">Handpicked gifts to make your special moments worthwhile.</div>
             </div>
             <div className="rounded-[28px] border border-border bg-card/80 backdrop-blur-xl p-5">
               <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Vendors</div>
-              <div className="mt-2 font-heading text-2xl">Verified</div>
-              <div className="mt-1 text-sm text-muted-foreground">Trusted vendors and thoughtful quality.</div>
+              <div className="mt-2 font-heading text-2xl">Verified Vendors</div>
+              <div className="mt-1 text-sm text-muted-foreground">Every seller is carefully vetted to ensure authenticity and craftsmanship</div>
             </div>
             <div className="rounded-[28px] border border-border bg-card/80 backdrop-blur-xl p-5">
               <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Trust</div>
-              <div className="mt-2 font-heading text-2xl">Secure</div>
-              <div className="mt-1 text-sm text-muted-foreground">Safe checkout and reliable support.</div>
+              <div className="mt-2 font-heading text-2xl">Secure Shopping</div>
+              <div className="mt-1 text-sm text-muted-foreground">seamless shopping experience backed by secure checkout and responsive support </div>
             </div>
           </div>
         </div>
@@ -50,17 +50,18 @@ export default function AboutPage() {
       <div className="mt-10 grid gap-6 md:grid-cols-3">
         <div className="rounded-[28px] border border-border bg-card/80 backdrop-blur-xl p-6 shadow-[0_18px_55px_rgba(0,0,0,0.06)]">
           <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Multi-vendor</div>
-          <div className="mt-2 font-heading text-xl">Built for gifting</div>
+          <div className="mt-2 font-heading text-xl">Making Every Ocassion Meaningful</div>
           <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-            Every collection is shaped around occasions, emotions and people, not just product types.
+          Every collection is carefully assembled focusing on ocassions, emotions and meaningful gifting.
           </p>
         </div>
 
         <div className="rounded-[28px] border border-border bg-card/80 backdrop-blur-xl p-6 shadow-[0_18px_55px_rgba(0,0,0,0.06)]">
           <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Pricing</div>
-          <div className="mt-2 font-heading text-xl">Premium discovery</div>
+          <div className="mt-2 font-heading text-xl">Effortless Gift Selection
+          </div>
           <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-            Filters by occasion, budget, style and recipient make it easier to choose the right gift.
+          Refine your search by occasion, personality, budget, or recipient to find the perfect match.
           </p>
         </div>
 
@@ -70,24 +71,6 @@ export default function AboutPage() {
           <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
             Clear order flow, tracking and help pages keep your gifting experience stress-free.
           </p>
-        </div>
-      </div>
-
-      <div className="mt-10 rounded-4xl border border-border bg-muted/15 p-6 md:p-10">
-        <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">What we stand for</div>
-        <div className="mt-3 grid gap-4 md:grid-cols-2">
-          <div className="rounded-[28px] border border-border bg-card/80 backdrop-blur-xl p-6">
-            <div className="font-heading text-xl">Craft first</div>
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-              We prioritize authentic, handmade products and small-batch production.
-            </p>
-          </div>
-          <div className="rounded-[28px] border border-border bg-card/80 backdrop-blur-xl p-6">
-            <div className="font-heading text-xl">Premium experience</div>
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-              A clean, modern storefront with role-aware panels that scale for production.
-            </p>
-          </div>
         </div>
       </div>
     </div>

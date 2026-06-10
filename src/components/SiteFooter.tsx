@@ -176,9 +176,10 @@ export default function SiteFooter() {
             </Link>
 
             <p className="mt-2 text-xs text-foreground/72 max-w-sm leading-relaxed">
-              Bohosaaz brings together <span className="font-semibold text-primary">thoughtful gifts</span>,{" "}
-              <span className="font-semibold text-primary">handcrafted keepsakes</span>, and artisan-made pieces
-              curated for birthdays, weddings, festivals, and the people who matter most.
+            Bohosaaz will take you on this journey <span className="font-semibold text-primary">elevating your gifting experience </span>,{" "}
+              <span className="font-semibold text-primary">Where every
+              </span>gift holds an emotional journey thoughtfully chosen to celebrate your loved ones. 
+
             </p>
           </div>
 
