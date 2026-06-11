@@ -5,10 +5,12 @@ import { audit } from "@/lib/audit";
 import { jsonError, jsonOk } from "@/lib/api";
 import { getIpFromRequest, getUserAgentFromRequest } from "@/lib/requestMeta";
 import { bumpDashboardScopes } from "@/lib/bumpDashboard";
+import { attachmentsOrNull, supportAttachmentsSchema } from "@/lib/supportAttachments";
 
 const createSchema = z.object({
   message: z.string().trim().min(1).max(191),
   isInternal: z.boolean().optional(),
+  attachments: supportAttachmentsSchema,
 });
 
 export async function GET(
@@ -31,6 +33,7 @@ export async function GET(
       id: true,
       senderRole: true,
       message: true,
+      attachments: true,
       createdAt: true,
       isInternal: true,
     },
@@ -62,9 +65,10 @@ export async function POST(
       senderId: admin.id,
       senderRole: admin.role,
       message: parsed.data.message,
+      attachments: attachmentsOrNull(parsed.data.attachments),
       isInternal: parsed.data.isInternal ?? false,
     },
-    select: { id: true, senderRole: true, message: true, createdAt: true, isInternal: true },
+    select: { id: true, senderRole: true, message: true, attachments: true, createdAt: true, isInternal: true },
   });
 
   await prisma.supportTicket.update({

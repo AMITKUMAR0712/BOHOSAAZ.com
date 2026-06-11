@@ -150,6 +150,10 @@ export async function PATCH(
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) return Response.json({ error: "Invalid payload" }, { status: 400 });
   const b = parsed.data;
+  const isContentUpdate = Object.keys(b).some((key) => key !== "isActive");
+  if (!isContentUpdate && b.isActive === true && product.status !== "PUBLISHED") {
+    return Response.json({ error: "Product must be approved before it can be active" }, { status: 400 });
+  }
 
   const markup = 1.10;
   
@@ -244,7 +248,8 @@ export async function PATCH(
         stock: b.stock ?? undefined,
         sku: b.sku !== undefined ? (b.sku === null ? null : String(b.sku)) : undefined,
         barcode: b.barcode !== undefined ? (b.barcode ?? null) : undefined,
-        isActive: b.isActive ?? undefined,
+        status: isContentUpdate ? "PENDING" : undefined,
+        isActive: isContentUpdate ? false : b.isActive ?? undefined,
         categoryId: b.categoryId ?? undefined,
         brandId: b.brandId !== undefined ? b.brandId : undefined,
         material: b.material !== undefined ? (b.material ?? null) : undefined,

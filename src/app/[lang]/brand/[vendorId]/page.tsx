@@ -43,7 +43,7 @@ export default async function BrandPage({
   if (!brand || !brand.isActive) return notFound();
 
   const products = await prisma.product.findMany({
-    where: { brandId: brand.id, isActive: true },
+    where: { brandId: brand.id, isActive: true, status: "PUBLISHED" },
     orderBy: [{ createdAt: "desc" }],
     take: 60,
     select: {

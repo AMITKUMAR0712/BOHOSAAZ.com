@@ -126,7 +126,7 @@ const createSchema = z.object({
   sku: z.string().optional().nullable(),
   barcode: z.string().trim().max(191).optional().nullable(),
   stock: z.number().int().min(0).optional().default(0),
-  isActive: z.boolean().optional().default(true),
+  isActive: z.boolean().optional().default(false),
   status: z.enum(["DRAFT", "PENDING", "PUBLISHED", "REJECTED"]).optional().default("PENDING"),
 
   // advanced attributes
@@ -223,7 +223,6 @@ export async function POST(req: NextRequest) {
     stock,
     description,
     shortDescription,
-    isActive,
     material,
     weight,
     length,
@@ -241,7 +240,6 @@ export async function POST(req: NextRequest) {
     colorOptions,
     tags,
     variants,
-    status: requestedStatus,
   } = parsed.data;
 
   const category = await prisma.category.findUnique({ where: { id: categoryId } });
@@ -330,8 +328,8 @@ export async function POST(req: NextRequest) {
         barcode: barcode ?? null,
         shortDescription: shortDescription ?? null,
         description: description ?? null,
-        status: requestedStatus ?? "PENDING",
-        isActive,
+        status: "PENDING",
+        isActive: false,
         material: material ?? null,
         weight: weight ?? null,
         length: dimL,
@@ -405,7 +403,7 @@ export async function POST(req: NextRequest) {
       price: computedBasePrice,
       salePrice: computedBaseSale,
       stock: computedStock,
-      isActive,
+      isActive: product.isActive,
       hasVariants,
       variantCount: normalizedVariants.length,
       tags: normalizedTags,

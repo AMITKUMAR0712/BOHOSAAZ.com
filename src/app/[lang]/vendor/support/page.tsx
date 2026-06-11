@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { SupportAttachmentPicker, type SupportAttachment } from "@/components/support/SupportAttachments";
 
 type Ticket = {
   id: string;
@@ -25,6 +26,7 @@ export default function VendorSupportPage() {
   const [category, setCategory] = useState("ORDER_ISSUE");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [attachments, setAttachments] = useState<SupportAttachment[]>([]);
 
   async function load() {
     setLoading(true);
@@ -67,7 +69,7 @@ export default function VendorSupportPage() {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ category, subject, message }),
+      body: JSON.stringify({ category, subject, message, attachments }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -77,21 +79,22 @@ export default function VendorSupportPage() {
     const id = data?.ticket?.id as string | undefined;
     setSubject("");
     setMessage("");
+    setAttachments([]);
     if (id) router.push(`/${params.lang}/vendor/support/${id}`);
     else await load();
   }
 
   return (
     <div className="grid gap-6">
-      <div className="rounded-2xl border bg-white p-6">
-        <div className="text-lg font-semibold">Support (Admin Tickets)</div>
-        <div className="mt-1 text-sm text-gray-600">
-          Vendors cannot contact customers directly. Use tickets to communicate with Admin.
-        </div>
+      <div>
+        <div className="text-xl font-semibold">Support (Admin Tickets)</div>
+        <div className="mt-1 text-sm text-gray-600">Use tickets to communicate with Admin.</div>
+        {msg ? <div className="mt-2 text-sm">{msg}</div> : null}
+      </div>
 
-        {msg && <div className="mt-3 text-sm">{msg}</div>}
-
-        <div className="mt-4 grid gap-3 max-w-2xl">
+      <div className="rounded-2xl border overflow-hidden">
+        <div className="bg-gray-50 p-4 text-sm font-semibold">Create ticket</div>
+        <div className="p-4 grid gap-3 max-w-2xl">
           <div>
             <label className="text-xs text-gray-600">Category</label>
             <select
@@ -128,6 +131,8 @@ export default function VendorSupportPage() {
             />
           </div>
 
+          <SupportAttachmentPicker attachments={attachments} onChange={setAttachments} onError={setMsg} />
+
           <div className="flex items-center gap-2">
             <button
               className="rounded-xl bg-black px-4 py-2 text-sm text-white disabled:opacity-60"
@@ -143,20 +148,20 @@ export default function VendorSupportPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border bg-white overflow-hidden">
-        <div className="bg-gray-50 px-6 py-4 text-sm font-semibold">Your tickets</div>
+      <div className="rounded-2xl border overflow-hidden">
+        <div className="bg-gray-50 p-4 text-sm font-semibold">Your tickets</div>
 
         {loading ? (
-          <div className="p-6 text-sm">Loading...</div>
+          <div className="p-4 text-sm text-gray-600">Loading...</div>
         ) : tickets.length === 0 ? (
-          <div className="p-6 text-sm text-gray-600">No tickets yet.</div>
+          <div className="p-4 text-sm text-gray-600">No tickets yet.</div>
         ) : (
           <div className="divide-y">
             {tickets.map((t) => (
               <Link
                 key={t.id}
                 href={`/${params.lang}/vendor/support/${t.id}`}
-                className="block px-6 py-4 hover:bg-gray-50"
+                className="block p-4 hover:bg-gray-50"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>

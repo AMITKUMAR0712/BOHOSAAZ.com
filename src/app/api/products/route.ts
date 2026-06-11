@@ -142,7 +142,7 @@ export async function GET(req: NextRequest) {
       }
     : undefined;
 
-  const and: Prisma.ProductWhereInput[] = [{ isActive: true, deletedAt: null }];
+  const and: Prisma.ProductWhereInput[] = [{ isActive: true, status: "PUBLISHED", deletedAt: null }];
 
   if (q) {
     and.push({

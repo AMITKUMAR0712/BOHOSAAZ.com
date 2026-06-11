@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ExportDropdown from "@/components/ExportDropdown";
+import { SupportAttachmentPicker, type SupportAttachment } from "@/components/support/SupportAttachments";
 
 type Ticket = {
   id: string;
@@ -32,6 +33,7 @@ export default function AccountSupportPage() {
   const [message, setMessage] = useState("");
   const [orderId, setOrderId] = useState("");
   const [returnRequestId, setReturnRequestId] = useState("");
+  const [attachments, setAttachments] = useState<SupportAttachment[]>([]);
 
   async function load() {
     setLoading(true);
@@ -66,6 +68,7 @@ export default function AccountSupportPage() {
         priority,
         subject,
         message,
+        attachments,
         orderId: orderId.trim() ? orderId.trim() : undefined,
         returnRequestId: returnRequestId.trim() ? returnRequestId.trim() : undefined,
       }),
@@ -81,6 +84,7 @@ export default function AccountSupportPage() {
     setMessage("");
     setOrderId("");
     setReturnRequestId("");
+    setAttachments([]);
 
     if (id) router.push(`/${params.lang}/account/support/${id}`);
     else await load();
@@ -155,6 +159,8 @@ export default function AccountSupportPage() {
               placeholder="Describe the issue"
             />
           </div>
+
+          <SupportAttachmentPicker attachments={attachments} onChange={setAttachments} onError={setMsg} />
 
           <div className="grid gap-3 md:grid-cols-2">
             <div>

@@ -47,18 +47,6 @@ function OrdersIcon() {
   );
 }
 
-function PayoutIcon() {
-  return (
-    <IconBox>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M3 7h18v12H3z" />
-        <path d="M16 11h5v4h-5z" />
-        <path d="M3 7V6a2 2 0 0 1 2-2h14" />
-      </svg>
-    </IconBox>
-  );
-}
-
 function ReturnIcon() {
   return (
     <IconBox>
@@ -129,8 +117,6 @@ export function DashboardCards({ role, basePath }: Props) {
       <div className={grid}>
         <KpiCard label="Total Earnings (lifetime)" value={formatInr(d?.totalEarningsRupees ?? 0)} href={`${basePath}/vendor/payouts`} icon={<MoneyIcon />} updatedText={updatedText} loading={loading} />
         <KpiCard label="Earnings This Month" value={formatInr(d?.earningsThisMonthRupees ?? 0)} href={`${basePath}/vendor/payouts`} icon={<MoneyIcon />} updatedText={updatedText} loading={loading} />
-        <KpiCard label="Pending Payout" value={formatInr(d?.pendingPayoutRupees ?? 0)} href={`${basePath}/vendor/payouts`} icon={<PayoutIcon />} updatedText={updatedText} loading={loading} />
-        <KpiCard label="Settled Payout" value={formatInr(d?.settledPayoutRupees ?? 0)} href={`${basePath}/vendor/payouts`} icon={<PayoutIcon />} updatedText={updatedText} loading={loading} />
         <KpiCard label="Total Orders" value={d?.totalOrdersCount ?? 0} href={`${basePath}/vendor/orders`} icon={<OrdersIcon />} updatedText={updatedText} loading={loading} />
         <KpiCard label="Total Return / Refund" value={d?.totalReturnsCount ?? 0} href={`${basePath}/vendor/returns`} icon={<ReturnIcon />} updatedText={updatedText} loading={loading} />
       </div>
@@ -144,7 +130,6 @@ export function DashboardCards({ role, basePath }: Props) {
     <div className={grid}>
       <KpiCard label="Total GMV (today / 7d)" value={gmv} href={`${basePath}/admin/finance`} icon={<MoneyIcon />} updatedText={updatedText} loading={loading} />
       <KpiCard label="Pending Vendor Approvals" value={d?.pendingVendorApprovalsCount ?? 0} href={`${basePath}/admin/vendors`} icon={<OrdersIcon />} updatedText={updatedText} loading={loading} />
-      <KpiCard label="Pending Payout Settlements" value={d?.pendingPayoutSettlementsCount ?? 0} href={`${basePath}/admin/payouts`} icon={<PayoutIcon />} updatedText={updatedText} loading={loading} />
       <KpiCard label="Open Tickets" value={d?.openTicketsCount ?? 0} href={`${basePath}/admin/support`} icon={<TicketIcon />} updatedText={updatedText} loading={loading} />
       <KpiCard label="Return / Refund Pending Approval" value={d?.returnsPendingApprovalCount ?? 0} href={`${basePath}/admin/returns`} icon={<ReturnIcon />} updatedText={updatedText} loading={loading} />
     </div>

@@ -4,6 +4,7 @@ import { audit } from "@/lib/audit";
 import { jsonError, jsonOk } from "@/lib/api";
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { attachmentsOrNull, supportAttachmentsSchema } from "@/lib/supportAttachments";
 
 const CreateSchema = z.object({
   category: z.enum(["ORDER", "PAYMENT", "RETURN", "GENERAL"]),
@@ -12,6 +13,7 @@ const CreateSchema = z.object({
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   orderId: z.string().min(1).optional(),
   returnRequestId: z.string().min(1).optional(),
+  attachments: supportAttachmentsSchema,
 });
 
 export async function GET() {
@@ -58,7 +60,7 @@ export async function POST(req: NextRequest) {
   const parsed = CreateSchema.safeParse(body);
   if (!parsed.success) return jsonError("Invalid payload", 400);
 
-  const { category, subject, message, priority, orderId, returnRequestId } = parsed.data;
+  const { category, subject, message, priority, orderId, returnRequestId, attachments } = parsed.data;
 
   const ticket = await prisma.$transaction(async (tx) => {
     return tx.userTicket.create({
@@ -74,6 +76,7 @@ export async function POST(req: NextRequest) {
             senderId: user.id,
             senderRole: user.role,
             message,
+            attachments: attachmentsOrNull(attachments),
           },
         },
       },

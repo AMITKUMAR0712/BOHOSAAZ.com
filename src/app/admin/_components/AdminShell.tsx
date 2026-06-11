@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import {
   BadgePercent,
   BookOpenText,
-  HandCoins,
   LayoutDashboard,
   Megaphone,
   Package,
@@ -26,7 +25,6 @@ import {
 type AdminBadges = {
   ordersPending: number;
   vendorsPending: number;
-  payoutRequestsPending: number;
 };
 
 export default function AdminShell({
@@ -40,7 +38,6 @@ export default function AdminShell({
   const [badges, setBadges] = React.useState<AdminBadges>({
     ordersPending: 0,
     vendorsPending: 0,
-    payoutRequestsPending: 0,
   });
 
   function iconForHref(href: string) {
@@ -55,7 +52,6 @@ export default function AdminShell({
     if (href.includes("/customers")) return <Users className="h-4 w-4" />;
 
     if (href.includes("/vendors")) return <Store className="h-4 w-4" />;
-    if (href.includes("/payouts")) return <HandCoins className="h-4 w-4" />;
 
     if (href.includes("/cms") || href.includes("/blog")) return <BookOpenText className="h-4 w-4" />;
     if (href.includes("/coupons")) return <BadgePercent className="h-4 w-4" />;
@@ -81,8 +77,6 @@ export default function AdminShell({
       setBadges({
         ordersPending: typeof data.ordersPending === "number" ? data.ordersPending : 0,
         vendorsPending: typeof data.vendorsPending === "number" ? data.vendorsPending : 0,
-        payoutRequestsPending:
-          typeof data.payoutRequestsPending === "number" ? data.payoutRequestsPending : 0,
       });
     }
 
@@ -175,19 +169,6 @@ export default function AdminShell({
             match="exact"
             icon={iconForHref("/admin/vendors")}
             badge={badges.vendorsPending}
-          />
-          <SidebarItem
-            href="/admin/payouts/requests"
-            label="Payout Requests"
-            match="exact"
-            icon={iconForHref("/admin/payouts/requests")}
-            badge={badges.payoutRequestsPending}
-          />
-          <SidebarItem
-            href="/admin/payouts/history"
-            label="Payout History"
-            match="exact"
-            icon={iconForHref("/admin/payouts/history")}
           />
         </SidebarGroup>
 

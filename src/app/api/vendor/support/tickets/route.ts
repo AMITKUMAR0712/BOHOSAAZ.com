@@ -5,6 +5,7 @@ import { z } from "zod";
 import { rateLimit } from "@/lib/rateLimit";
 import { audit } from "@/lib/audit";
 import { SupportTicketStatus } from "@prisma/client";
+import { attachmentsOrNull, supportAttachmentsSchema } from "@/lib/supportAttachments";
 
 const createSchema = z.object({
   category: z.enum([
@@ -16,6 +17,7 @@ const createSchema = z.object({
   ]),
   subject: z.string().min(3).max(191),
   message: z.string().min(1).max(191),
+  attachments: supportAttachmentsSchema,
 });
 
 async function requireVendor(req: NextRequest) {
@@ -101,6 +103,7 @@ export async function POST(req: NextRequest) {
           senderId: auth.payload.sub,
           senderRole: auth.payload.role,
           message: parsed.data.message,
+          attachments: attachmentsOrNull(parsed.data.attachments),
           isInternal: false,
         },
       },

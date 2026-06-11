@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  SupportAttachmentList,
+  SupportAttachmentPicker,
+  type SupportAttachment,
+} from "@/components/support/SupportAttachments";
 
 type Ticket = {
   id: string;
@@ -15,6 +20,7 @@ type Message = {
   id: string;
   senderRole: string;
   message: string;
+  attachments: unknown;
   createdAt: string;
   isInternal: boolean;
 };
@@ -29,6 +35,7 @@ export default function TicketClient({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [msg, setMsg] = useState<string | null>(null);
   const [text, setText] = useState("");
+  const [attachments, setAttachments] = useState<SupportAttachment[]>([]);
   const [isInternal, setIsInternal] = useState(false);
   const [status, setStatus] = useState<Ticket["status"]>(ticket.status);
   const [sending, setSending] = useState(false);
@@ -53,14 +60,14 @@ export default function TicketClient({
   async function send() {
     setMsg(null);
     const m = text.trim();
-    if (!m) return;
+    if (!m && attachments.length === 0) return;
     setSending(true);
 
     const res = await fetch(`/api/admin/support/tickets/${ticket.id}/messages`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: m, isInternal }),
+      body: JSON.stringify({ message: m || "Attached file", attachments, isInternal }),
     });
     const data = await res.json().catch(() => null);
     if (!res.ok || !data?.ok) {
@@ -68,6 +75,7 @@ export default function TicketClient({
       return setMsg(data?.error || "Send failed");
     }
     setText("");
+    setAttachments([]);
     await reload();
     setSending(false);
   }
@@ -123,28 +131,32 @@ export default function TicketClient({
                 <div>{new Date(m.createdAt).toLocaleString()}</div>
               </div>
               <div className="mt-2 text-sm">{m.message}</div>
+              <SupportAttachmentList attachments={m.attachments} />
             </div>
           ))}
         </div>
 
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-4 grid gap-3">
           <input
-            className="flex-1 rounded-lg border px-3 py-2 text-sm"
+            className="w-full rounded-lg border px-3 py-2 text-sm"
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Write a reply"
           />
-          <label className="text-xs text-gray-600 flex items-center gap-1">
-            <input
-              type="checkbox"
-              checked={isInternal}
-              onChange={(e) => setIsInternal(e.target.checked)}
-            />
-            internal
-          </label>
-          <button className="rounded-lg bg-black text-white px-4 py-2 text-sm disabled:opacity-60" onClick={send} disabled={sending || text.trim().length < 1 || status === "CLOSED"}>
-            {sending ? "Sending..." : "Send"}
-          </button>
+          <SupportAttachmentPicker attachments={attachments} onChange={setAttachments} disabled={sending || status === "CLOSED"} onError={setMsg} />
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="text-xs text-gray-600 flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={isInternal}
+                onChange={(e) => setIsInternal(e.target.checked)}
+              />
+              internal
+            </label>
+            <button className="rounded-lg bg-black text-white px-4 py-2 text-sm disabled:opacity-60" onClick={send} disabled={sending || (text.trim().length < 1 && attachments.length === 0) || status === "CLOSED"}>
+              {sending ? "Sending..." : "Send"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

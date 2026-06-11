@@ -24,6 +24,15 @@ export async function POST(
   const parsed = schema.safeParse(body);
   if (!parsed.success) return jsonError("Invalid payload", 400);
 
+  const product = await prisma.product.findFirst({
+    where: { id: productId, deletedAt: null },
+    select: { id: true, status: true },
+  });
+  if (!product) return jsonError("Not found", 404);
+  if (parsed.data.isActive && product.status !== "PUBLISHED") {
+    return jsonError("Product must be approved before it can be active", 400);
+  }
+
   const res = await prisma.product.updateMany({
     where: { id: productId, deletedAt: null },
     data: { isActive: parsed.data.isActive },

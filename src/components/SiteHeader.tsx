@@ -95,13 +95,13 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
     return seg[i] === "admin" || seg[i] === "vendor" || seg[i] === "account";
   })();
 
-  // Sticky shadow on scroll
+  // Sticky shadow and compact chrome on scroll.
   useEffect(() => {
     if (isDashboardRoute) {
       return;
     }
 
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => setScrolled(window.scrollY > 32);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -468,45 +468,72 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
 
   return (
     <>
+    <style>{`
+      main.site-content {
+        --site-header-offset: ${!isDashboardRoute && scrolled ? "148px" : "184px"};
+      }
+    `}</style>
     <header
-      className={`fixed inset-x-0 top-0 z-999 w-full border-b border-primary/15 bg-background/88 backdrop-blur-2xl supports-backdrop-filter:bg-background/80 transition-all duration-300 ${
+      className={`fixed inset-x-0 top-0 z-999 w-full border-b border-primary/15 bg-background/88 backdrop-blur-2xl supports-backdrop-filter:bg-background/80 transition-[box-shadow,background-color,border-color] duration-500 ease-out ${
         !isDashboardRoute && scrolled
-          ? "shadow-[0_22px_70px_rgba(47,38,34,0.18)] ring-1 ring-primary/15"
+          ? "shadow-[0_24px_76px_rgba(47,38,34,0.18)] ring-1 ring-primary/15"
           : "shadow-[0_12px_45px_rgba(47,38,34,0.09)]"
       }`}
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/35 to-transparent" />
-      <section className="border-b border-primary/10 bg-card/35 px-3 py-2 backdrop-blur-xl sm:px-4 sm:py-2.5">
+      <section
+        className={`overflow-hidden border-b border-primary/10 bg-card/35 px-3 backdrop-blur-xl transition-all duration-500 ease-out sm:px-4 ${
+          !isDashboardRoute && scrolled
+            ? "max-h-24 py-1 opacity-100 translate-y-0 sm:py-1"
+            : "max-h-36 py-2 opacity-100 translate-y-0 sm:py-2.5"
+        }`}
+      >
         <Link
           href={lp}
-          className="group mx-auto flex w-fit max-w-full flex-col items-center justify-center rounded-4xl border border-primary/12 bg-background/65 px-4 py-2 shadow-[0_10px_30px_rgba(47,38,34,0.08)] transition hover:-translate-y-px hover:border-primary/28 hover:bg-background/85 hover:shadow-[0_14px_38px_rgba(47,38,34,0.12)] sm:rounded-[2.4rem] sm:px-7 sm:py-2.5"
+          className={`group mx-auto flex w-fit max-w-full flex-col items-center justify-center rounded-4xl border border-primary/12 bg-background/65 shadow-[0_10px_30px_rgba(47,38,34,0.08)] transition-all duration-500 hover:-translate-y-px hover:border-primary/28 hover:bg-background/85 hover:shadow-[0_14px_38px_rgba(47,38,34,0.12)] sm:rounded-[2.4rem] ${
+            !isDashboardRoute && scrolled ? "px-3 py-1 sm:px-5 sm:py-1.5" : "px-4 py-2 sm:px-7 sm:py-2.5"
+          }`}
           aria-label="Boho Saaz home"
         >
-          <span className="flex items-center justify-center gap-3 sm:gap-5">
-            <span className="font-heading text-[1.08rem] font-semibold uppercase tracking-[0.22em] text-foreground transition group-hover:text-primary sm:text-[1.45rem]">
+          <span className={`flex items-center justify-center transition-all duration-500 ${!isDashboardRoute && scrolled ? "gap-2 sm:gap-3" : "gap-3 sm:gap-5"}`}>
+            <span className={`font-heading font-semibold uppercase tracking-[0.22em] text-foreground transition-all duration-500 group-hover:text-primary ${
+              !isDashboardRoute && scrolled ? "text-[0.95rem] sm:text-[1.15rem]" : "text-[1.08rem] sm:text-[1.45rem]"
+            }`}>
               Boho
             </span>
-            <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full border border-primary/25 bg-card shadow-[0_8px_22px_rgba(135,56,20,0.18)] sm:h-20 sm:w-20">
+            <span className={`grid shrink-0 place-items-center overflow-hidden rounded-full border border-primary/25 bg-card shadow-[0_8px_22px_rgba(135,56,20,0.18)] transition-all duration-500 ${
+              !isDashboardRoute && scrolled ? "h-11 w-11 sm:h-14 sm:w-14" : "h-16 w-16 sm:h-20 sm:w-20"
+            }`}>
               <Image
                 src="/logo copy.jpeg"
                 alt="Boho Saaz"
                 width={96}
                 height={96}
-                className="h-15 w-15 rounded-full object-contain sm:h-19 sm:w-19"
+                className={`rounded-full object-contain transition-all duration-500 ${
+                  !isDashboardRoute && scrolled ? "h-10 w-10 sm:h-13 sm:w-13" : "h-15 w-15 sm:h-19 sm:w-19"
+                }`}
                 priority
               />
             </span>
-            <span className="font-heading text-[1.08rem] font-semibold uppercase tracking-[0.22em] text-foreground transition group-hover:text-primary sm:text-[1.45rem]">
+            <span className={`font-heading font-semibold uppercase tracking-[0.22em] text-foreground transition-all duration-500 group-hover:text-primary ${
+              !isDashboardRoute && scrolled ? "text-[0.95rem] sm:text-[1.15rem]" : "text-[1.08rem] sm:text-[1.45rem]"
+            }`}>
               Saaz
             </span>
           </span>
-          <span className="mt-1 text-[9px] font-semibold uppercase tracking-[0.28em] text-muted-foreground sm:text-[10px]">
+          <span className={`font-semibold uppercase tracking-[0.28em] text-muted-foreground transition-all duration-500 ${
+            !isDashboardRoute && scrolled ? "mt-0.5 text-[8px] sm:text-[9px]" : "mt-1 text-[9px] sm:text-[10px]"
+          }`}>
             Art of meaningful gifting
           </span>
         </Link>
       </section>
       {/* ✅ MAIN ROW (Category + Search + Actions) */}
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 lg:flex-nowrap">
+      <div
+        className={`mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-3 transition-all duration-500 ease-out sm:gap-3 sm:px-4 lg:flex-nowrap ${
+          !isDashboardRoute && scrolled ? "py-1.5" : "py-2.5"
+        }`}
+      >
         {/* Category Dropdown */}
         <div
           className="relative hidden shrink-0 lg:block"
@@ -515,7 +542,9 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
         >
           <button
             type="button"
-            className="h-10 rounded-2xl bg-primary text-primary-foreground px-4 shadow-(--shadowBtn) hover:-translate-y-px hover:brightness-95 hover:shadow-(--shadowBtnHover) transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className={`rounded-2xl bg-primary text-primary-foreground px-4 shadow-(--shadowBtn) hover:-translate-y-px hover:brightness-95 hover:shadow-(--shadowBtnHover) transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+              !isDashboardRoute && scrolled ? "h-9" : "h-10"
+            }`}
             aria-haspopup="menu"
             aria-expanded={catOpen}
             onFocus={() => {
@@ -615,12 +644,14 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
           <Input
             name="q"
             placeholder="Search gifts, brands, occasions..."
-            className="h-11 rounded-2xl bg-background/80 pl-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_8px_24px_rgba(47,38,34,0.08)] sm:h-10"
+            className={`rounded-2xl bg-background/80 pl-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_8px_24px_rgba(47,38,34,0.08)] transition-all duration-500 ${
+              !isDashboardRoute && scrolled ? "h-9" : "h-11 sm:h-10"
+            }`}
           />
           <Button
             type="submit"
             variant="primary"
-            className="h-11 rounded-2xl px-4 sm:h-10"
+            className={`rounded-2xl px-4 transition-all duration-500 ${!isDashboardRoute && scrolled ? "h-9" : "h-11 sm:h-10"}`}
             aria-label="Search"
           >
             {Icon.Search}
@@ -637,7 +668,9 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
                 ? `${lp}/account/wishlist`
                 : `${lp}/login?next=${encodeURIComponent(`${lp}/account/wishlist`)}`
             }
-            className="relative h-10 w-10 grid place-items-center rounded-2xl border border-primary/10 bg-card/80 shadow-sm backdrop-blur transition hover:-translate-y-px hover:border-primary/30 hover:bg-muted/50 hover:shadow-md"
+            className={`relative grid place-items-center rounded-2xl border border-primary/10 bg-card/80 shadow-sm backdrop-blur transition-all duration-500 hover:-translate-y-px hover:border-primary/30 hover:bg-muted/50 hover:shadow-md ${
+              !isDashboardRoute && scrolled ? "h-9 w-9" : "h-10 w-10"
+            }`}
             aria-label="Wishlist"
           >
             {Icon.Heart}
@@ -652,7 +685,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
           {/* Auth */}
           {loading ? null : me?.user ? (
             <Dropdown>
-              <DropdownTrigger className="h-10 w-10 grid place-items-center rounded-2xl border border-primary/10 bg-card/80 shadow-sm backdrop-blur transition hover:-translate-y-px hover:border-primary/30 hover:bg-muted/50 hover:shadow-md" aria-label="Profile">
+              <DropdownTrigger className={`grid place-items-center rounded-2xl border border-primary/10 bg-card/80 shadow-sm backdrop-blur transition-all duration-500 hover:-translate-y-px hover:border-primary/30 hover:bg-muted/50 hover:shadow-md ${!isDashboardRoute && scrolled ? "h-9 w-9" : "h-10 w-10"}`} aria-label="Profile">
                 {Icon.User}
               </DropdownTrigger>
               <DropdownContent className="w-64">
@@ -712,7 +745,9 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
           {/* Cart */}
           <Link
             href={`${lp}/cart`}
-            className="relative h-10 inline-flex items-center gap-2 rounded-2xl bg-primary text-primary-foreground px-4 shadow-(--shadowBtn) transition hover:-translate-y-px hover:brightness-95 hover:shadow-(--shadowBtnHover)"
+            className={`relative inline-flex items-center gap-2 rounded-2xl bg-primary text-primary-foreground px-4 shadow-(--shadowBtn) transition-all duration-500 hover:-translate-y-px hover:brightness-95 hover:shadow-(--shadowBtnHover) ${
+              !isDashboardRoute && scrolled ? "h-9" : "h-10"
+            }`}
           >
             {Icon.Cart}
             <span className="text-[12px] tracking-widest uppercase">
@@ -731,14 +766,16 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
         <div className="ml-auto flex shrink-0 items-center gap-2 md:hidden">
           <Link
             href={`${lp}/cart`}
-            className="relative h-11 touch-target inline-flex items-center gap-2 rounded-2xl bg-primary text-primary-foreground px-3 shadow-(--shadowBtn)"
+            className={`relative touch-target inline-flex items-center gap-2 rounded-2xl bg-primary text-primary-foreground px-3 shadow-(--shadowBtn) transition-all duration-500 ${
+              !isDashboardRoute && scrolled ? "h-10" : "h-11"
+            }`}
           >
             {Icon.Cart}
             <span className="text-xs font-semibold font-numeric tabular-nums">{cartCount}</span>
           </Link>
           <Button
             variant="outline"
-            className="h-11 rounded-2xl px-3"
+            className={`rounded-2xl px-3 transition-all duration-500 ${!isDashboardRoute && scrolled ? "h-10" : "h-11"}`}
             onClick={() => setDrawerOpen((open) => !open)}
             aria-expanded={drawerOpen}
             aria-label={drawerOpen ? "Close menu" : "Open menu"}
@@ -750,8 +787,12 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
       </div>
 
       {/* ✅ Compact Scrollable Links instead of Row D */}
-      <div className="hidden border-t border-primary/10 bg-card/40 backdrop-blur-2xl sm:block">
-        <div className="mx-auto max-w-6xl px-3 py-2 sm:px-4">
+      <div
+        className={`hidden overflow-hidden border-t border-primary/10 bg-card/40 backdrop-blur-2xl transition-all duration-500 ease-out sm:block ${
+          !isDashboardRoute && scrolled ? "max-h-16 opacity-100" : "max-h-20 opacity-100"
+        }`}
+      >
+        <div className={`mx-auto max-w-6xl px-3 transition-all duration-500 sm:px-4 ${!isDashboardRoute && scrolled ? "py-1" : "py-2"}`}>
           <div className="mobile-scroll items-center whitespace-nowrap sm:flex sm:flex-wrap sm:justify-start sm:overflow-visible">
             {navLinks.map((l) => {
               const active =

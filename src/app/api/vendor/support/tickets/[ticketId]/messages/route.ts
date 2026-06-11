@@ -5,9 +5,11 @@ import { z } from "zod";
 import { rateLimit } from "@/lib/rateLimit";
 import { audit } from "@/lib/audit";
 import { bumpDashboardScopes } from "@/lib/bumpDashboard";
+import { attachmentsOrNull, supportAttachmentsSchema } from "@/lib/supportAttachments";
 
 const createSchema = z.object({
   message: z.string().min(1).max(191),
+  attachments: supportAttachmentsSchema,
 });
 
 export async function GET(
@@ -40,7 +42,7 @@ export async function GET(
   const messages = await prisma.supportTicketMessage.findMany({
     where: { ticketId, isInternal: false },
     orderBy: { createdAt: "asc" },
-    select: { id: true, senderRole: true, message: true, createdAt: true },
+    select: { id: true, senderRole: true, message: true, attachments: true, createdAt: true },
   });
 
   return Response.json({ messages });
@@ -88,9 +90,10 @@ export async function POST(
       senderId: payload.sub,
       senderRole: payload.role,
       message: parsed.data.message,
+      attachments: attachmentsOrNull(parsed.data.attachments),
       isInternal: false,
     },
-    select: { id: true, senderRole: true, message: true, createdAt: true },
+    select: { id: true, senderRole: true, message: true, attachments: true, createdAt: true },
   });
 
   await prisma.supportTicket.update({

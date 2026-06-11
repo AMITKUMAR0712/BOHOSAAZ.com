@@ -30,7 +30,7 @@ export default async function AdminTicketDetailPage({
   const messagesRaw = await prisma.supportTicketMessage.findMany({
     where: { ticketId },
     orderBy: { createdAt: "asc" },
-    select: { id: true, senderRole: true, message: true, createdAt: true, isInternal: true },
+    select: { id: true, senderRole: true, message: true, attachments: true, createdAt: true, isInternal: true },
   });
 
   const messages = messagesRaw.map((m) => ({

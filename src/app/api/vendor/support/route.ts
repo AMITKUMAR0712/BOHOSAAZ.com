@@ -2,11 +2,13 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken, type JwtPayload } from "@/lib/auth";
 import { z } from "zod";
+import { attachmentsOrNull, supportAttachmentsSchema } from "@/lib/supportAttachments";
 
 const createTicketSchema = z.object({
   subject: z.string().min(5).max(200),
   category: z.enum(["ORDER_ISSUE", "PAYOUT_ISSUE", "PRODUCT_ISSUE", "RETURNS_ISSUE", "OTHER"]),
   message: z.string().min(10).max(2000),
+  attachments: supportAttachmentsSchema,
 });
 
 export async function GET(req: NextRequest) {
@@ -51,7 +53,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Invalid input" }, { status: 400 });
   }
 
-  const { subject, category, message } = parsed.data;
+  const { subject, category, message, attachments } = parsed.data;
 
   const ticket = await prisma.$transaction(async (tx) => {
     const t = await tx.supportTicket.create({
@@ -70,6 +72,7 @@ export async function POST(req: NextRequest) {
         senderId: payload.sub,
         senderRole: "VENDOR",
         message,
+        attachments: attachmentsOrNull(attachments),
       },
     });
 

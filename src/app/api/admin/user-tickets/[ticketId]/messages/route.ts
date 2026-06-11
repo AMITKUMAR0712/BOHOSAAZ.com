@@ -5,9 +5,11 @@ import { audit } from "@/lib/audit";
 import { jsonError, jsonOk } from "@/lib/api";
 import { getIpFromRequest, getUserAgentFromRequest } from "@/lib/requestMeta";
 import { bumpDashboardScopes } from "@/lib/bumpDashboard";
+import { attachmentsOrNull, supportAttachmentsSchema } from "@/lib/supportAttachments";
 
 const CreateSchema = z.object({
   message: z.string().trim().min(1).max(4000),
+  attachments: supportAttachmentsSchema,
 });
 
 export async function GET(
@@ -73,6 +75,7 @@ export async function POST(
         senderId: admin.id,
         senderRole: admin.role,
         message: parsed.data.message,
+        attachments: attachmentsOrNull(parsed.data.attachments),
       },
       select: {
         id: true,

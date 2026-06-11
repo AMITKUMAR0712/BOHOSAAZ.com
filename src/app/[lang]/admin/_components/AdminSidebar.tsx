@@ -8,7 +8,6 @@ import {
   BadgePercent,
   BookOpenText,
   ClipboardList,
-  HandCoins,
   Image,
   LayoutDashboard,
   LifeBuoy,
@@ -50,7 +49,6 @@ export default function AdminSidebar({ lang }: { lang: string }) {
     { href: `/${lang}/admin/banners`, label: "Banners" },
     { href: `/${lang}/admin/ads`, label: "Ads" },
     { href: `/${lang}/admin/categories`, label: "Categories" },
-    { href: `/${lang}/admin/payouts`, label: "Payouts" },
     { href: `/${lang}/admin/returns`, label: "Return / Refund" },
     { href: `/${lang}/admin/support/tickets`, label: "Support Tickets" },
     { href: `/${lang}/admin/user-tickets`, label: "User Tickets" },
@@ -66,9 +64,7 @@ export default function AdminSidebar({ lang }: { lang: string }) {
     if (href.includes("/products")) return <Package className="h-4 w-4" />;
     if (href.includes("/categories")) return <Tags className="h-4 w-4" />;
     if (href.includes("/users") || href.includes("/customers")) return <Users className="h-4 w-4" />;
-    if (href.includes("/vendors") || href.includes("/brands") || href.includes("/payouts"))
-      return <Store className="h-4 w-4" />;
-    if (href.includes("/payouts")) return <HandCoins className="h-4 w-4" />;
+    if (href.includes("/vendors") || href.includes("/brands")) return <Store className="h-4 w-4" />;
     if (href.includes("/refunds") || href.includes("/returns")) return <RotateCcw className="h-4 w-4" />;
     if (href.includes("/support") || href.includes("/tickets") || href.includes("/user-tickets"))
       return <LifeBuoy className="h-4 w-4" />;

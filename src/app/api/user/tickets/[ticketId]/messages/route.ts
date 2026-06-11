@@ -5,9 +5,11 @@ import { jsonError, jsonOk } from "@/lib/api";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { bumpDashboardScopes } from "@/lib/bumpDashboard";
+import { attachmentsOrNull, supportAttachmentsSchema } from "@/lib/supportAttachments";
 
 const CreateMessageSchema = z.object({
   message: z.string().min(1).max(4000),
+  attachments: supportAttachmentsSchema,
 });
 
 export async function GET(
@@ -67,7 +69,13 @@ export async function POST(
 
   const msg = await prisma.$transaction(async (tx) => {
     const created = await tx.userTicketMessage.create({
-      data: { ticketId: ticket.id, senderId: user.id, senderRole: user.role, message: parsed.data.message },
+      data: {
+        ticketId: ticket.id,
+        senderId: user.id,
+        senderRole: user.role,
+        message: parsed.data.message,
+        attachments: attachmentsOrNull(parsed.data.attachments),
+      },
       select: { id: true },
     });
     await tx.userTicket.update({

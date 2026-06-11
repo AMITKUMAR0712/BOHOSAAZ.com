@@ -33,7 +33,7 @@ export async function GET(_: Request, ctx: { params: Promise<{ slug: string }> }
     },
   });
 
-  if (!product || !product.isActive) {
+  if (!product || !product.isActive || product.status !== "PUBLISHED") {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 

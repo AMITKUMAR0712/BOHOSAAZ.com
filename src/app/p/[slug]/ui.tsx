@@ -90,6 +90,15 @@ export default function PurchasePanel({
     return Array.from(set);
   }, [activeVariants]);
 
+  const allColors = useMemo(() => {
+    const set = new Set(
+      activeVariants
+        .map((v) => v.color)
+        .filter((c): c is string => Boolean(c))
+    );
+    return Array.from(set);
+  }, [activeVariants]);
+
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
@@ -130,6 +139,33 @@ export default function PurchasePanel({
     if (!selectedColor) return null;
     return list.find((v) => (v.color ?? null) === selectedColor) ?? null;
   }, [activeVariants, colorsForSize.length, hasVariants, selectedColor, selectedSize]);
+
+  function handleSizeChange(nextSize: string) {
+    const size = nextSize || null;
+    setSelectedSize(size);
+    if (!size) return;
+
+    const matchingColors = activeVariants
+      .filter((v) => v.size === size)
+      .map((v) => v.color)
+      .filter((c): c is string => Boolean(c));
+
+    if (matchingColors.length && (!selectedColor || !matchingColors.includes(selectedColor))) {
+      setSelectedColor(matchingColors[0]);
+    }
+  }
+
+  function handleColorChange(nextColor: string) {
+    const color = nextColor || null;
+    setSelectedColor(color);
+    if (!color) return;
+
+    const matchingVariant = activeVariants.find((v) => v.color === color && (!selectedSize || v.size === selectedSize))
+      ?? activeVariants.find((v) => v.color === color);
+    if (matchingVariant && matchingVariant.size !== selectedSize) {
+      setSelectedSize(matchingVariant.size);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -213,7 +249,7 @@ export default function PurchasePanel({
             <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Size</div>
             <Select
               value={selectedSize ?? ""}
-              onChange={(e) => setSelectedSize(e.target.value || null)}
+              onChange={(e) => handleSizeChange(e.target.value)}
             >
               <option value="" disabled>
                 Select size
@@ -226,17 +262,17 @@ export default function PurchasePanel({
             </Select>
           </div>
 
-          {colorsForSize.length > 0 && (
+          {allColors.length > 0 && (
             <div className="grid grid-cols-1 gap-2">
               <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Colour</div>
               <Select
                 value={selectedColor ?? ""}
-                onChange={(e) => setSelectedColor(e.target.value || null)}
+                onChange={(e) => handleColorChange(e.target.value)}
               >
                 <option value="" disabled>
                   Select color
                 </option>
-                {colorsForSize.map((c) => (
+                {allColors.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>

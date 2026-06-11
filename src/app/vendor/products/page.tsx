@@ -86,6 +86,22 @@ type VariantRow = {
   isActive: boolean;
 };
 
+type ProductStatus = ProductListItem["status"];
+
+const statusLabel: Record<ProductStatus, string> = {
+  DRAFT: "Draft",
+  PENDING: "Pending",
+  PUBLISHED: "Approved",
+  REJECTED: "Rejected",
+};
+
+function statusBadgeClass(status: ProductStatus) {
+  if (status === "PUBLISHED") return "bg-green-100 text-green-800";
+  if (status === "REJECTED") return "bg-red-100 text-red-800";
+  if (status === "PENDING") return "bg-yellow-100 text-yellow-800";
+  return "bg-gray-100 text-gray-800";
+}
+
 function toTagList(input: string): string[] {
   return input
     .split(",")
@@ -278,6 +294,30 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
       const message = e instanceof Error ? e.message : "Load failed";
       setMsg(`❌ ${message}`);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, occasionFilter, recipientFilter, availabilityFilter]);
+
+  useEffect(() => {
+    if (mode !== "all") return;
+
+    const syncProducts = () => {
+      if (document.visibilityState !== "visible") return;
+      void loadProducts().catch(() => {
+        // Keep background sync quiet; manual actions still show errors.
+      });
+    };
+
+    const interval = window.setInterval(syncProducts, 5000);
+    window.addEventListener("focus", syncProducts);
+    window.addEventListener("bohosaaz-live-refresh", syncProducts);
+    document.addEventListener("visibilitychange", syncProducts);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", syncProducts);
+      window.removeEventListener("bohosaaz-live-refresh", syncProducts);
+      document.removeEventListener("visibilitychange", syncProducts);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, occasionFilter, recipientFilter, availabilityFilter]);
 
@@ -1128,17 +1168,12 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
                       <TD>{p.salePrice != null ? `₹${p.salePrice}` : "-"}</TD>
                       <TD>{p.stock}</TD>
                       <TD>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                          p.status === "PUBLISHED" ? "bg-green-100 text-green-800" :
-                          p.status === "REJECTED" ? "bg-red-100 text-red-800" :
-                          p.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
-                          "bg-gray-100 text-gray-800"
-                        }`}>
-                          {p.status}
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${statusBadgeClass(p.status)}`}>
+                          {statusLabel[p.status]}
                         </span>
                       </TD>
-                      <TD className={p.isActive ? "text-success font-semibold text-xs" : "text-muted-foreground text-xs"}>
-                        {p.isActive ? "ACTIVE" : "DISABLED"}
+                      <TD className={p.status === "PUBLISHED" && p.isActive ? "text-success font-semibold text-xs" : "text-muted-foreground text-xs"}>
+                        {p.status === "PUBLISHED" && p.isActive ? "ACTIVE" : "INACTIVE"}
                       </TD>
 
                       <TD>
@@ -1198,8 +1233,13 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
                             <Button variant="danger" size="sm" onClick={() => delProduct(p.id)}>
                               Delete
                             </Button>
-                            <Button variant="outline" size="sm" onClick={() => toggleActive(p)}>
-                              {p.isActive ? "Disable" : "Enable"}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={p.status !== "PUBLISHED"}
+                              onClick={() => toggleActive(p)}
+                            >
+                              {p.status === "PUBLISHED" && p.isActive ? "Disable" : "Enable"}
                             </Button>
                             <Button variant="outline" size="sm" onClick={() => openEdit(p.id)}>
                               Edit

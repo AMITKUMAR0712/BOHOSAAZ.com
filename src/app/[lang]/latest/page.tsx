@@ -25,7 +25,7 @@ export default async function LatestPage({
   if (!isLocale(lang)) throw new Error("Invalid locale");
 
   const products = await prisma.product.findMany({
-    where: { isActive: true },
+    where: { isActive: true, status: "PUBLISHED" },
     orderBy: { createdAt: "desc" },
     take: 24,
     select: {

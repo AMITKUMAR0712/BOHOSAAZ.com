@@ -23,9 +23,13 @@ export async function POST(
   }
 
   try {
+    const isApproved = parsed.data.status === "PUBLISHED";
     const product = await prisma.product.update({
       where: { id: productId },
-      data: { status: parsed.data.status },
+      data: {
+        status: parsed.data.status,
+        isActive: isApproved,
+      },
     });
 
     return Response.json({ ok: true, product });

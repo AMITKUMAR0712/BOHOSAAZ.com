@@ -219,7 +219,7 @@ export default async function ShopPage({
   });
 
   const tagRows = await prisma.tag.findMany({
-    where: { products: { some: { product: { isActive: true, deletedAt: null } } } },
+    where: { products: { some: { product: { isActive: true, status: "PUBLISHED", deletedAt: null } } } },
     orderBy: { name: "asc" },
     select: { name: true, slug: true },
   });
@@ -238,14 +238,14 @@ export default async function ShopPage({
   const categoryOptions: FilterOption[] = categories.map((c) => [c.slug || c.id, c.name]);
 
   const variantColors = await prisma.productVariant.findMany({
-    where: { isActive: true, color: { not: null }, product: { isActive: true, deletedAt: null } },
+    where: { isActive: true, color: { not: null }, product: { isActive: true, status: "PUBLISHED", deletedAt: null } },
     distinct: ["color"],
     select: { color: true },
     orderBy: { color: "asc" },
     take: 24,
   });
   const colorFromProducts = await prisma.product.findMany({
-    where: { isActive: true, deletedAt: null, colorOptions: { not: null } },
+    where: { isActive: true, status: "PUBLISHED", deletedAt: null, colorOptions: { not: null } },
     distinct: ["colorOptions"],
     select: { colorOptions: true },
     take: 100,
@@ -264,14 +264,14 @@ export default async function ShopPage({
   const colorOptions: ColorFilterOption[] = colorValues.map((value) => [value, toTitleCase(value), swatchClassForColor(value)]);
 
   const variantSizes = await prisma.productVariant.findMany({
-    where: { isActive: true, size: { not: "" }, product: { isActive: true, deletedAt: null } },
+    where: { isActive: true, size: { not: "" }, product: { isActive: true, status: "PUBLISHED", deletedAt: null } },
     distinct: ["size"],
     select: { size: true },
     orderBy: { size: "asc" },
     take: 24,
   });
   const sizeFromProducts = await prisma.product.findMany({
-    where: { isActive: true, deletedAt: null, sizeOptions: { not: null } },
+    where: { isActive: true, status: "PUBLISHED", deletedAt: null, sizeOptions: { not: null } },
     distinct: ["sizeOptions"],
     select: { sizeOptions: true },
     take: 100,
@@ -293,11 +293,12 @@ export default async function ShopPage({
     prisma.product.count({
       where: {
         isActive: true,
+        status: "PUBLISHED",
         deletedAt: null,
         OR: [{ stock: { gt: 0 } }, { variants: { some: { isActive: true, stock: { gt: 0 } } } }],
       },
     }),
-    prisma.product.count({ where: { isActive: true, deletedAt: null, salePrice: { not: null } } }),
+    prisma.product.count({ where: { isActive: true, status: "PUBLISHED", deletedAt: null, salePrice: { not: null } } }),
   ]);
   const systemAvailabilityOptions: FilterOption[] = [
     ...(inStockCount > 0 ? [["in_stock", "In Stock"] as const] : []),

@@ -9,6 +9,7 @@ import SonnerToaster from "@/components/SonnerToaster";
 import BackToTop from "@/components/BackToTop";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import ScrollToTop from "@/components/ScrollToTop";
+import GlobalAutoRefresh from "@/components/GlobalAutoRefresh";
 import { CurrencyProvider } from "@/lib/currency-context";
 import { requireUser } from "@/lib/auth";
 
@@ -200,6 +201,7 @@ export default async function RootLayout({
           <ToastProvider>
             <SonnerToaster />
             <ScrollToTop />
+            <GlobalAutoRefresh />
 
             {/* Header */}
             <SiteHeader />

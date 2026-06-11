@@ -100,6 +100,22 @@ type VariantRow = {
   isActive: boolean;
 };
 
+type ProductStatus = ProductRow["status"];
+
+const statusLabel: Record<ProductStatus, string> = {
+  DRAFT: "Draft",
+  PENDING: "Pending",
+  PUBLISHED: "Approved",
+  REJECTED: "Rejected",
+};
+
+function statusBadgeClass(status: ProductStatus) {
+  if (status === "PUBLISHED") return "bg-green-100 text-green-800";
+  if (status === "REJECTED") return "bg-red-100 text-red-800";
+  if (status === "PENDING") return "bg-yellow-100 text-yellow-800";
+  return "bg-gray-100 text-gray-800";
+}
+
 function toTagList(input: string): string[] {
   return input
     .split(",")
@@ -333,8 +349,9 @@ export default function ProductsClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function reload() {
-    setLoading(true);
+  async function reload(options?: { silent?: boolean }) {
+    const silent = options?.silent ?? false;
+    if (!silent) setLoading(true);
     const params = new URLSearchParams({ take: "50" });
     if (occasionFilter) params.set("occasion", occasionFilter);
     if (recipientFilter) params.set("recipient", recipientFilter);
@@ -342,8 +359,8 @@ export default function ProductsClient({
     const res = await fetch(`/api/admin/products?${params}`, { credentials: "include" });
     const data = await res.json().catch(() => null);
     if (!res.ok || !data?.ok) {
-      toast.error(data?.error || "Failed to load products");
-      setLoading(false);
+      if (!silent) toast.error(data?.error || "Failed to load products");
+      if (!silent) setLoading(false);
       return;
     }
     const raw = (data.data?.products || []) as ProductRowApi[];
@@ -353,11 +370,33 @@ export default function ProductsClient({
       salePrice: p.salePrice == null ? null : Number(p.salePrice),
     }));
     setProducts(loaded);
-    setLoading(false);
+    if (!silent) setLoading(false);
   }
 
   useEffect(() => {
     void reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [occasionFilter, recipientFilter, availabilityFilter]);
+
+  useEffect(() => {
+    const syncProducts = () => {
+      if (document.visibilityState !== "visible") return;
+      void reload({ silent: true }).catch(() => {
+        // Keep background sync quiet; manual actions still show errors.
+      });
+    };
+
+    const interval = window.setInterval(syncProducts, 5000);
+    window.addEventListener("focus", syncProducts);
+    window.addEventListener("bohosaaz-live-refresh", syncProducts);
+    document.addEventListener("visibilitychange", syncProducts);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", syncProducts);
+      window.removeEventListener("bohosaaz-live-refresh", syncProducts);
+      document.removeEventListener("visibilitychange", syncProducts);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [occasionFilter, recipientFilter, availabilityFilter]);
 
@@ -424,7 +463,7 @@ export default function ProductsClient({
     setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, ...patch } : p)));
   }
 
-  async function updateProductStatus(productId: string, status: string) {
+  async function updateProductStatus(productId: string, status: ProductStatus) {
     const res = await fetch(`/api/admin/products/${productId}/status`, {
       method: "POST",
       credentials: "include",
@@ -436,8 +475,19 @@ export default function ProductsClient({
       toast.error(data?.error || "Update failed");
       return;
     }
-    toast.success(`Product status updated to ${status}`);
-    setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, status: status as any } : p)));
+    const updated = data?.product as Partial<ProductRow> | undefined;
+    toast.success(`Product status updated to ${statusLabel[status]}`);
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId
+          ? {
+              ...p,
+              status,
+              isActive: typeof updated?.isActive === "boolean" ? updated.isActive : status === "PUBLISHED",
+            }
+          : p,
+      ),
+    );
   }
 
   async function createProduct() {
@@ -776,7 +826,7 @@ export default function ProductsClient({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="text-xs text-muted-foreground">Dashboard: Admin</div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
+                <Button variant="outline" size="sm" onClick={() => void reload()} disabled={loading}>
                   Refresh
                 </Button>
                 <Link className="text-sm text-primary underline" href="/admin/categories">
@@ -1132,7 +1182,7 @@ export default function ProductsClient({
                       Clear filters
                     </Button>
                   ) : null}
-                  <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
+                  <Button variant="outline" size="sm" onClick={() => void reload()} disabled={loading}>
                     Refresh
                   </Button>
                 </div>
@@ -1211,16 +1261,12 @@ export default function ProductsClient({
                         <TD>{p.salePrice != null ? `₹${p.salePrice}` : "-"}</TD>
                         <TD>{p.stock}</TD>
                         <TD>
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${p.status === "PUBLISHED" ? "bg-green-100 text-green-800" :
-                              p.status === "REJECTED" ? "bg-red-100 text-red-800" :
-                                p.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
-                                  "bg-gray-100 text-gray-800"
-                            }`}>
-                            {p.status}
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${statusBadgeClass(p.status)}`}>
+                            {statusLabel[p.status]}
                           </span>
                         </TD>
-                        <TD className={p.isActive ? "text-success font-semibold text-xs" : "text-muted-foreground text-xs"}>
-                          {p.isActive ? "ACTIVE" : "DISABLED"}
+                        <TD className={p.status === "PUBLISHED" && p.isActive ? "text-success font-semibold text-xs" : "text-muted-foreground text-xs"}>
+                          {p.status === "PUBLISHED" && p.isActive ? "ACTIVE" : "INACTIVE"}
                         </TD>
 
                         <TD>
@@ -1275,11 +1321,21 @@ export default function ProductsClient({
                                   </Button>
                                 </>
                               )}
+                              {p.status === "REJECTED" && (
+                                <Button variant="primary" size="sm" onClick={() => updateProductStatus(p.id, "PUBLISHED")}>
+                                  Approve
+                                </Button>
+                              )}
                               <Button variant="danger" size="sm" onClick={() => deleteProduct(p.id)}>
                                 Delete
                               </Button>
-                              <Button variant="outline" size="sm" onClick={() => setActive(p.id, !p.isActive)}>
-                                {p.isActive ? "Disable" : "Enable"}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={p.status !== "PUBLISHED"}
+                                onClick={() => setActive(p.id, !(p.status === "PUBLISHED" && p.isActive))}
+                              >
+                                {p.status === "PUBLISHED" && p.isActive ? "Disable" : "Enable"}
                               </Button>
                               <Button
                                 variant={p.isFeatured ? "soft" : "outline"}

@@ -6,7 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { toast } from "@/lib/toast";
-import { MessageSquare, Plus, Send, Paperclip, ChevronRight, Clock } from "lucide-react";
+import { MessageSquare, Plus, Send, Clock } from "lucide-react";
+import {
+  SupportAttachmentList,
+  SupportAttachmentPicker,
+  type SupportAttachment,
+} from "@/components/support/SupportAttachments";
 
 type Ticket = {
   id: string;
@@ -22,16 +27,17 @@ type Message = {
   senderRole: string;
   message: string;
   createdAt: string;
-  attachments?: any;
+  attachments?: unknown;
 };
 
-export default function SupportClient({ userId }: { userId: string }) {
+export default function SupportClient({ userId: _userId }: { userId: string }) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [msgLoading, setMsgLoading] = useState(false);
   const [newMsg, setNewMsg] = useState("");
+  const [replyAttachments, setReplyAttachments] = useState<SupportAttachment[]>([]);
   const [sending, setSending] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
 
@@ -39,6 +45,7 @@ export default function SupportClient({ userId }: { userId: string }) {
   const [subject, setSubject] = useState("");
   const [category, setCategory] = useState("ORDER_ISSUE");
   const [initialMessage, setInitialMessage] = useState("");
+  const [createAttachments, setCreateAttachments] = useState<SupportAttachment[]>([]);
 
   async function loadTickets() {
     setLoading(true);
@@ -46,7 +53,7 @@ export default function SupportClient({ userId }: { userId: string }) {
       const res = await fetch("/api/vendor/support");
       const data = await res.json();
       if (res.ok) setTickets(data.tickets);
-    } catch (error) {
+    } catch {
       toast.error("Failed to load tickets");
     } finally {
       setLoading(false);
@@ -59,7 +66,7 @@ export default function SupportClient({ userId }: { userId: string }) {
       const res = await fetch(`/api/vendor/support/${ticketId}`);
       const data = await res.json();
       if (res.ok) setMessages(data.ticket.messages);
-    } catch (error) {
+    } catch {
       toast.error("Failed to load messages");
     } finally {
       setMsgLoading(false);
@@ -85,35 +92,37 @@ export default function SupportClient({ userId }: { userId: string }) {
       const res = await fetch("/api/vendor/support", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject, category, message: initialMessage }),
+        body: JSON.stringify({ subject, category, message: initialMessage, attachments: createAttachments }),
       });
       if (res.ok) {
         toast.success("Ticket created");
         setShowCreate(false);
         setSubject("");
         setInitialMessage("");
+        setCreateAttachments([]);
         loadTickets();
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to create ticket");
     }
   }
 
   async function sendMessage() {
     const message = newMsg.trim();
-    if (!message || !selectedTicket) return;
+    if ((!message && replyAttachments.length === 0) || !selectedTicket) return;
     setSending(true);
     try {
       const res = await fetch(`/api/vendor/support/${selectedTicket.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message: message || "Attached file", attachments: replyAttachments }),
       });
       if (res.ok) {
         setNewMsg("");
+        setReplyAttachments([]);
         loadMessages(selectedTicket.id);
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to send message");
     } finally {
       setSending(false);
@@ -212,6 +221,7 @@ export default function SupportClient({ userId }: { userId: string }) {
                     onChange={(e) => setInitialMessage(e.target.value)}
                   />
                 </div>
+                <SupportAttachmentPicker attachments={createAttachments} onChange={setCreateAttachments} onError={toast.error} />
                 <div className="flex justify-end gap-3">
                   <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
                   <Button onClick={createTicket} disabled={!subject || !initialMessage}>Create Ticket</Button>
@@ -243,25 +253,31 @@ export default function SupportClient({ userId }: { userId: string }) {
                           {m.senderRole === "ADMIN" ? "BOHOSAAZ Admin" : "You"} • {new Date(m.createdAt).toLocaleTimeString()}
                         </div>
                         <p className="whitespace-pre-wrap">{m.message}</p>
+                        <SupportAttachmentList attachments={m.attachments} />
                       </div>
                     </div>
                   ))
                 )}
               </CardContent>
               <div className="border-t p-4">
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="shrink-0">
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
+                <div className="grid gap-3">
+                  <SupportAttachmentPicker
+                    attachments={replyAttachments}
+                    onChange={setReplyAttachments}
+                    disabled={sending || selectedTicket.status === "CLOSED"}
+                    onError={toast.error}
+                  />
+                  <div className="flex gap-2">
                   <Input
                     placeholder="Type your message..."
                     value={newMsg}
                     onChange={(e) => setNewMsg(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                   />
-                  <Button onClick={sendMessage} disabled={sending || !newMsg.trim() || selectedTicket.status === "CLOSED"}>
+                  <Button onClick={sendMessage} disabled={sending || (!newMsg.trim() && replyAttachments.length === 0) || selectedTicket.status === "CLOSED"}>
                     <Send className="h-4 w-4" />
                   </Button>
+                  </div>
                 </div>
               </div>
             </Card>

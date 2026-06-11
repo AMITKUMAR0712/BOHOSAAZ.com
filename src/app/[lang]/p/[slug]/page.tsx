@@ -139,12 +139,30 @@ export default async function ProductDetailPage({
   };
 
   const tagsText = Array.isArray(p?.tags) ? p.tags.map((t) => t?.tag?.name).filter(Boolean).join(", ") : "";
-  const dimsText =
-    p?.dimensions && typeof p.dimensions === "object"
-      ? JSON.stringify(p.dimensions)
-      : [p?.length, p?.width, p?.height].some((n) => n !== null && n !== undefined)
-        ? `${text(p?.length)} × ${text(p?.width)} × ${text(p?.height)}`
-        : "—";
+  const formatDimensions = () => {
+    if (p?.dimensions && typeof p.dimensions === "object" && !Array.isArray(p.dimensions)) {
+      const dims = p.dimensions as Record<string, unknown>;
+      if (typeof dims.raw === "string" && dims.raw.trim()) return dims.raw.trim();
+
+      const unit = typeof dims.unit === "string" && dims.unit.trim() ? ` ${dims.unit.trim()}` : "";
+      const parts = [
+        dims.length !== null && dims.length !== undefined ? `L ${text(dims.length)}${unit}` : null,
+        dims.width !== null && dims.width !== undefined ? `W ${text(dims.width)}${unit}` : null,
+        dims.height !== null && dims.height !== undefined ? `H ${text(dims.height)}${unit}` : null,
+      ].filter(Boolean);
+
+      if (parts.length) return parts.join(" × ");
+    }
+
+    const parts = [
+      p?.length !== null && p?.length !== undefined ? `L ${text(p.length)}` : null,
+      p?.width !== null && p?.width !== undefined ? `W ${text(p.width)}` : null,
+      p?.height !== null && p?.height !== undefined ? `H ${text(p.height)}` : null,
+    ].filter(Boolean);
+
+    return parts.length ? parts.join(" × ") : "—";
+  };
+  const dimsText = formatDimensions();
 
   const images = (() => {
     const list = Array.isArray(p?.images) ? p.images : [];
@@ -350,10 +368,6 @@ export default async function ProductDetailPage({
                   <div className="rounded-2xl border border-border/70 bg-card/70 p-4">
                     <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Dimensions</div>
                     <div className="mt-1 font-medium text-foreground">{dimsText}</div>
-                  </div>
-                  <div className="rounded-2xl border border-border/70 bg-card/70 p-4">
-                    <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Availability</div>
-                    <div className="mt-1 font-medium text-foreground">{Number(p.stock) > 0 ? `${p.stock} in stock` : "Out of stock"}</div>
                   </div>
                 </div>
               </div>

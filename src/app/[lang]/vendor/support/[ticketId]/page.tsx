@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import {
+  SupportAttachmentList,
+  SupportAttachmentPicker,
+  type SupportAttachment,
+} from "@/components/support/SupportAttachments";
 
 type Ticket = {
   id: string;
@@ -17,6 +22,7 @@ type Message = {
   id: string;
   senderRole: string;
   message: string;
+  attachments: unknown;
   createdAt: string;
 };
 
@@ -28,6 +34,7 @@ export default function VendorTicketDetailPage() {
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
   const [text, setText] = useState("");
+  const [attachments, setAttachments] = useState<SupportAttachment[]>([]);
   const [sending, setSending] = useState(false);
 
   async function load(options: { silent?: boolean } = {}) {
@@ -67,13 +74,13 @@ export default function VendorTicketDetailPage() {
   async function send() {
     setMsg(null);
     const m = text.trim();
-    if (!m) return;
+    if (!m && attachments.length === 0) return;
     setSending(true);
     const res = await fetch(`/api/vendor/support/tickets/${params.ticketId}/messages`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: m }),
+      body: JSON.stringify({ message: m || "Attached file", attachments }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -82,6 +89,7 @@ export default function VendorTicketDetailPage() {
       return;
     }
     setText("");
+    setAttachments([]);
     await load();
     setSending(false);
   }
@@ -121,6 +129,7 @@ export default function VendorTicketDetailPage() {
                       {m.senderRole} • {new Date(m.createdAt).toLocaleString()}
                     </div>
                     <div className="mt-1 text-sm">{m.message}</div>
+                    <SupportAttachmentList attachments={m.attachments} />
                   </div>
                 ))
               )}
@@ -133,9 +142,15 @@ export default function VendorTicketDetailPage() {
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                 />
+                <SupportAttachmentPicker
+                  attachments={attachments}
+                  onChange={setAttachments}
+                  disabled={sending || ticket.status === "CLOSED"}
+                  onError={setMsg}
+                />
                 <button
                   className="w-fit rounded-xl bg-black px-4 py-2 text-sm text-white disabled:opacity-60"
-                  disabled={sending || text.trim().length < 1 || ticket.status === "CLOSED"}
+                  disabled={sending || (text.trim().length < 1 && attachments.length === 0) || ticket.status === "CLOSED"}
                   onClick={send}
                 >
                   {sending ? "Sending..." : "Send"}

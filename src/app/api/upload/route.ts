@@ -8,7 +8,7 @@ import crypto from "crypto";
 export const runtime = "nodejs";
 
 const BodySchema = z.object({
-  purpose: z.enum(["products", "brand", "banner", "vendor_kyc", "vendor_logo"]).optional(),
+  purpose: z.enum(["products", "brand", "banner", "vendor_kyc", "vendor_logo", "support_ticket"]).optional(),
 });
 
 function isAllowedMime(mime: string, purpose: z.infer<typeof BodySchema>["purpose"]) {
@@ -21,6 +21,16 @@ function isAllowedMime(mime: string, purpose: z.infer<typeof BodySchema>["purpos
     const kyc = new Set([...images, "application/pdf"]);
     return kyc.has(mime);
   }
+  if (purpose === "support_ticket") {
+    const docs = new Set([
+      ...images,
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/plain",
+    ]);
+    return docs.has(mime);
+  }
   // products, brand, vendor_logo default to images only
   return images.has(mime);
 }
@@ -32,6 +42,9 @@ function extFromMime(mime: string) {
   if (mime === "video/mp4") return ".mp4";
   if (mime === "video/webm") return ".webm";
   if (mime === "application/pdf") return ".pdf";
+  if (mime === "application/msword") return ".doc";
+  if (mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") return ".docx";
+  if (mime === "text/plain") return ".txt";
   return "";
 }
 
@@ -53,7 +66,7 @@ export async function POST(req: NextRequest) {
   const purpose = parsed.success ? parsed.data.purpose : undefined;
 
   // Authorization rules mirror the old signing route.
-  if (purpose === "vendor_kyc" || purpose === "vendor_logo") {
+  if (purpose === "vendor_kyc" || purpose === "vendor_logo" || purpose === "support_ticket") {
     if (payload.role !== "USER" && payload.role !== "VENDOR" && payload.role !== "ADMIN") {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -88,6 +101,8 @@ export async function POST(req: NextRequest) {
       ? path.join("vendor", "logo", userId)
       : safePurpose === "vendor_kyc"
         ? path.join("vendor", "kyc", userId)
+        : safePurpose === "support_ticket"
+          ? path.join("support", userId)
         : path.join(safePurpose, userId);
 
   const uploadsDir = path.join(process.cwd(), "public", "uploads", subdir);

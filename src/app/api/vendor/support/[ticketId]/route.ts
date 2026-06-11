@@ -2,10 +2,11 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken, type JwtPayload } from "@/lib/auth";
 import { z } from "zod";
+import { attachmentsOrNull, supportAttachmentsSchema } from "@/lib/supportAttachments";
 
 const messageSchema = z.object({
   message: z.string().min(1).max(2000),
-  attachments: z.array(z.string().url()).optional(),
+  attachments: supportAttachmentsSchema,
 });
 
 export async function GET(
@@ -78,7 +79,7 @@ export async function POST(
       senderId: payload.sub,
       senderRole: payload.role,
       message: parsed.data.message,
-      attachments: parsed.data.attachments ? JSON.stringify(parsed.data.attachments) : undefined,
+      attachments: attachmentsOrNull(parsed.data.attachments),
     },
   });
 

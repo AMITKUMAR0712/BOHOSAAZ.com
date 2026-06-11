@@ -35,7 +35,7 @@ export default async function AdminUserTicketDetailPage({
     where: { ticketId },
     orderBy: { createdAt: "asc" },
     take: 400,
-    select: { id: true, senderRole: true, senderId: true, message: true, createdAt: true },
+    select: { id: true, senderRole: true, senderId: true, message: true, attachments: true, createdAt: true },
   });
 
   const messages = messagesRaw.map((m) => ({

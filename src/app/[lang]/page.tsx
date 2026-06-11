@@ -982,7 +982,7 @@ export default async function Home({
   const [featured, trending, brands] = showHomeSections
     ? await Promise.all([
         prisma.product.findMany({
-          where: { isActive: true, isFeatured: true, deletedAt: null },
+          where: { isActive: true, status: "PUBLISHED", isFeatured: true, deletedAt: null },
           take: 12,
           include: {
             category: true,
@@ -992,7 +992,7 @@ export default async function Home({
           orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
         }),
         prisma.product.findMany({
-          where: { isActive: true, isTrending: true, deletedAt: null },
+          where: { isActive: true, status: "PUBLISHED", isTrending: true, deletedAt: null },
           take: 12,
           include: {
             category: true,
@@ -1066,7 +1066,7 @@ export default async function Home({
   };
 
   const tagRows = await prisma.tag.findMany({
-    where: { products: { some: { product: { isActive: true, deletedAt: null } } } },
+    where: { products: { some: { product: { isActive: true, status: "PUBLISHED", deletedAt: null } } } },
     orderBy: { name: "asc" },
     select: { name: true, slug: true },
   });
@@ -1086,7 +1086,7 @@ export default async function Home({
   const tagAvailabilityOptions = groupedTagOptions.availability ?? [];
 
   const priceStats = await prisma.product.aggregate({
-    where: { isActive: true },
+    where: { isActive: true, status: "PUBLISHED" },
     _min: { price: true },
     _max: { price: true },
   });
@@ -1112,14 +1112,14 @@ export default async function Home({
   })();
 
   const variantColors = await prisma.productVariant.findMany({
-    where: { isActive: true, color: { not: null }, product: { isActive: true, deletedAt: null } },
+    where: { isActive: true, color: { not: null }, product: { isActive: true, status: "PUBLISHED", deletedAt: null } },
     distinct: ["color"],
     select: { color: true },
     orderBy: { color: "asc" },
     take: 24,
   });
   const colorFromProducts = await prisma.product.findMany({
-    where: { isActive: true, deletedAt: null, colorOptions: { not: null } },
+    where: { isActive: true, status: "PUBLISHED", deletedAt: null, colorOptions: { not: null } },
     distinct: ["colorOptions"],
     select: { colorOptions: true },
     take: 100,
@@ -1158,12 +1158,13 @@ export default async function Home({
     prisma.product.count({
       where: {
         isActive: true,
+        status: "PUBLISHED",
         deletedAt: null,
         OR: [{ stock: { gt: 0 } }, { variants: { some: { isActive: true, stock: { gt: 0 } } } }],
       },
     }),
-    prisma.product.count({ where: { isActive: true, deletedAt: null, salePrice: { not: null } } }),
-    prisma.product.count({ where: { isActive: true, deletedAt: null, createdAt: { gte: newArrivalSince } } }),
+    prisma.product.count({ where: { isActive: true, status: "PUBLISHED", deletedAt: null, salePrice: { not: null } } }),
+    prisma.product.count({ where: { isActive: true, status: "PUBLISHED", deletedAt: null, createdAt: { gte: newArrivalSince } } }),
   ]);
   const availabilityOptions: FilterOption[] = [
     ...(inStockCount > 0 ? [["in_stock", "In Stock"] as const] : []),
