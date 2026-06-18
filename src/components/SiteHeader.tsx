@@ -470,70 +470,63 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
     <>
     <style>{`
       main.site-content {
-        --site-header-offset: ${!isDashboardRoute && scrolled ? "148px" : "184px"};
+        --site-header-offset: 116px;
+      }
+      @media (max-width: 767px) {
+        main.site-content {
+          --site-header-offset: 152px;
+        }
+      }
+      @keyframes boho-nav-pop {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
       }
     `}</style>
     <header
-      className={`fixed inset-x-0 top-0 z-999 w-full border-b border-primary/15 bg-background/88 backdrop-blur-2xl supports-backdrop-filter:bg-background/80 transition-[box-shadow,background-color,border-color] duration-500 ease-out ${
+      className={`fixed inset-x-0 top-0 z-999 w-full border-b border-primary/10 bg-[rgba(238,224,204,0.88)] backdrop-blur-2xl supports-backdrop-filter:bg-[rgba(238,224,204,0.76)] transition-[box-shadow,background-color,border-color] duration-500 ease-out ${
         !isDashboardRoute && scrolled
-          ? "shadow-[0_24px_76px_rgba(47,38,34,0.18)] ring-1 ring-primary/15"
-          : "shadow-[0_12px_45px_rgba(47,38,34,0.09)]"
+          ? "shadow-[0_16px_44px_rgba(69,40,24,0.14)] ring-1 ring-white/25"
+          : "shadow-[0_8px_26px_rgba(69,40,24,0.08)]"
       }`}
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/35 to-transparent" />
-      <section
-        className={`overflow-hidden border-b border-primary/10 bg-card/35 px-3 backdrop-blur-xl transition-all duration-500 ease-out sm:px-4 ${
-          !isDashboardRoute && scrolled
-            ? "max-h-24 py-1 opacity-100 translate-y-0 sm:py-1"
-            : "max-h-36 py-2 opacity-100 translate-y-0 sm:py-2.5"
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/60 to-transparent" />
+      {/* Main row: logo, category, search and actions */}
+      <div
+        className={`mx-auto flex max-w-6xl flex-wrap items-center gap-2.5 px-3 transition-all duration-500 ease-out sm:gap-3 sm:px-4 lg:flex-nowrap ${
+          !isDashboardRoute && scrolled ? "py-2" : "py-2.5"
         }`}
       >
         <Link
           href={lp}
-          className={`group mx-auto flex w-fit max-w-full flex-col items-center justify-center rounded-4xl border border-primary/12 bg-background/65 shadow-[0_10px_30px_rgba(47,38,34,0.08)] transition-all duration-500 hover:-translate-y-px hover:border-primary/28 hover:bg-background/85 hover:shadow-[0_14px_38px_rgba(47,38,34,0.12)] sm:rounded-[2.4rem] ${
-            !isDashboardRoute && scrolled ? "px-3 py-1 sm:px-5 sm:py-1.5" : "px-4 py-2 sm:px-7 sm:py-2.5"
-          }`}
-          aria-label="Boho Saaz home"
+          className="group flex min-w-0 shrink-0 items-center gap-2.5 rounded-full px-1.5 pr-3 transition-all duration-300 hover:-translate-y-px hover:bg-white/22 hover:shadow-[0_10px_26px_rgba(69,40,24,0.10)]"
+          aria-label="Bohosaaz home"
         >
-          <span className={`flex items-center justify-center transition-all duration-500 ${!isDashboardRoute && scrolled ? "gap-2 sm:gap-3" : "gap-3 sm:gap-5"}`}>
-            <span className={`font-heading font-semibold uppercase tracking-[0.22em] text-foreground transition-all duration-500 group-hover:text-primary ${
-              !isDashboardRoute && scrolled ? "text-[0.95rem] sm:text-[1.15rem]" : "text-[1.08rem] sm:text-[1.45rem]"
-            }`}>
-              Boho
-            </span>
-            <span className={`grid shrink-0 place-items-center overflow-hidden rounded-full border border-primary/25 bg-card shadow-[0_8px_22px_rgba(135,56,20,0.18)] transition-all duration-500 ${
-              !isDashboardRoute && scrolled ? "h-11 w-11 sm:h-14 sm:w-14" : "h-16 w-16 sm:h-20 sm:w-20"
-            }`}>
-              <Image
-                src="/logo copy.jpeg"
-                alt="Boho Saaz"
-                width={96}
-                height={96}
-                className={`rounded-full object-contain transition-all duration-500 ${
-                  !isDashboardRoute && scrolled ? "h-10 w-10 sm:h-13 sm:w-13" : "h-15 w-15 sm:h-19 sm:w-19"
-                }`}
-                priority
-              />
-            </span>
-            <span className={`font-heading font-semibold uppercase tracking-[0.22em] text-foreground transition-all duration-500 group-hover:text-primary ${
-              !isDashboardRoute && scrolled ? "text-[0.95rem] sm:text-[1.15rem]" : "text-[1.08rem] sm:text-[1.45rem]"
-            }`}>
-              Saaz
-            </span>
-          </span>
-          <span className={`font-semibold uppercase tracking-[0.28em] text-muted-foreground transition-all duration-500 ${
-            !isDashboardRoute && scrolled ? "mt-0.5 text-[8px] sm:text-[9px]" : "mt-1 text-[9px] sm:text-[10px]"
+          <span className={`grid shrink-0 place-items-center overflow-hidden rounded-full bg-[#f8ead8] shadow-[0_8px_22px_rgba(69,40,24,0.12)] ring-1 ring-white/55 transition-all duration-500 ${
+            !isDashboardRoute && scrolled ? "h-12 w-12" : "h-14 w-14 sm:h-15 sm:w-15"
           }`}>
-            Art of meaningful gifting
+            <Image
+              src="/logo copy.jpeg"
+              alt="Bohosaaz"
+              width={64}
+              height={64}
+              className={`rounded-full object-contain transition-all duration-500 ${
+                !isDashboardRoute && scrolled ? "h-11 w-11" : "h-13 w-13 sm:h-14 sm:w-14"
+              }`}
+              priority
+            />
+          </span>
+          <span className="hidden leading-tight sm:block">
+            <span className="block font-heading text-[15px] font-semibold tracking-tight text-foreground transition group-hover:text-primary">Bohosaaz</span>
+            <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Meaningful gifting</span>
           </span>
         </Link>
-      </section>
-      {/* ✅ MAIN ROW (Category + Search + Actions) */}
-      <div
-        className={`mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-3 transition-all duration-500 ease-out sm:gap-3 sm:px-4 lg:flex-nowrap ${
-          !isDashboardRoute && scrolled ? "py-1.5" : "py-2.5"
-        }`}
-      >
+
         {/* Category Dropdown */}
         <div
           className="relative hidden shrink-0 lg:block"
@@ -542,7 +535,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
         >
           <button
             type="button"
-            className={`rounded-2xl bg-primary text-primary-foreground px-4 shadow-(--shadowBtn) hover:-translate-y-px hover:brightness-95 hover:shadow-(--shadowBtnHover) transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+            className={`rounded-full bg-[#823817] px-4 text-primary-foreground shadow-[0_10px_22px_rgba(130,56,23,0.18)] transition-all duration-300 hover:-translate-y-px hover:bg-[#743114] hover:shadow-[0_14px_28px_rgba(130,56,23,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
               !isDashboardRoute && scrolled ? "h-9" : "h-10"
             }`}
             aria-haspopup="menu"
@@ -558,13 +551,13 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
           >
             <span className="inline-flex items-center gap-2">
               {Icon.Menu}
-              <span className="text-[12px] tracking-widest uppercase">Shop by Category</span>
+              <span className="text-[11px] font-bold tracking-[0.16em] uppercase">Shop by Category</span>
             </span>
           </button>
 
           {catOpen ? (
             <div
-              className="absolute left-0 top-full z-100 mt-2 max-h-[min(70vh,30rem)] w-[min(31rem,calc(100vw-2rem))] overflow-y-auto rounded-[26px] bg-card/96 p-3.5 shadow-[0_22px_70px_rgba(47,38,34,0.18)] backdrop-blur-2xl"
+              className="absolute left-0 top-full z-100 mt-2 max-h-[min(70vh,30rem)] w-[min(31rem,calc(100vw-2rem))] origin-top-left overflow-y-auto rounded-[26px] bg-card/96 p-3.5 shadow-[0_22px_70px_rgba(47,38,34,0.16)] ring-1 ring-white/35 backdrop-blur-2xl animate-[boho-nav-pop_220ms_cubic-bezier(0.16,1,0.3,1)]"
               role="menu"
               onKeyDown={(e) => {
                 if (e.key === "Escape") setCatOpen(false);
@@ -633,25 +626,25 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
 
         {/* Search */}
         <form
-          className="order-3 flex w-full min-w-0 flex-1 items-center gap-2 sm:w-auto md:min-w-56 lg:order-0"
+          className="order-3 flex w-full min-w-0 flex-1 items-center gap-1 rounded-full bg-[#f8ead8]/82 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.72),0_8px_22px_rgba(69,40,24,0.07)] ring-1 ring-primary/8 transition-all duration-300 focus-within:shadow-[inset_0_1px_0_rgba(255,255,255,0.82),0_12px_28px_rgba(69,40,24,0.10)] focus-within:ring-primary/22 sm:w-auto md:min-w-56 lg:order-0"
           onSubmit={(e) => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
             const q = String(fd.get("q") || "").trim();
-            window.location.href = q ? `${lp}?q=${encodeURIComponent(q)}` : lp;
+            window.location.href = q ? `${lp}/shop?q=${encodeURIComponent(q)}` : `${lp}/shop`;
           }}
         >
           <Input
             name="q"
             placeholder="Search gifts, brands, occasions..."
-            className={`rounded-2xl bg-background/80 pl-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_8px_24px_rgba(47,38,34,0.08)] transition-all duration-500 ${
-              !isDashboardRoute && scrolled ? "h-9" : "h-11 sm:h-10"
+            className={`border-transparent bg-transparent pl-4 shadow-none transition-all duration-300 focus:scale-100 focus:border-transparent focus:shadow-none ${
+              !isDashboardRoute && scrolled ? "h-8" : "h-10 sm:h-9"
             }`}
           />
           <Button
             type="submit"
             variant="primary"
-            className={`rounded-2xl px-4 transition-all duration-500 ${!isDashboardRoute && scrolled ? "h-9" : "h-11 sm:h-10"}`}
+            className={`rounded-full px-4 shadow-[0_8px_18px_rgba(130,56,23,0.18)] transition-all duration-300 ${!isDashboardRoute && scrolled ? "h-8" : "h-10 sm:h-9"}`}
             aria-label="Search"
           >
             {Icon.Search}
@@ -668,7 +661,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
                 ? `${lp}/account/wishlist`
                 : `${lp}/login?next=${encodeURIComponent(`${lp}/account/wishlist`)}`
             }
-            className={`relative grid place-items-center rounded-2xl border border-primary/10 bg-card/80 shadow-sm backdrop-blur transition-all duration-500 hover:-translate-y-px hover:border-primary/30 hover:bg-muted/50 hover:shadow-md ${
+            className={`relative grid place-items-center rounded-full border border-primary/10 bg-[#f8ead8]/76 shadow-[0_6px_16px_rgba(69,40,24,0.07)] backdrop-blur transition-all duration-300 hover:-translate-y-px hover:border-primary/22 hover:bg-white/32 hover:shadow-[0_10px_22px_rgba(69,40,24,0.10)] ${
               !isDashboardRoute && scrolled ? "h-9 w-9" : "h-10 w-10"
             }`}
             aria-label="Wishlist"
@@ -685,7 +678,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
           {/* Auth */}
           {loading ? null : me?.user ? (
             <Dropdown>
-              <DropdownTrigger className={`grid place-items-center rounded-2xl border border-primary/10 bg-card/80 shadow-sm backdrop-blur transition-all duration-500 hover:-translate-y-px hover:border-primary/30 hover:bg-muted/50 hover:shadow-md ${!isDashboardRoute && scrolled ? "h-9 w-9" : "h-10 w-10"}`} aria-label="Profile">
+              <DropdownTrigger className={`grid place-items-center rounded-full border border-primary/10 bg-[#f8ead8]/76 shadow-[0_6px_16px_rgba(69,40,24,0.07)] backdrop-blur transition-all duration-300 hover:-translate-y-px hover:border-primary/22 hover:bg-white/32 hover:shadow-[0_10px_22px_rgba(69,40,24,0.10)] ${!isDashboardRoute && scrolled ? "h-9 w-9" : "h-10 w-10"}`} aria-label="Profile">
                 {Icon.User}
               </DropdownTrigger>
               <DropdownContent className="w-64">
@@ -730,12 +723,12 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
           ) : (
             <div className="hidden sm:flex items-center gap-2">
               <Link href={`${lp}/login`} className="h-10">
-                <Button variant="outline" className="h-10 rounded-2xl">
+                <Button variant="outline" className="h-10 rounded-full bg-[#f8ead8]/76 px-5 text-sm font-semibold shadow-[0_6px_16px_rgba(69,40,24,0.07)]">
                   Login
                 </Button>
               </Link>
               <Link href={`${lp}/register`} className="h-10">
-                <Button variant="primary" className="h-10 rounded-2xl">
+                <Button variant="primary" className="h-10 rounded-full px-5 text-sm font-semibold shadow-[0_10px_22px_rgba(130,56,23,0.18)]">
                   Create Account
                 </Button>
               </Link>
@@ -745,7 +738,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
           {/* Cart */}
           <Link
             href={`${lp}/cart`}
-            className={`relative inline-flex items-center gap-2 rounded-2xl bg-primary text-primary-foreground px-4 shadow-(--shadowBtn) transition-all duration-500 hover:-translate-y-px hover:brightness-95 hover:shadow-(--shadowBtnHover) ${
+            className={`relative inline-flex items-center gap-2 rounded-full bg-[#823817] px-4 text-primary-foreground shadow-[0_10px_22px_rgba(130,56,23,0.18)] transition-all duration-300 hover:-translate-y-px hover:bg-[#743114] hover:shadow-[0_14px_28px_rgba(130,56,23,0.24)] ${
               !isDashboardRoute && scrolled ? "h-9" : "h-10"
             }`}
           >
@@ -766,7 +759,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
         <div className="ml-auto flex shrink-0 items-center gap-2 md:hidden">
           <Link
             href={`${lp}/cart`}
-            className={`relative touch-target inline-flex items-center gap-2 rounded-2xl bg-primary text-primary-foreground px-3 shadow-(--shadowBtn) transition-all duration-500 ${
+            className={`relative touch-target inline-flex items-center gap-2 rounded-full bg-[#823817] px-3 text-primary-foreground shadow-[0_10px_22px_rgba(130,56,23,0.18)] transition-all duration-300 ${
               !isDashboardRoute && scrolled ? "h-10" : "h-11"
             }`}
           >
@@ -775,7 +768,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
           </Link>
           <Button
             variant="outline"
-            className={`rounded-2xl px-3 transition-all duration-500 ${!isDashboardRoute && scrolled ? "h-10" : "h-11"}`}
+            className={`rounded-full bg-[#f8ead8]/76 px-3 shadow-[0_6px_16px_rgba(69,40,24,0.07)] transition-all duration-300 ${!isDashboardRoute && scrolled ? "h-10" : "h-11"}`}
             onClick={() => setDrawerOpen((open) => !open)}
             aria-expanded={drawerOpen}
             aria-label={drawerOpen ? "Close menu" : "Open menu"}
@@ -786,14 +779,14 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
         </div>
       </div>
 
-      {/* ✅ Compact Scrollable Links instead of Row D */}
+      {/* Compact link row */}
       <div
-        className={`hidden overflow-hidden border-t border-primary/10 bg-card/40 backdrop-blur-2xl transition-all duration-500 ease-out sm:block ${
+        className={`hidden overflow-hidden border-t border-white/24 bg-[rgba(246,232,212,0.48)] backdrop-blur-2xl transition-all duration-500 ease-out sm:block ${
           !isDashboardRoute && scrolled ? "max-h-16 opacity-100" : "max-h-20 opacity-100"
         }`}
       >
-        <div className={`mx-auto max-w-6xl px-3 transition-all duration-500 sm:px-4 ${!isDashboardRoute && scrolled ? "py-1" : "py-2"}`}>
-          <div className="mobile-scroll items-center whitespace-nowrap sm:flex sm:flex-wrap sm:justify-start sm:overflow-visible">
+        <div className={`mx-auto max-w-6xl px-3 transition-all duration-500 sm:px-4 ${!isDashboardRoute && scrolled ? "py-1" : "py-1.5"}`}>
+          <div className="mobile-scroll items-center whitespace-nowrap sm:flex sm:flex-wrap sm:justify-start sm:gap-1.5 sm:overflow-visible">
             {navLinks.map((l) => {
               const active =
                 l.href === lp
@@ -803,10 +796,10 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
                 <Link
                   key={l.label}
                   href={l.href}
-                  className={`relative shrink-0 rounded-full border px-3 py-2 text-[11px] font-bold uppercase tracking-[0.14em] shadow-sm transition-all duration-200 hover:-translate-y-px hover:border-primary/25 hover:bg-primary/10 hover:text-primary hover:shadow-md sm:py-1.5 sm:text-[12px] ${
+                  className={`relative shrink-0 rounded-full border px-3 py-2 text-[11px] font-extrabold uppercase tracking-[0.14em] transition-all duration-300 hover:-translate-y-px hover:border-primary/20 hover:bg-white/28 hover:text-primary hover:shadow-[0_8px_18px_rgba(69,40,24,0.08)] sm:py-1.5 sm:text-[11px] ${
                     active
-                      ? "border-primary/25 bg-primary/10 text-primary after:absolute after:-bottom-0.5 after:left-3 after:right-3 after:h-0.5 after:rounded-full after:bg-primary"
-                      : "border-transparent bg-background/30 text-foreground/85"
+                      ? "border-primary/18 bg-white/30 text-primary shadow-[0_8px_18px_rgba(69,40,24,0.08)] after:absolute after:-bottom-0.5 after:left-3 after:right-3 after:h-0.5 after:rounded-full after:bg-primary"
+                      : "border-transparent bg-transparent text-foreground/82"
                   }`}
                 >
                   {l.label}
