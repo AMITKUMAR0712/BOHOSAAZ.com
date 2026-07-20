@@ -21,7 +21,7 @@ function copyDir(src, dest) {
 const rootDir = path.join(__dirname, "..", "..");
 const standaloneDir = path.join(rootDir, ".next", "standalone");
 
-	if (fs.existsSync(standaloneDir)) {
+if (fs.existsSync(standaloneDir)) {
 	console.log("[post-build] Copying static assets to standalone folder...");
 	
 	// Copy .next/static to .next/standalone/.next/static
