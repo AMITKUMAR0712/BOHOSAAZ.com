@@ -50,5 +50,26 @@ export async function GET(req: Request) {
     },
   });
 
-  return jsonOk({ tickets });
+  return jsonOk({
+    tickets: tickets.map((t) => ({
+      id: t.id,
+      category: t.category,
+      subject: t.subject,
+      status: t.status,
+      createdAt: t.createdAt.toISOString(),
+      updatedAt: t.updatedAt.toISOString(),
+      vendor: t.vendor
+        ? { id: t.vendor.id, shopName: t.vendor.shopName, status: t.vendor.status }
+        : { id: "unknown", shopName: "Unknown vendor", status: "UNKNOWN" },
+      creator: t.creator
+        ? { id: t.creator.id, email: t.creator.email, name: t.creator.name }
+        : { id: "unknown", email: "Unknown user", name: null },
+      messages: t.messages.map((m) => ({
+        message: m.message,
+        senderRole: m.senderRole,
+        createdAt: m.createdAt.toISOString(),
+        isInternal: m.isInternal,
+      })),
+    })),
+  });
 }

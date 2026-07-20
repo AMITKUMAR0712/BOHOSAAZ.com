@@ -49,12 +49,14 @@ function locationText(order: OrderRow) {
 export default function OrdersClient({
   lang,
   initialOrders,
+  initialError = null,
 }: {
   lang: string;
   initialOrders: OrderRow[];
+  initialError?: string | null;
 }) {
   const [orders, setOrders] = useState<OrderRow[]>(initialOrders);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(initialError);
   const [loading, setLoading] = useState(false);
 
   async function reload() {
@@ -67,7 +69,17 @@ export default function OrdersClient({
       setLoading(false);
       return;
     }
-    setOrders((data.data?.orders || []) as OrderRow[]);
+    setOrders(
+      ((data.data?.orders || []) as Array<Omit<OrderRow, "createdAt"> & { createdAt: string | Date }>).map(
+        (order) => ({
+          ...order,
+          total: Number(order.total ?? 0),
+          createdAt:
+            typeof order.createdAt === "string" ? order.createdAt : new Date(order.createdAt).toISOString(),
+          user: order.user ?? { id: "unknown", email: "Unknown user", name: null },
+        }),
+      ),
+    );
     setLoading(false);
   }
 
@@ -122,8 +134,8 @@ export default function OrdersClient({
 
             <div className="mt-4 min-w-0 lg:mt-0">
               <div className="text-xs font-medium uppercase tracking-wide text-gray-500 lg:hidden">User</div>
-              <div className="truncate font-semibold text-gray-900">{o.user.email}</div>
-              <div className="truncate text-xs text-gray-600">{o.user.name || "No name provided"}</div>
+              <div className="truncate font-semibold text-gray-900">{o.user?.email || "Unknown user"}</div>
+              <div className="truncate text-xs text-gray-600">{o.user?.name || "No name provided"}</div>
             </div>
 
             <div className="mt-4 hidden lg:mt-0 lg:block">
@@ -137,7 +149,7 @@ export default function OrdersClient({
               </div>
               <div>
                 <div className="text-xs font-medium uppercase tracking-wide text-gray-500 lg:hidden">Total</div>
-                <div className="font-semibold text-gray-900">₹{o.total.toFixed(2)}</div>
+                <div className="font-semibold text-gray-900">₹{Number(o.total ?? 0).toFixed(2)}</div>
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-medium uppercase tracking-wide text-gray-500 lg:hidden">Location</div>

@@ -57,5 +57,14 @@ export async function GET(req: Request) {
     orders = rows;
   }
 
-  return jsonOk({ orders, nextCursor });
+  return jsonOk({
+    orders: orders.map((order) => ({
+      ...order,
+      total: Number(order.total ?? 0),
+      createdAt: order.createdAt.toISOString(),
+      updatedAt: order.updatedAt.toISOString(),
+      user: order.user ?? { id: "unknown", email: "Unknown user", name: null },
+    })),
+    nextCursor,
+  });
 }

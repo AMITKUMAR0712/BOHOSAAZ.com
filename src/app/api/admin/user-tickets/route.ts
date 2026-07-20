@@ -50,10 +50,23 @@ export async function GET(req: Request) {
 
   return jsonOk({
     tickets: tickets.map((t) => ({
-      ...t,
+      id: t.id,
+      category: t.category,
+      subject: t.subject,
+      status: t.status,
+      priority: t.priority,
+      orderId: t.orderId,
+      returnRequestId: t.returnRequestId,
       createdAt: t.createdAt.toISOString(),
       updatedAt: t.updatedAt.toISOString(),
-      messages: t.messages.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() })),
+      user: t.user
+        ? { id: t.user.id, email: t.user.email, name: t.user.name, phone: t.user.phone }
+        : { id: "unknown", email: "Unknown user", name: null, phone: null },
+      messages: t.messages.map((m) => ({
+        message: m.message,
+        senderRole: m.senderRole,
+        createdAt: m.createdAt.toISOString(),
+      })),
     })),
   });
 }

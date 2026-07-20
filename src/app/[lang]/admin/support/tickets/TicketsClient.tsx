@@ -20,23 +20,39 @@ type TicketRow = {
 export default function TicketsClient({
   lang,
   initialTickets,
+  initialError = null,
 }: {
   lang: string;
   initialTickets: TicketRow[];
+  initialError?: string | null;
 }) {
   const [tickets, setTickets] = useState<TicketRow[]>(initialTickets);
+  const [msg, setMsg] = useState<string | null>(initialError);
   const [loading, setLoading] = useState(false);
 
   async function reload() {
     setLoading(true);
+    setMsg(null);
     const res = await fetch("/api/admin/support/tickets?take=50", { credentials: "include" });
     const data = await res.json().catch(() => null);
     if (!res.ok || !data?.ok) {
-      toast.error(data?.error || "Failed to load tickets");
+      const error = data?.error || "Failed to load tickets";
+      setMsg(error);
+      toast.error(error);
       setLoading(false);
       return;
     }
-    setTickets((data.data?.tickets || []) as TicketRow[]);
+    setTickets(
+      ((data.data?.tickets || []) as TicketRow[]).map((t) => ({
+        ...t,
+        vendor: t.vendor ?? { id: "unknown", shopName: "Unknown vendor", status: "UNKNOWN" },
+        creator: t.creator ?? { id: "unknown", email: "Unknown user", name: null },
+        messages: (t.messages || []).map((m) => ({
+          ...m,
+          createdAt: typeof m.createdAt === "string" ? m.createdAt : new Date(m.createdAt).toISOString(),
+        })),
+      })),
+    );
     setLoading(false);
   }
 
@@ -44,6 +60,8 @@ export default function TicketsClient({
     <div className="p-6 md:p-10">
       <h1 className="text-2xl font-semibold">Support Tickets</h1>
       <p className="mt-1 text-sm text-gray-600">Vendor ↔ Admin inbox</p>
+
+      {msg && <div className="mt-3 text-sm text-red-600">{msg}</div>}
 
       <div className="mt-4">
         <div className="flex flex-wrap items-center gap-3">
@@ -77,8 +95,8 @@ export default function TicketsClient({
                 <div className="text-xs text-gray-600">{t.category}</div>
               </div>
               <div>
-                <div className="font-semibold">{t.vendor.shopName}</div>
-                <div className="text-xs text-gray-500">{t.creator.email}</div>
+                <div className="font-semibold">{t.vendor?.shopName || "Unknown vendor"}</div>
+                <div className="text-xs text-gray-500">{t.creator?.email || "Unknown user"}</div>
               </div>
               <div className="font-semibold">{t.status}</div>
               <div className="col-span-3 text-xs text-gray-700">
@@ -94,6 +112,9 @@ export default function TicketsClient({
             </div>
           );
         })}
+        {!tickets.length ? (
+          <div className="border-t p-6 text-center text-sm text-gray-600">No support tickets found.</div>
+        ) : null}
       </div>
     </div>
   );

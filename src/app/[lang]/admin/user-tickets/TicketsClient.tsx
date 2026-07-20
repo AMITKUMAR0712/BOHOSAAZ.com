@@ -21,12 +21,14 @@ type TicketRow = {
 export default function TicketsClient({
   lang,
   initialTickets,
+  initialError = null,
 }: {
   lang: string;
   initialTickets: TicketRow[];
+  initialError?: string | null;
 }) {
   const [tickets, setTickets] = useState<TicketRow[]>(initialTickets);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(initialError);
   const [loading, setLoading] = useState(false);
 
   async function reload() {
@@ -39,7 +41,16 @@ export default function TicketsClient({
       setLoading(false);
       return;
     }
-    setTickets((data.data?.tickets || []) as TicketRow[]);
+    setTickets(
+      ((data.data?.tickets || []) as TicketRow[]).map((t) => ({
+        ...t,
+        user: t.user ?? { id: "unknown", email: "Unknown user", name: null, phone: null },
+        messages: (t.messages || []).map((m) => ({
+          ...m,
+          createdAt: typeof m.createdAt === "string" ? m.createdAt : new Date(m.createdAt).toISOString(),
+        })),
+      })),
+    );
     setLoading(false);
   }
 
@@ -84,8 +95,8 @@ export default function TicketsClient({
                 </div>
               </div>
               <div>
-                <div className="font-semibold">{t.user.name || "User"}</div>
-                <div className="text-xs text-gray-500">{t.user.email}</div>
+                <div className="font-semibold">{t.user?.name || "User"}</div>
+                <div className="text-xs text-gray-500">{t.user?.email || "Unknown user"}</div>
               </div>
               <div className="font-semibold">{t.status}</div>
               <div className="col-span-3 text-xs text-gray-700">
@@ -100,6 +111,9 @@ export default function TicketsClient({
             </div>
           );
         })}
+        {!tickets.length ? (
+          <div className="border-t p-6 text-center text-sm text-gray-600">No user tickets found.</div>
+        ) : null}
       </div>
     </div>
   );
