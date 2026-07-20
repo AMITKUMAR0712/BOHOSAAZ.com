@@ -77,3 +77,36 @@ export async function GET(req: Request) {
 
   return jsonOk({ users: items, nextCursor });
 }
+
+export async function DELETE(req: Request) {
+  const admin = await requireAdmin();
+  if (!admin) return jsonError("Unauthorized", 401);
+
+  const url = new URL(req.url);
+  const scope = url.searchParams.get("scope");
+  if (scope !== "non-admin") {
+    return jsonError("Invalid delete scope", 400);
+  }
+
+  const users = await prisma.user.findMany({
+    where: { role: { not: "ADMIN" } },
+    select: { id: true, vendor: { select: { id: true } } },
+  });
+
+  let deleted = 0;
+  for (const user of users) {
+    if (user.id === admin.id) continue;
+    try {
+      if (user.vendor?.id) {
+        await prisma.product.deleteMany({ where: { vendorId: user.vendor.id } });
+        await prisma.vendor.delete({ where: { id: user.vendor.id } });
+      }
+      await prisma.user.delete({ where: { id: user.id } });
+      deleted += 1;
+    } catch {
+      // Skip users that cannot be deleted due to related records.
+    }
+  }
+
+  return jsonOk({ deleted });
+}

@@ -292,7 +292,7 @@ export default function CartClient({ langPrefix }: { langPrefix?: string }) {
             <Card className="overflow-hidden bg-card/90 shadow-premium">
               <div className="border-b border-border bg-muted/25 px-5 py-4">
                 <div className="font-heading text-lg text-foreground">Summary</div>
-                <div className="mt-1 text-sm text-muted-foreground">Secure checkout • COD available</div>
+                <div className="mt-1 text-sm text-muted-foreground">Secure checkout</div>
               </div>
 
               <div className="p-5">
@@ -314,7 +314,7 @@ export default function CartClient({ langPrefix }: { langPrefix?: string }) {
                 </Link>
 
                 <div className="mt-4 text-xs text-muted-foreground">
-                  Taxes and shipping are calculated at checkout.
+                  Price is inclusive of all applicable taxes and delivery charges.
                 </div>
               </div>
             </Card>

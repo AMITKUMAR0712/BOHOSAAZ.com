@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/PasswordInput";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Gift, Heart, ShieldCheck, Sparkles, Store, Truck } from "lucide-react";
+import { Gift, Heart, ShieldCheck, Sparkles, Truck } from "lucide-react";
 
 export default function RegisterClient({
   langPrefix,
@@ -27,8 +27,7 @@ export default function RegisterClient({
   const vendorNext = `${langPrefix}/account/vendor-apply`;
   const vendorLoginHref = `${langPrefix}/login?next=${encodeURIComponent(vendorNext)}`;
   const startsAsVendor = next === vendorNext || next === "/account/vendor-apply";
-  const [accountType, setAccountType] = useState<"user" | "vendor">(() => (startsAsVendor ? "vendor" : "user"));
-  const vendorFlowActive = accountType === "vendor";
+  const vendorFlowActive = startsAsVendor;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,7 +44,9 @@ export default function RegisterClient({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Registration failed");
 
-      const target = await resolvePostLoginRedirect({ next: vendorFlowActive ? vendorNext : next });
+      const target = await resolvePostLoginRedirect({
+        next: vendorFlowActive ? vendorNext : next || `${langPrefix}/shop`,
+      });
 
       try {
         localStorage.setItem("bohosaaz_auth_ts", String(Date.now()));
@@ -116,19 +117,6 @@ export default function RegisterClient({
             </div>
           </div>
 
-          <div className="mt-3 overflow-hidden rounded-[26px] border border-primary/20 bg-linear-to-br from-primary/12 via-background/70 to-amber-500/10 p-3 shadow-sm">
-            <div className="flex items-start gap-3">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
-                <Store className="h-5 w-5" aria-hidden />
-              </div>
-              <div className="min-w-0">
-                <div className="font-heading text-base text-foreground">Create account as vendor</div>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  Select vendor role, create account, submit all shop/KYC details, then wait for admin approval.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div className="order-1 md:order-2">
@@ -149,35 +137,6 @@ export default function RegisterClient({
 
             <CardContent className="p-4 md:p-5">
               <form onSubmit={onSubmit} className="grid gap-3">
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={() => setAccountType("user")}
-                    className={
-                      "rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-sm " +
-                      (accountType === "user"
-                        ? "border-primary/45 bg-primary/10 text-foreground"
-                        : "border-border bg-background/60 text-muted-foreground hover:text-foreground")
-                    }
-                  >
-                    <span className="block text-xs uppercase tracking-[0.18em]">User Account</span>
-                    <span className="mt-1 block text-sm font-semibold">Shop, wishlist and orders</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAccountType("vendor")}
-                    className={
-                      "rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-sm " +
-                      (accountType === "vendor"
-                        ? "border-primary/45 bg-primary/10 text-foreground"
-                        : "border-border bg-background/60 text-muted-foreground hover:text-foreground")
-                    }
-                  >
-                    <span className="block text-xs uppercase tracking-[0.18em]">Vendor Account</span>
-                    <span className="mt-1 block text-sm font-semibold">Sell after admin approval</span>
-                  </button>
-                </div>
-
                 <div className="grid gap-2">
                   <label className="text-xs tracking-[0.22em] uppercase text-muted-foreground">
                     Name
@@ -226,18 +185,6 @@ export default function RegisterClient({
                 <Button type="submit" size="lg" disabled={loading} className="w-full rounded-2xl uppercase tracking-[0.14em]">
                   {loading ? "Creating..." : vendorFlowActive ? "Create vendor account" : "Start gifting"}
                 </Button>
-
-                {!vendorFlowActive ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="lg"
-                    className="w-full rounded-2xl uppercase tracking-[0.14em]"
-                    onClick={() => setAccountType("vendor")}
-                  >
-                    Create account for vendor
-                  </Button>
-                ) : null}
 
                 <div className="rounded-2xl border border-border bg-background/60 p-3 text-sm text-muted-foreground">
                   Already have an account?{" "}

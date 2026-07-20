@@ -72,6 +72,11 @@ export default function ContactClient() {
               <div className="mt-2 font-heading text-xl text-foreground">Product and order help</div>
               <div className="mt-1 text-sm text-muted-foreground">Ask about sizing, delivery, personalization or checkout.</div>
             </div>
+            <div className="rounded-[28px] border border-border bg-background/65 p-5 shadow-sm backdrop-blur-xl">
+              <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Direct email</div>
+              <div className="mt-2 font-heading text-xl text-foreground">care@bohosaaz.com</div>
+              <div className="mt-1 text-sm text-muted-foreground">Contact form messages are delivered to this inbox.</div>
+            </div>
           </div>
         </div>
 

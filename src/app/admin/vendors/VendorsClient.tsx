@@ -82,6 +82,22 @@ export default function VendorsClient({
     reload();
   }
 
+  async function deleteVendor(vendorId: string, shopName: string) {
+    if (!window.confirm(`Delete vendor "${shopName}"? Products and vendor data will be removed.`)) return;
+
+    const res = await fetch(`/api/admin/vendors/${vendorId}/delete`, {
+      method: "POST",
+      credentials: "include",
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) {
+      toast.error(data?.error || "Delete failed");
+      return;
+    }
+    toast.success("Vendor deleted");
+    reload();
+  }
+
   return (
     <div className="p-6 md:p-10">
       <Card>
@@ -163,6 +179,13 @@ export default function VendorsClient({
                             onClick={() => reject(v.id)}
                           >
                             Reject
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => deleteVendor(v.id, v.shopName)}
+                          >
+                            Delete
                           </Button>
                         </div>
                       </TD>

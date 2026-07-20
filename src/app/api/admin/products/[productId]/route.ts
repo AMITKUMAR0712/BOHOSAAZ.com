@@ -22,7 +22,7 @@ const patchSchema = z.object({
   description: z.string().optional().nullable(),
   shortDescription: z.string().optional().nullable(),
   // pricing
-  currency: z.literal("INR").optional(),
+  currency: z.enum(["INR", "USD"]).optional(),
   mrp: z.number().positive().optional().nullable(),
   price: z.number().positive().optional(),
   salePrice: z.number().positive().optional().nullable(),
@@ -207,7 +207,7 @@ export async function PATCH(
         slug: nextSlug ?? undefined,
         description: b.description ?? undefined,
         shortDescription: b.shortDescription !== undefined ? (b.shortDescription ?? null) : undefined,
-        currency: "INR",
+        currency: b.currency ?? undefined,
         mrp: b.mrp !== undefined ? (b.mrp ?? null) : undefined,
         price: b.price ?? undefined,
         salePrice: b.salePrice !== undefined ? (b.salePrice ?? null) : undefined,

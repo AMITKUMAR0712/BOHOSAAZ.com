@@ -183,28 +183,29 @@ export default function AccountProfilePage() {
   }
 
   if (loading) {
-    return <div className="rounded-2xl border p-4 text-sm text-gray-600">Loading…</div>;
+    return <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">Loading…</div>;
   }
 
   if (!me) {
     return (
-      <div className="rounded-2xl border p-4 text-sm text-gray-600">
-        You need to sign in to view your profile. <Link className="underline" href="/login">Sign in</Link>
+      <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
+        You need to sign in to view your profile. <Link className="underline text-primary" href="/login">Sign in</Link>
       </div>
     );
   }
 
   return (
     <div className="grid gap-6">
-      <div className="rounded-2xl border p-4">
-        <div className="text-xl font-semibold">Profile</div>
-        <div className="mt-1 text-sm text-gray-600">Update your personal details.</div>
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Account</div>
+        <div className="mt-2 font-heading text-2xl tracking-tight text-foreground">Profile</div>
+        <div className="mt-1 text-sm text-muted-foreground">Update your personal details.</div>
 
         {msg ? <div className="mt-3 text-sm">{msg}</div> : null}
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <label className="grid gap-1">
-            <span className="text-xs text-gray-600">Name</span>
+            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Name</span>
             <input
               className="rounded-lg border px-3 py-2"
               value={name}
@@ -214,12 +215,12 @@ export default function AccountProfilePage() {
           </label>
 
           <label className="grid gap-1">
-            <span className="text-xs text-gray-600">Email (read-only)</span>
-            <input className="rounded-lg border px-3 py-2 bg-gray-50" value={me.email} readOnly />
+            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Email (read-only)</span>
+            <input className="rounded-lg border border-border bg-muted/30 px-3 py-2" value={me.email} readOnly />
           </label>
 
           <label className="grid gap-1">
-            <span className="text-xs text-gray-600">Phone</span>
+            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Phone</span>
             <input
               className="rounded-lg border px-3 py-2"
               value={phone}
@@ -238,11 +239,11 @@ export default function AccountProfilePage() {
         </button>
       </div>
 
-      <div className="rounded-2xl border p-4">
+      <div className="rounded-2xl border border-border bg-card p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-xl font-semibold">Shipping addresses</div>
-            <div className="mt-1 text-sm text-gray-600">Add multiple addresses and choose default, primary, or secondary.</div>
+            <div className="font-heading text-xl text-foreground">Shipping addresses</div>
+            <div className="mt-1 text-sm text-muted-foreground">Add multiple addresses and choose default, primary, or secondary.</div>
           </div>
           <button className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50" onClick={() => setAddr(defaultAddress)}>
             Add new
@@ -287,11 +288,11 @@ export default function AccountProfilePage() {
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <label className="grid gap-1">
-            <span className="text-xs text-gray-600">Label</span>
+            <span className="text-xs text-muted-foreground">Label</span>
             <input className="rounded-lg border px-3 py-2" value={addr.label} onChange={(e) => setAddr({ ...addr, label: e.target.value })} placeholder="Home, Office, Parents..." />
           </label>
           <label className="grid gap-1">
-            <span className="text-xs text-gray-600">Type</span>
+            <span className="text-xs text-muted-foreground">Type</span>
             <select className="rounded-lg border px-3 py-2" value={addr.kind} onChange={(e) => setAddr({ ...addr, kind: e.target.value as Address["kind"], isDefault: e.target.value === "DEFAULT" })}>
               <option value="PRIMARY">Primary</option>
               <option value="DEFAULT">Default</option>
@@ -299,31 +300,31 @@ export default function AccountProfilePage() {
             </select>
           </label>
           <label className="grid gap-1">
-            <span className="text-xs text-gray-600">Full name</span>
+            <span className="text-xs text-muted-foreground">Full name</span>
             <input className="rounded-lg border px-3 py-2" value={addr.fullName} onChange={(e) => setAddr({ ...addr, fullName: e.target.value })} />
           </label>
           <label className="grid gap-1">
-            <span className="text-xs text-gray-600">Phone</span>
+            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Phone</span>
             <input className="rounded-lg border px-3 py-2" value={addr.phone} onChange={(e) => setAddr({ ...addr, phone: e.target.value })} />
           </label>
           <label className="grid gap-1 md:col-span-2">
-            <span className="text-xs text-gray-600">Address line 1</span>
+            <span className="text-xs text-muted-foreground">Address line 1</span>
             <input className="rounded-lg border px-3 py-2" value={addr.address1} onChange={(e) => setAddr({ ...addr, address1: e.target.value })} />
           </label>
           <label className="grid gap-1 md:col-span-2">
-            <span className="text-xs text-gray-600">Address line 2</span>
+            <span className="text-xs text-muted-foreground">Address line 2</span>
             <input className="rounded-lg border px-3 py-2" value={addr.address2 || ""} onChange={(e) => setAddr({ ...addr, address2: e.target.value })} />
           </label>
           <label className="grid gap-1">
-            <span className="text-xs text-gray-600">City</span>
+            <span className="text-xs text-muted-foreground">City</span>
             <input className="rounded-lg border px-3 py-2" value={addr.city} onChange={(e) => setAddr({ ...addr, city: e.target.value })} />
           </label>
           <label className="grid gap-1">
-            <span className="text-xs text-gray-600">State</span>
+            <span className="text-xs text-muted-foreground">State</span>
             <input className="rounded-lg border px-3 py-2" value={addr.state} onChange={(e) => setAddr({ ...addr, state: e.target.value })} />
           </label>
           <label className="grid gap-1">
-            <span className="text-xs text-gray-600">Pincode</span>
+            <span className="text-xs text-muted-foreground">Pincode</span>
             <input className="rounded-lg border px-3 py-2" value={addr.pincode} onChange={(e) => setAddr({ ...addr, pincode: e.target.value })} />
           </label>
           <label className="flex items-center gap-2 text-sm">
@@ -343,11 +344,11 @@ export default function AccountProfilePage() {
 
       <div className="rounded-2xl border p-4">
         <div className="text-xl font-semibold">Password</div>
-        <div className="mt-1 text-sm text-gray-600">Change your password.</div>
+        <div className="mt-1 text-sm text-muted-foreground">Change your password.</div>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <label className="grid gap-1">
-            <span className="text-xs text-gray-600">Current password</span>
+            <span className="text-xs text-muted-foreground">Current password</span>
             <input
               className="rounded-lg border px-3 py-2"
               type="password"
@@ -356,7 +357,7 @@ export default function AccountProfilePage() {
             />
           </label>
           <label className="grid gap-1">
-            <span className="text-xs text-gray-600">New password</span>
+            <span className="text-xs text-muted-foreground">New password</span>
             <input
               className="rounded-lg border px-3 py-2"
               type="password"

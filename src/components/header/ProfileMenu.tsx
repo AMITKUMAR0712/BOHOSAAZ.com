@@ -115,6 +115,7 @@ export function ProfileMenu({
           {/* Menu */}
           <nav className="p-2 grid gap-1">
             <MenuLink href={`${langPrefix}/account`} label="My Account" />
+            <MenuLink href={`${langPrefix}/account/profile`} label="Profile & Address" />
             <MenuLink href={`${langPrefix}/account/orders`} label="Orders" />
             <MenuLink
               href={`${langPrefix}/account/returns`}

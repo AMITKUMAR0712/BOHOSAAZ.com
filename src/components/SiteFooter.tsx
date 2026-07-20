@@ -44,8 +44,8 @@ export default function SiteFooter() {
   return (
     <footer className="relative mt-5 overflow-hidden bg-linear-to-b from-card/65 to-background pb-[calc(var(--mobileBottomNav)+env(safe-area-inset-bottom,0px)+1.5rem)] md:mt-6 md:pb-0">
       <div className="h-1 w-full bg-linear-to-r from-transparent via-primary/55 to-transparent" />
-      <div className="mx-auto max-w-7xl px-4 py-6">
-        <div className="relative overflow-hidden rounded-[34px] bg-card/55 p-5 ring-1 ring-white/25 md:p-7">
+      <div className="mx-auto max-w-7xl px-4 py-4">
+        <div className="relative overflow-hidden rounded-[28px] bg-card/55 p-4 ring-1 ring-white/25 md:p-5">
           <div className="relative grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
             <div className="max-w-2xl">
               <div className="font-heading text-2xl tracking-tight text-foreground md:text-3xl">
@@ -156,13 +156,13 @@ export default function SiteFooter() {
           {/* Left */}
           <div className="lg:col-span-4">
             <Link href={lp} className="flex items-center gap-4 group">
-              <div className="grid h-18 w-18 place-items-center overflow-hidden rounded-full border-2 border-primary/25 bg-card shadow-[0_12px_34px_rgba(135,56,20,0.20),0_0_0_5px_rgba(184,134,50,0.09)] transition duration-300 ease-out group-hover:scale-105 group-hover:border-primary/45 group-hover:shadow-premium sm:h-20 sm:w-20">
+              <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-full border-2 border-primary/25 bg-card shadow-[0_12px_34px_rgba(135,56,20,0.20),0_0_0_5px_rgba(184,134,50,0.09)] transition duration-300 ease-out group-hover:scale-105 group-hover:border-primary/45 group-hover:shadow-premium sm:h-16 sm:w-16">
                 <Image
                   src="/logo copy.jpeg"
                   alt="Bohosaaz"
                   width={112}
                   height={112}
-                  className="h-16 w-16 rounded-full object-contain sm:h-18 sm:w-18"
+                  className="h-12 w-12 rounded-full object-contain sm:h-14 sm:w-14"
                 />
               </div>
               <div>
@@ -192,6 +192,7 @@ export default function SiteFooter() {
                 <FooterLink currentPathname={pathname} href={`${lp}/brands/popular`} label="Popular Brands" />
                 <FooterLink currentPathname={pathname} href={`${lp}/brands/luxury`} label="Luxury Brands" />
                 <FooterLink currentPathname={pathname} href={`${lp}/about`} label="About Bohosaaz" />
+                <FooterLink currentPathname={pathname} href={`${lp}/blog`} label="Blog" />
               </FooterCol>
 
               {/* Account */}
@@ -208,7 +209,7 @@ export default function SiteFooter() {
               <FooterCol title="Social">
                 <a
                   className="text-muted-foreground hover:text-foreground transition flex items-center gap-2 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  href="https://instagram.com"
+                  href="https://www.instagram.com/bohosaaz"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -217,7 +218,7 @@ export default function SiteFooter() {
                 </a>
                 <a
                   className="text-muted-foreground hover:text-foreground transition flex items-center gap-2 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  href="https://facebook.com"
+                  href="https://www.facebook.com/bohosaaz"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -226,7 +227,7 @@ export default function SiteFooter() {
                 </a>
                 <a
                   className="text-muted-foreground hover:text-foreground transition flex items-center gap-2 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  href="https://youtube.com"
+                  href="https://www.youtube.com/@bohosaaz"
                   target="_blank"
                   rel="noreferrer"
                 >

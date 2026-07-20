@@ -470,11 +470,11 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
     <>
     <style>{`
       main.site-content {
-        --site-header-offset: 116px;
+        --site-header-offset: 92px;
       }
       @media (max-width: 767px) {
         main.site-content {
-          --site-header-offset: 152px;
+          --site-header-offset: 128px;
         }
       }
       @keyframes boho-nav-pop {
@@ -499,7 +499,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
       {/* Main row: logo, category, search and actions */}
       <div
         className={`mx-auto flex max-w-6xl flex-wrap items-center gap-2.5 px-3 transition-all duration-500 ease-out sm:gap-3 sm:px-4 lg:flex-nowrap ${
-          !isDashboardRoute && scrolled ? "py-2" : "py-2.5"
+          !isDashboardRoute && scrolled ? "py-1.5" : "py-2"
         }`}
       >
         <Link
@@ -508,7 +508,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
           aria-label="Bohosaaz home"
         >
           <span className={`grid shrink-0 place-items-center overflow-hidden rounded-full bg-[#f8ead8] shadow-[0_8px_22px_rgba(69,40,24,0.12)] ring-1 ring-white/55 transition-all duration-500 ${
-            !isDashboardRoute && scrolled ? "h-12 w-12" : "h-14 w-14 sm:h-15 sm:w-15"
+            !isDashboardRoute && scrolled ? "h-10 w-10" : "h-11 w-11 sm:h-12 sm:w-12"
           }`}>
             <Image
               src="/logo copy.jpeg"
@@ -516,7 +516,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
               width={64}
               height={64}
               className={`rounded-full object-contain transition-all duration-500 ${
-                !isDashboardRoute && scrolled ? "h-11 w-11" : "h-13 w-13 sm:h-14 sm:w-14"
+                !isDashboardRoute && scrolled ? "h-9 w-9" : "h-10 w-10 sm:h-11 sm:w-11"
               }`}
               priority
             />

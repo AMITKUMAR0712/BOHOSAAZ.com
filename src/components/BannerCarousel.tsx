@@ -121,7 +121,7 @@ export function BannerCarousel({
           setPaused(false);
         }}
       >
-        <div className="relative min-h-[280px] w-full sm:aspect-16/7 sm:min-h-0">
+        <div className="relative flex min-h-[220px] w-full items-center justify-center bg-black/5 sm:aspect-video sm:min-h-0">
           {posterUrl ? (
             <img
               src={posterUrl}
@@ -147,7 +147,7 @@ export function BannerCarousel({
               key={storyUrl}
               src={storyUrl}
               poster={posterUrl || undefined}
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+              className={`absolute inset-0 m-auto h-full w-full max-h-full max-w-full object-contain object-center transition-opacity duration-300 ${
                 mediaReady ? "opacity-100" : "opacity-0"
               }`}
               autoPlay

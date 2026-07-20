@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { PriceBlock } from "@/components/PriceBlock";
+import { QtyStepper } from "@/components/ui/qty-stepper";
 import { useCurrency } from "@/lib/currency-context";
 import { getCustomerUnitPrice } from "@/lib/customer-pricing";
 
@@ -32,6 +33,7 @@ export default function AccountWishlistClient({
   const { toast } = useToast();
   const [items, setItems] = React.useState<WishlistRow[]>(initialItems);
   const [busyId, setBusyId] = React.useState<string | null>(null);
+  const [qtyByProduct, setQtyByProduct] = React.useState<Record<string, number>>({});
   const { currency: userCurrency } = useCurrency();
 
   async function remove(productId: string) {
@@ -128,24 +130,55 @@ export default function AccountWishlistClient({
                 />
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <QtyStepper
+                  value={qtyByProduct[row.product.id] ?? 1}
+                  min={1}
+                  onChange={(qty) =>
+                    setQtyByProduct((prev) => ({
+                      ...prev,
+                      [row.product.id]: qty,
+                    }))
+                  }
+                  disabled={busyId === row.product.id}
+                />
                 <Button
                   variant="soft"
                   disabled={busyId === row.product.id}
                   onClick={async () => {
-                    const res = await fetch("/api/cart/add", {
-                      method: "POST",
-                      credentials: "include",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ productId: row.product.id, qty: 1 }),
-                    });
-                    if (res.status === 401) {
-                      const next = `${window.location.pathname}${window.location.search}`;
-                      window.location.href = `${langPrefix}/login?next=${encodeURIComponent(next)}`;
-                      return;
+                    const qty = qtyByProduct[row.product.id] ?? 1;
+                    setBusyId(row.product.id);
+                    try {
+                      const res = await fetch("/api/cart/add", {
+                        method: "POST",
+                        credentials: "include",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ productId: row.product.id, qty }),
+                      });
+                      if (res.status === 401) {
+                        const next = `${window.location.pathname}${window.location.search}`;
+                        window.location.href = `${langPrefix}/login?next=${encodeURIComponent(next)}`;
+                        return;
+                      }
+                      if (!res.ok) {
+                        toast({ variant: "danger", title: "Cart", message: "Add to cart failed" });
+                        return;
+                      }
+                      const delRes = await fetch("/api/wishlist", {
+                        method: "DELETE",
+                        credentials: "include",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ productId: row.product.id }),
+                      });
+                      if (delRes.ok) {
+                        setItems((prev) => prev.filter((x) => x.product.id !== row.product.id));
+                        window.dispatchEvent(new Event("bohosaaz-wishlist"));
+                      }
+                      window.dispatchEvent(new Event("bohosaaz-cart"));
+                      toast({ variant: "success", title: "Added to cart", message: "Moved from wishlist to cart." });
+                    } finally {
+                      setBusyId(null);
                     }
-                    if (res.ok) toast({ variant: "success", title: "Added to cart", message: "Added." });
-                    else toast({ variant: "danger", title: "Cart", message: "Add to cart failed" });
                   }}
                 >
                   Add to cart

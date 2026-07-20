@@ -25,6 +25,7 @@ export type ProductRow = {
   sku: string | null;
   price: number;
   salePrice: number | null;
+  currency: "INR" | "USD";
   stock: number;
   status: "DRAFT" | "PENDING" | "PUBLISHED" | "REJECTED";
   isActive: boolean;
@@ -59,7 +60,7 @@ type ProductDetails = {
   slug?: string;
   description?: string | null;
   shortDescription?: string | null;
-  currency: "INR";
+  currency: "INR" | "USD";
   mrp?: number | null;
   price: number;
   salePrice: number | null;
@@ -191,7 +192,7 @@ export default function ProductsClient({
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [brandId, setBrandId] = useState<string>("");
-  const [currency, setCurrency] = useState<"INR">("INR");
+  const [currency, setCurrency] = useState<"INR" | "USD">("INR");
   const [price, setPrice] = useState("999");
   const [salePrice, setSalePrice] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -230,7 +231,7 @@ export default function ProductsClient({
   const [eDescription, setEDescription] = useState("");
   const [eCategoryId, setECategoryId] = useState("");
   const [eBrandId, setEBrandId] = useState<string>("");
-  const [eCurrency, setECurrency] = useState<"INR">("INR");
+  const [eCurrency, setECurrency] = useState<"INR" | "USD">("INR");
   const [ePrice, setEPrice] = useState("");
   const [eSalePrice, setESalePrice] = useState("");
   const [eStock, setEStock] = useState("");
@@ -368,6 +369,7 @@ export default function ProductsClient({
       ...p,
       price: Number(p.price ?? 0),
       salePrice: p.salePrice == null ? null : Number(p.salePrice),
+      currency: p.currency === "USD" ? "USD" : "INR",
     }));
     setProducts(loaded);
     if (!silent) setLoading(false);
@@ -633,7 +635,7 @@ export default function ProductsClient({
       setEDescription(p.description ?? "");
       setECategoryId(p.categoryId);
       setEBrandId(p.brandId ?? "");
-      setECurrency("INR");
+      setECurrency(p.currency === "USD" ? "USD" : "INR");
       setEPrice(String(p.price ?? ""));
       setESalePrice(p.salePrice != null ? String(p.salePrice) : "");
       setEStock(String(p.stock ?? ""));
@@ -891,9 +893,14 @@ export default function ProductsClient({
 
                   <div className="grid gap-1">
                     <div className="text-xs text-muted-foreground">Currency</div>
-                    <div className="rounded-(--radius) border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
-                      INR only
-                    </div>
+                    <select
+                      className="rounded-(--radius) border border-border bg-background px-3 py-2 text-sm"
+                      value={currency}
+                      onChange={(e) => setCurrency(e.target.value as "INR" | "USD")}
+                    >
+                      <option value="INR">INR (₹)</option>
+                      <option value="USD">USD ($)</option>
+                    </select>
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1220,11 +1227,6 @@ export default function ProductsClient({
                           </div>
 
                           <div className="mt-2 flex flex-wrap gap-2">
-                            {p.forceCodOnly ? (
-                              <span className="rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[10px] font-semibold">
-                                COD available
-                              </span>
-                            ) : null}
                             {p.isFeatured ? (
                               <span className="rounded-full bg-purple-100 text-purple-800 px-2 py-0.5 text-[10px] font-semibold">
                                 Featured
@@ -1257,8 +1259,8 @@ export default function ProductsClient({
                           </div>
                         </TD>
 
-                        <TD>₹{p.price}</TD>
-                        <TD>{p.salePrice != null ? `₹${p.salePrice}` : "-"}</TD>
+                        <TD>{p.currency === "USD" ? "$" : "₹"}{p.price}</TD>
+                        <TD>{p.salePrice != null ? `${p.currency === "USD" ? "$" : "₹"}${p.salePrice}` : "-"}</TD>
                         <TD>{p.stock}</TD>
                         <TD>
                           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${statusBadgeClass(p.status)}`}>
@@ -1435,9 +1437,14 @@ export default function ProductsClient({
 
               <div className="grid gap-1">
                 <div className="text-xs text-muted-foreground">Currency</div>
-                <div className="rounded-(--radius) border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
-                  INR only
-                </div>
+                <select
+                  className="rounded-(--radius) border border-border bg-background px-3 py-2 text-sm"
+                  value={eCurrency}
+                  onChange={(e) => setECurrency(e.target.value as "INR" | "USD")}
+                >
+                  <option value="INR">INR (₹)</option>
+                  <option value="USD">USD ($)</option>
+                </select>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

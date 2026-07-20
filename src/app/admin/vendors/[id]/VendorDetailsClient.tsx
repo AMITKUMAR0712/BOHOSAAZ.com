@@ -76,15 +76,16 @@ export default function VendorDetailsClient({ initialVendor }: { initialVendor: 
         body: action === "reject" ? JSON.stringify({ reason }) : undefined,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Action failed");
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || "Action failed");
+      }
 
       toast.success(action === "approve" ? "Vendor approved successfully" : "Vendor rejected");
 
-      // Refresh vendor data
       const refreshRes = await fetch(`/api/admin/vendors/${vendor.id}`);
-      const refreshData = await refreshRes.json();
-      if (refreshRes.ok) setVendor(refreshData.vendor);
+      const refreshData = await refreshRes.json().catch(() => null);
+      if (refreshRes.ok && refreshData?.vendor) setVendor(refreshData.vendor);
 
     } catch (error: any) {
       toast.error(error.message);
@@ -93,6 +94,26 @@ export default function VendorDetailsClient({ initialVendor }: { initialVendor: 
     }
   }
 
+  async function deleteVendor() {
+    if (!window.confirm(`Delete vendor "${vendor.shopName}"? This cannot be undone.`)) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/vendors/${vendor.id}/delete`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) throw new Error(data?.error || "Delete failed");
+      toast.success("Vendor deleted");
+      router.push("/admin/vendors");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Delete failed";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  }
   const kyc = vendor.kyc;
   const bank = vendor.bankAccount;
 
@@ -126,6 +147,9 @@ export default function VendorDetailsClient({ initialVendor }: { initialVendor: 
               </Button>
             </>
           )}
+          <Button variant="outline" size="sm" onClick={deleteVendor} disabled={loading}>
+            Delete
+          </Button>
         </div>
       </div>
 

@@ -140,7 +140,7 @@ const createSchema = z.object({
   brandId: z.string().trim().min(1).optional().nullable(),
 
   // pricing
-  currency: z.literal("INR").optional().default("INR"),
+  currency: z.enum(["INR", "USD"]).optional().default("INR"),
   // base fields (optional when variants are provided)
   mrp: z.number().positive().optional().nullable(),
   price: z.number().positive().optional(),
@@ -313,7 +313,7 @@ export async function POST(req: NextRequest) {
         slug,
         description: parsed.data.description ?? null,
         shortDescription: parsed.data.shortDescription ?? null,
-        currency: "INR",
+        currency: parsed.data.currency,
         mrp: hasVariants ? null : (parsed.data.mrp ?? null),
         price: computedBasePrice,
         salePrice: computedBaseSale,

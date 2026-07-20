@@ -28,7 +28,7 @@ export async function POST(req: Request) {
 
   try {
     await sendEmail({
-      to: process.env.CONTACT_TO || process.env.SMTP_USER || "",
+      to: process.env.CONTACT_TO || process.env.SMTP_USER || "care@bohosaaz.com",
       subject,
       replyTo: email,
       html: `
