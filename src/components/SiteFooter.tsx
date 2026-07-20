@@ -42,60 +42,60 @@ export default function SiteFooter() {
     value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
   return (
-    <footer className="relative mt-5 overflow-hidden bg-linear-to-b from-card/65 to-background pb-[calc(var(--mobileBottomNav)+env(safe-area-inset-bottom,0px)+1.5rem)] md:mt-6 md:pb-0">
-      <div className="h-1 w-full bg-linear-to-r from-transparent via-primary/55 to-transparent" />
-      <div className="mx-auto max-w-7xl px-4 py-4">
-        <div className="relative overflow-hidden rounded-[28px] bg-card/55 p-4 ring-1 ring-white/25 md:p-5">
-          <div className="relative grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+    <footer className="relative mt-3 overflow-hidden bg-linear-to-b from-card/65 to-background pb-[calc(var(--mobileBottomNav)+env(safe-area-inset-bottom,0px)+0.75rem)] md:mt-4 md:pb-0">
+      <div className="h-px w-full bg-linear-to-r from-transparent via-primary/55 to-transparent" />
+      <div className="mx-auto max-w-7xl px-4 py-3">
+        <div className="relative overflow-hidden rounded-[24px] bg-card/55 p-3 ring-1 ring-white/25 md:p-4">
+          <div className="relative grid gap-4 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
             <div className="max-w-2xl">
-              <div className="font-heading text-2xl tracking-tight text-foreground md:text-3xl">
+              <div className="font-heading text-xl tracking-tight text-foreground md:text-2xl">
                 Find <span className="text-primary">meaningful gifts</span> for every celebration.
               </div>
-              <p className="mt-2 max-w-xl text-xs leading-relaxed text-foreground/74 md:text-sm">
+              <p className="mt-1.5 max-w-xl text-[11px] leading-relaxed text-foreground/74 md:text-xs">
                 <span className="font-semibold text-primary">Curated picks</span>, artisan craftsmanship, and{" "}
                 <span className="font-semibold text-primary">beautiful packaging</span> for moments that deserve more.
               </p>
-              <div className="mt-4 flex flex-wrap gap-2.5">
+              <div className="mt-2.5 flex flex-wrap gap-2">
                 <Link
                   href={`${lp}/shop`}
-                  className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-5 text-xs font-semibold text-primary-foreground shadow-(--shadowBtn) hover:shadow-(--shadowBtnHover) hover:brightness-95 hover:scale-[1.02] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="inline-flex h-9 items-center justify-center rounded-xl bg-primary px-4 text-[11px] font-semibold text-primary-foreground shadow-(--shadowBtn) hover:shadow-(--shadowBtnHover) hover:brightness-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   Start Gifting →
                 </Link>
                 <Link
                   href={`${lp}/categories`}
-                  className="inline-flex h-10 items-center justify-center rounded-xl border border-primary/20 bg-background/70 px-5 text-xs font-semibold text-foreground shadow-sm transition hover:border-primary/35 hover:bg-muted/35"
+                  className="inline-flex h-9 items-center justify-center rounded-xl border border-primary/20 bg-background/70 px-4 text-[11px] font-semibold text-foreground shadow-sm transition hover:border-primary/35 hover:bg-muted/35"
                 >
                   Explore Categories
                 </Link>
               </div>
             </div>
 
-            <div className="relative overflow-hidden rounded-[30px] border border-primary/22 bg-linear-to-br from-card/92 via-background/78 to-primary/14 p-4 shadow-[0_18px_52px_rgba(135,56,20,0.16)] ring-1 ring-white/35 backdrop-blur-xl">
-              <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary/14 blur-2xl" />
-              <div className="flex items-center justify-between gap-3">
+            <div className="relative overflow-hidden rounded-[22px] border border-primary/22 bg-linear-to-br from-card/92 via-background/78 to-primary/14 p-3 shadow-[0_12px_36px_rgba(135,56,20,0.12)] ring-1 ring-white/35 backdrop-blur-xl">
+              <div className="pointer-events-none absolute -right-16 -top-16 h-32 w-32 rounded-full bg-primary/14 blur-2xl" />
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <div className="text-[10px] uppercase tracking-[0.24em] text-primary/80">Safe & secure</div>
-                  <div className="font-heading text-xl tracking-tight text-foreground drop-shadow-sm">Delivered with care</div>
+                  <div className="text-[9px] uppercase tracking-[0.22em] text-primary/80">Safe & secure</div>
+                  <div className="font-heading text-lg tracking-tight text-foreground drop-shadow-sm">Delivered with care</div>
                 </div>
-                <span className="rounded-full border border-primary/15 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
+                <span className="rounded-full border border-primary/15 bg-primary/10 px-2 py-0.5 text-[9px] font-semibold text-primary">
                   Protected
                 </span>
               </div>
 
-              <div className="footer-safe-scene relative mt-4 overflow-hidden rounded-[24px] border border-primary/14 bg-background/62 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_10px_28px_rgba(135,56,20,0.10)]">
-                <div className="flex items-center justify-between gap-2">
+              <div className="footer-safe-scene relative mt-2.5 overflow-hidden rounded-[18px] border border-primary/14 bg-background/62 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_8px_20px_rgba(135,56,20,0.08)]">
+                <div className="flex items-center justify-between gap-1.5">
                   {trackingSteps.map((step, index) => {
                     const isActive = index === activeStep;
                     const isDone = index < activeStep;
 
                     return (
-                      <div key={step.label} className="relative z-10 flex min-w-0 flex-1 flex-col items-center gap-1">
+                      <div key={step.label} className="relative z-10 flex min-w-0 flex-1 flex-col items-center gap-0.5">
                         <div
                           className={
-                            "grid h-8 w-8 place-items-center rounded-full text-sm shadow-sm transition duration-500 " +
+                            "grid h-6 w-6 place-items-center rounded-full text-[11px] shadow-sm transition duration-500 " +
                             (isActive
-                              ? "scale-110 bg-primary text-primary-foreground shadow-(--shadowBtn)"
+                              ? "scale-105 bg-primary text-primary-foreground shadow-(--shadowBtn)"
                               : isDone
                                 ? "bg-primary/18 text-primary"
                                 : "bg-background/70 text-foreground/55")
@@ -105,7 +105,7 @@ export default function SiteFooter() {
                         </div>
                         <span
                           className={
-                            "truncate text-[10px] font-semibold transition " +
+                            "truncate text-[9px] font-semibold transition " +
                             (isActive || isDone ? "text-primary" : "text-muted-foreground")
                           }
                         >
@@ -114,36 +114,29 @@ export default function SiteFooter() {
                       </div>
                     );
                   })}
-                  <div className="absolute left-7 right-7 top-7 h-1 rounded-full bg-primary/10" />
+                  <div className="absolute left-5 right-5 top-5 h-0.5 rounded-full bg-primary/10" />
                   <div
-                    className="absolute left-7 top-7 h-1 rounded-full bg-primary transition-all duration-700"
+                    className="absolute left-5 top-5 h-0.5 rounded-full bg-primary transition-all duration-700"
                     style={{
                       width: `${(activeStep / (trackingSteps.length - 1)) * 100}%`,
-                      maxWidth: "calc(100% - 3.5rem)",
+                      maxWidth: "calc(100% - 2.5rem)",
                     }}
                   />
                 </div>
-                <div className="mt-3 grid gap-1.5 text-[11px] font-medium text-foreground/85 sm:grid-cols-3">
-                  <span className="rounded-lg border border-primary/10 bg-background/70 px-2 py-1">
-                    <span className="font-bold text-primary">{liveStats.successRate}%</span> success rate
+                <div className="mt-2 hidden gap-1 text-[10px] font-medium text-foreground/85 sm:grid sm:grid-cols-3">
+                  <span className="rounded-md border border-primary/10 bg-background/70 px-1.5 py-0.5">
+                    <span className="font-bold text-primary">{liveStats.successRate}%</span> success
                   </span>
-                  <span className="rounded-lg border border-primary/10 bg-background/70 px-2 py-1">
+                  <span className="rounded-md border border-primary/10 bg-background/70 px-1.5 py-0.5">
                     <span className="font-bold text-primary">{formatNumber(liveStats.delivered)}+</span> delivered
                   </span>
-                  <span className="rounded-lg border border-primary/10 bg-background/70 px-2 py-1">
+                  <span className="rounded-md border border-primary/10 bg-background/70 px-1.5 py-0.5">
                     <span className="font-bold text-primary">{Math.ceil(liveStats.etaHours / 24)} days</span> delivery
                   </span>
                 </div>
-                <div className="mt-2 flex items-center gap-2 text-[11px] font-semibold text-primary">
-                  <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/55" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-                  </span>
-                  Live secured dispatch updates
-                </div>
                 <Link
                   href={`${lp}/account/orders`}
-                  className="mt-3 inline-flex h-8 items-center justify-center rounded-lg border border-primary/15 bg-background/65 px-3 text-[11px] font-semibold text-primary transition hover:bg-primary hover:text-primary-foreground"
+                  className="mt-2 inline-flex h-7 items-center justify-center rounded-lg border border-primary/15 bg-background/65 px-2.5 text-[10px] font-semibold text-primary transition hover:bg-primary hover:text-primary-foreground"
                 >
                   Track Package
                 </Link>
@@ -151,18 +144,18 @@ export default function SiteFooter() {
             </div>
           </div>
           {/* ✅ Main Footer Content */}
-          <div className="relative mt-7 pt-6">
-          <div className="relative grid gap-8 lg:grid-cols-12">
+          <div className="relative mt-4 border-t border-border/50 pt-4">
+          <div className="relative grid gap-4 lg:grid-cols-12">
           {/* Left */}
           <div className="lg:col-span-4">
-            <Link href={lp} className="flex items-center gap-4 group">
-              <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-full border-2 border-primary/25 bg-card shadow-[0_12px_34px_rgba(135,56,20,0.20),0_0_0_5px_rgba(184,134,50,0.09)] transition duration-300 ease-out group-hover:scale-105 group-hover:border-primary/45 group-hover:shadow-premium sm:h-16 sm:w-16">
+            <Link href={lp} className="flex items-center gap-3 group">
+              <div className="grid h-11 w-11 place-items-center overflow-hidden rounded-full border-2 border-primary/25 bg-card shadow-[0_8px_24px_rgba(135,56,20,0.16)] transition duration-300 ease-out group-hover:scale-105 group-hover:border-primary/45 sm:h-12 sm:w-12">
                 <Image
                   src="/logo copy.jpeg"
                   alt="Bohosaaz"
                   width={112}
                   height={112}
-                  className="h-12 w-12 rounded-full object-contain sm:h-14 sm:w-14"
+                  className="h-9 w-9 rounded-full object-contain sm:h-10 sm:w-10"
                 />
               </div>
               <div>
@@ -175,7 +168,7 @@ export default function SiteFooter() {
               </div>
             </Link>
 
-            <p className="mt-3 max-w-sm text-xs font-bold leading-relaxed text-foreground/85">
+            <p className="mt-2 max-w-sm text-[11px] leading-relaxed text-foreground/80">
               Bohosaaz will take you on this journey elevating your gifting experience, where every gift holds an
               emotional journey thoughtfully chosen to celebrate your loved ones.
             </p>
@@ -183,7 +176,7 @@ export default function SiteFooter() {
 
           {/* Right */}
           <div className="lg:col-span-8">
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {/* Pages */}
               <FooterCol title="Pages">
                 <FooterLink currentPathname={pathname} href={lp} label="Home" />
@@ -256,7 +249,7 @@ export default function SiteFooter() {
           </div>
 
         {/* ✅ Bottom bar */}
-        <div className="relative mt-4 flex flex-col items-center justify-between gap-3 border-t border-border/60 pt-4 text-center text-xs text-muted-foreground md:flex-row md:text-left">
+        <div className="relative mt-3 flex flex-col items-center justify-between gap-2 border-t border-border/60 pt-3 text-center text-[11px] text-muted-foreground md:flex-row md:text-left">
           <div className="leading-relaxed">
             © {new Date().getFullYear()}{" "}
             <span className="font-semibold text-foreground">Bohosaaz</span>. All
@@ -298,7 +291,7 @@ function FooterCol({
       <div className="text-[10px] font-semibold tracking-[0.2em] uppercase text-primary/80">
         {title}
       </div>
-      <div className="mt-2.5 grid gap-1.5 text-xs">{children}</div>
+      <div className="mt-2 grid gap-1 text-xs">{children}</div>
     </div>
   );
 }

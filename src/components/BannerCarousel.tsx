@@ -80,7 +80,7 @@ export function BannerCarousel({
   const chrome = (() => {
     if (homeTheme !== "commerce") {
       return {
-        shell: "relative overflow-hidden rounded-[34px] bg-card shadow-premium",
+        shell: "relative h-full overflow-hidden rounded-[34px] bg-card shadow-premium",
         overlay: "pointer-events-none absolute inset-0 bg-linear-to-t from-black/10 via-transparent to-transparent",
         cta: "inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md hover:-translate-y-px active:translate-y-0 transition",
         nav: "rounded-full border border-border bg-background/70 px-3 py-2 text-sm backdrop-blur hover:bg-background/85 transition",
@@ -95,7 +95,7 @@ export function BannerCarousel({
 
     // Commerce: more retail/boxed, clearer chrome (Amazon-like vibe)
     return {
-      shell: "relative overflow-hidden rounded-2xl bg-background shadow-sm",
+      shell: "relative h-full overflow-hidden rounded-2xl bg-background shadow-sm",
         overlay: "pointer-events-none absolute inset-0 bg-linear-to-t from-black/8 via-transparent to-transparent",
       cta: "inline-flex h-11 items-center justify-center rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm hover:shadow-md transition",
       nav: "rounded-lg border border-border bg-background/85 px-3 py-2 text-sm backdrop-blur hover:bg-background transition",
@@ -109,7 +109,7 @@ export function BannerCarousel({
   })();
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-3 sm:px-4">
+    <section className="home-banner-screen mx-auto w-full max-w-6xl px-3 sm:px-4">
       <div
         className={chrome.shell}
         onMouseEnter={() => {
@@ -121,7 +121,7 @@ export function BannerCarousel({
           setPaused(false);
         }}
       >
-        <div className="relative flex min-h-[220px] w-full items-center justify-center bg-black/5 sm:aspect-video sm:min-h-0">
+        <div className="home-banner-media relative flex w-full items-center justify-center bg-black/5">
           {posterUrl ? (
             <img
               src={posterUrl}

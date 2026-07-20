@@ -1190,7 +1190,7 @@ export default async function Home({
   return (
     <div className={rootClassName} data-home-theme={homeTheme}>
       {showHomeSections ? (
-        <div className="pt-2 sm:pt-8">
+        <div className="pt-1 sm:pt-2">
           <BannerCarousel lang={lang} banners={activeBanners} homeTheme={homeTheme} />
         </div>
       ) : null}
