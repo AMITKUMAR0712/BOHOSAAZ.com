@@ -30,38 +30,68 @@ type Message = {
   createdAt: string;
 };
 
-export default function TicketClient({
-  ticket,
-  initialMessages,
-}: {
-  ticket: Ticket;
-  initialMessages: Message[];
-}) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+export default function TicketClient({ ticketId }: { ticketId: string }) {
+  const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<SupportAttachment[]>([]);
-  const [status, setStatus] = useState<Ticket["status"]>(ticket.status);
+  const [status, setStatus] = useState<Ticket["status"]>("OPEN");
   const [sending, setSending] = useState(false);
 
   const sorted = useMemo(() => messages, [messages]);
 
-  async function reload() {
-    const res = await fetch(`/api/admin/user-tickets/${ticket.id}/messages`, {
+  async function reloadMessages() {
+    const res = await fetch(`/api/admin/user-tickets/${ticketId}/messages`, {
       credentials: "include",
     });
     const data = await res.json().catch(() => null);
-    if (!res.ok || !data?.ok) return setMsg(data?.error || "Failed to load messages");
+    if (!res.ok || !data?.ok) {
+      setMsg(data?.error || "Failed to load messages");
+      return;
+    }
     setMessages((data.data?.messages || []) as Message[]);
   }
 
+  async function loadTicket() {
+    const res = await fetch(`/api/admin/user-tickets/${ticketId}`, {
+      credentials: "include",
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) {
+      setMsg(data?.error || "Failed to load ticket");
+      return false;
+    }
+    const next = data.data?.ticket as Ticket;
+    setTicket(next);
+    setStatus(next.status);
+    return true;
+  }
+
   useEffect(() => {
-    const interval = window.setInterval(() => void reload(), 5000);
+    let cancelled = false;
+    async function boot() {
+      setLoading(true);
+      setMsg(null);
+      const ok = await loadTicket();
+      if (!cancelled && ok) await reloadMessages();
+      if (!cancelled) setLoading(false);
+    }
+    void boot();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticketId]);
+
+  useEffect(() => {
+    if (!ticket) return;
+    const interval = window.setInterval(() => void reloadMessages(), 5000);
     return () => window.clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ticket.id]);
+  }, [ticket, ticketId]);
 
   async function send() {
+    if (!ticket) return;
     setMsg(null);
     const m = text.trim();
     if (!m && attachments.length === 0) return;
@@ -81,11 +111,12 @@ export default function TicketClient({
     }
     setText("");
     setAttachments([]);
-    await reload();
+    await reloadMessages();
     setSending(false);
   }
 
   async function setTicketStatus(next: Ticket["status"]) {
+    if (!ticket) return;
     setMsg(null);
     const res = await fetch(`/api/admin/user-tickets/${ticket.id}/status`, {
       method: "POST",
@@ -97,6 +128,14 @@ export default function TicketClient({
     const data = await res.json().catch(() => null);
     if (!res.ok || !data?.ok) return setMsg(data?.error || "Update failed");
     setStatus(next);
+  }
+
+  if (loading) {
+    return <div className="p-6 md:p-10 text-sm text-gray-600">Loading ticket...</div>;
+  }
+
+  if (!ticket) {
+    return <div className="p-6 md:p-10 text-sm text-red-600">{msg || "Ticket not found."}</div>;
   }
 
   return (
@@ -111,9 +150,9 @@ export default function TicketClient({
         <div>
           <h1 className="text-2xl font-semibold">{ticket.subject}</h1>
           <div className="mt-1 text-sm text-gray-600">
-            {ticket.category} • {ticket.priority} • {ticket.user.email}
+            {ticket.category} • {ticket.priority} • {ticket.user?.email || "Unknown user"}
           </div>
-          {ticket.user.phone ? (
+          {ticket.user?.phone ? (
             <div className="mt-1 text-xs text-gray-600">Phone: {ticket.user.phone}</div>
           ) : null}
           {ticket.orderId ? (
@@ -138,7 +177,7 @@ export default function TicketClient({
         </div>
       </div>
 
-      {msg && <div className="mt-3 text-sm">{msg}</div>}
+      {msg ? <div className="mt-3 text-sm text-red-600">{msg}</div> : null}
 
       <div className="mt-6 rounded-2xl border p-4">
         <div className="grid gap-3">
@@ -164,11 +203,18 @@ export default function TicketClient({
             placeholder="Write a reply"
             disabled={status === "CLOSED"}
           />
-          <SupportAttachmentPicker attachments={attachments} onChange={setAttachments} disabled={sending || status === "CLOSED"} onError={setMsg} />
+          <SupportAttachmentPicker
+            attachments={attachments}
+            onChange={setAttachments}
+            disabled={sending || status === "CLOSED"}
+            onError={setMsg}
+          />
           <button
             className="w-fit rounded-lg bg-black text-white px-4 py-2 text-sm disabled:opacity-60"
             onClick={send}
-            disabled={sending || status === "CLOSED" || (text.trim().length < 1 && attachments.length === 0)}
+            disabled={
+              sending || status === "CLOSED" || (text.trim().length < 1 && attachments.length === 0)
+            }
           >
             {sending ? "Sending..." : "Send"}
           </button>

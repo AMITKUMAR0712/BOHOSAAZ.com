@@ -7,6 +7,8 @@ import { getIpFromRequest, getUserAgentFromRequest } from "@/lib/requestMeta";
 import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 import { attachmentsOrNull, supportAttachmentsSchema } from "@/lib/supportAttachments";
 
+import { formatDbError } from "@/lib/dbError";
+
 const createSchema = z.object({
   message: z.string().trim().min(1).max(191),
   isInternal: z.boolean().optional(),
@@ -23,23 +25,40 @@ export async function GET(
   const { ticketId } = await ctx.params;
   if (!ticketId) return jsonError("Missing ticketId", 400);
 
-  const ticket = await prisma.supportTicket.findUnique({ where: { id: ticketId } });
-  if (!ticket) return jsonError("Not found", 404);
+  try {
+    const ticket = await prisma.supportTicket.findUnique({
+      where: { id: ticketId },
+      select: { id: true },
+    });
+    if (!ticket) return jsonError("Not found", 404);
 
-  const messages = await prisma.supportTicketMessage.findMany({
-    where: { ticketId },
-    orderBy: { createdAt: "asc" },
-    select: {
-      id: true,
-      senderRole: true,
-      message: true,
-      attachments: true,
-      createdAt: true,
-      isInternal: true,
-    },
-  });
+    const messages = await prisma.supportTicketMessage.findMany({
+      where: { ticketId },
+      orderBy: { createdAt: "asc" },
+      select: {
+        id: true,
+        senderRole: true,
+        message: true,
+        attachments: true,
+        createdAt: true,
+        isInternal: true,
+      },
+    });
 
-  return jsonOk({ messages });
+    return jsonOk({
+      messages: messages.map((m) => ({
+        id: m.id,
+        senderRole: m.senderRole,
+        message: m.message,
+        attachments: m.attachments,
+        createdAt: m.createdAt.toISOString(),
+        isInternal: m.isInternal,
+      })),
+    });
+  } catch (error) {
+    console.error("[api/admin/support/tickets/[ticketId]/messages] GET failed:", error);
+    return jsonError(`Failed to load messages: ${formatDbError(error)}`, 500);
+  }
 }
 
 export async function POST(

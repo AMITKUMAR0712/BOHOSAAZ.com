@@ -7,6 +7,8 @@ import { getIpFromRequest, getUserAgentFromRequest } from "@/lib/requestMeta";
 import { bumpDashboardScopes } from "@/lib/bumpDashboard";
 import { attachmentsOrNull, supportAttachmentsSchema } from "@/lib/supportAttachments";
 
+import { formatDbError } from "@/lib/dbError";
+
 const CreateSchema = z.object({
   message: z.string().trim().min(1).max(4000),
   attachments: supportAttachmentsSchema,
@@ -22,26 +24,34 @@ export async function GET(
   const { ticketId } = await ctx.params;
   if (!ticketId) return jsonError("Missing ticketId", 400);
 
-  const ticket = await prisma.userTicket.findUnique({ where: { id: ticketId }, select: { id: true } });
-  if (!ticket) return jsonError("Not found", 404);
+  try {
+    const ticket = await prisma.userTicket.findUnique({
+      where: { id: ticketId },
+      select: { id: true },
+    });
+    if (!ticket) return jsonError("Not found", 404);
 
-  const messages = await prisma.userTicketMessage.findMany({
-    where: { ticketId },
-    orderBy: { createdAt: "asc" },
-    take: 400,
-    select: {
-      id: true,
-      senderId: true,
-      senderRole: true,
-      message: true,
-      attachments: true,
-      createdAt: true,
-    },
-  });
+    const messages = await prisma.userTicketMessage.findMany({
+      where: { ticketId },
+      orderBy: { createdAt: "asc" },
+      take: 400,
+      select: {
+        id: true,
+        senderId: true,
+        senderRole: true,
+        message: true,
+        attachments: true,
+        createdAt: true,
+      },
+    });
 
-  return jsonOk({
-    messages: messages.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() })),
-  });
+    return jsonOk({
+      messages: messages.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() })),
+    });
+  } catch (error) {
+    console.error("[api/admin/user-tickets/[ticketId]/messages] GET failed:", error);
+    return jsonError(`Failed to load messages: ${formatDbError(error)}`, 500);
+  }
 }
 
 export async function POST(
