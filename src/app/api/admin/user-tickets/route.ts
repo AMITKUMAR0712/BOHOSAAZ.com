@@ -23,7 +23,8 @@ export async function GET(req: Request) {
 
   const take = parsed.data.take ?? 50;
 
-  const tickets = await prisma.userTicket.findMany({
+  try {
+    const tickets = await prisma.userTicket.findMany({
     where: {
       ...(parsed.data.status ? { status: parsed.data.status } : {}),
     },
@@ -69,4 +70,8 @@ export async function GET(req: Request) {
       })),
     })),
   });
+  } catch (error) {
+    console.error("[api/admin/user-tickets] GET failed:", error);
+    return jsonError("Failed to load user tickets", 500);
+  }
 }

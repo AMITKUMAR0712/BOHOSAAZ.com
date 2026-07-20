@@ -21,7 +21,7 @@ function copyDir(src, dest) {
 const rootDir = path.join(__dirname, "..", "..");
 const standaloneDir = path.join(rootDir, ".next", "standalone");
 
-if (fs.existsSync(standaloneDir)) {
+	if (fs.existsSync(standaloneDir)) {
 	console.log("[post-build] Copying static assets to standalone folder...");
 	
 	// Copy .next/static to .next/standalone/.next/static
@@ -33,6 +33,20 @@ if (fs.existsSync(standaloneDir)) {
 	const publicSrc = path.join(rootDir, "public");
 	const publicDest = path.join(standaloneDir, "public");
 	copyDir(publicSrc, publicDest);
+
+	// Ensure Prisma query engine is available in standalone runtime.
+	const prismaClientSrc = path.join(rootDir, "node_modules", ".prisma", "client");
+	const prismaClientDest = path.join(standaloneDir, "node_modules", ".prisma", "client");
+	if (fs.existsSync(prismaClientSrc)) {
+		console.log("[post-build] Copying Prisma client to standalone...");
+		copyDir(prismaClientSrc, prismaClientDest);
+	}
+
+	const prismaPkgSrc = path.join(rootDir, "node_modules", "@prisma", "client");
+	const prismaPkgDest = path.join(standaloneDir, "node_modules", "@prisma", "client");
+	if (fs.existsSync(prismaPkgSrc)) {
+		copyDir(prismaPkgSrc, prismaPkgDest);
+	}
 
 	console.log("[post-build] Done.");
 } else {

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ExportDropdown from "@/components/ExportDropdown";
 
 type OrderRow = {
@@ -46,18 +46,10 @@ function locationText(order: OrderRow) {
   return (order.city || "-") + (order.state ? `, ${order.state}` : "");
 }
 
-export default function OrdersClient({
-  lang,
-  initialOrders,
-  initialError = null,
-}: {
-  lang: string;
-  initialOrders: OrderRow[];
-  initialError?: string | null;
-}) {
-  const [orders, setOrders] = useState<OrderRow[]>(initialOrders);
-  const [msg, setMsg] = useState<string | null>(initialError);
-  const [loading, setLoading] = useState(false);
+export default function OrdersClient({ lang }: { lang: string }) {
+  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   async function reload() {
     setLoading(true);
@@ -77,18 +69,26 @@ export default function OrdersClient({
           createdAt:
             typeof order.createdAt === "string" ? order.createdAt : new Date(order.createdAt).toISOString(),
           user: order.user ?? { id: "unknown", email: "Unknown user", name: null },
+          _count: order._count ?? { items: 0 },
         }),
       ),
     );
     setLoading(false);
   }
 
+  useEffect(() => {
+    void reload();
+  }, []);
+
   return (
     <div className="p-6 md:p-10">
       <h1 className="text-2xl font-semibold">Orders</h1>
       <p className="mt-1 text-sm text-gray-600">Review orders and update status.</p>
 
-      {msg && <div className="mt-3 text-sm">{msg}</div>}
+      {msg ? <div className="mt-3 text-sm text-red-600">{msg}</div> : null}
+      {loading && !orders.length && !msg ? (
+        <div className="mt-3 text-sm text-gray-600">Loading orders...</div>
+      ) : null}
 
       <div className="mt-4">
         <div className="flex flex-wrap items-center gap-3">
@@ -159,7 +159,7 @@ export default function OrdersClient({
           </div>
         ))}
 
-        {!orders.length ? (
+        {!loading && !orders.length ? (
           <div className="p-6 text-center text-sm text-gray-600">No orders found.</div>
         ) : null}
       </div>

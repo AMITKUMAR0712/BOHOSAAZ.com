@@ -31,7 +31,8 @@ export async function GET(req: Request) {
     ];
   }
 
-  const rows = await prisma.order.findMany({
+  try {
+    const rows = await prisma.order.findMany({
     where,
     take: take + 1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -67,4 +68,8 @@ export async function GET(req: Request) {
     })),
     nextCursor,
   });
+  } catch (error) {
+    console.error("[api/admin/orders] GET failed:", error);
+    return jsonError("Failed to load orders", 500);
+  }
 }

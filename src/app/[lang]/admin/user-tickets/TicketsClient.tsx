@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ExportDropdown from "@/components/ExportDropdown";
 
 type TicketRow = {
@@ -18,18 +18,10 @@ type TicketRow = {
   messages: Array<{ message: string; senderRole: string; createdAt: string }>;
 };
 
-export default function TicketsClient({
-  lang,
-  initialTickets,
-  initialError = null,
-}: {
-  lang: string;
-  initialTickets: TicketRow[];
-  initialError?: string | null;
-}) {
-  const [tickets, setTickets] = useState<TicketRow[]>(initialTickets);
-  const [msg, setMsg] = useState<string | null>(initialError);
-  const [loading, setLoading] = useState(false);
+export default function TicketsClient({ lang }: { lang: string }) {
+  const [tickets, setTickets] = useState<TicketRow[]>([]);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   async function reload() {
     setLoading(true);
@@ -54,12 +46,19 @@ export default function TicketsClient({
     setLoading(false);
   }
 
+  useEffect(() => {
+    void reload();
+  }, []);
+
   return (
     <div className="p-6 md:p-10">
       <h1 className="text-2xl font-semibold">User Tickets</h1>
       <p className="mt-1 text-sm text-gray-600">User ↔ Admin inbox</p>
 
-      {msg && <div className="mt-3 text-sm">{msg}</div>}
+      {msg ? <div className="mt-3 text-sm text-red-600">{msg}</div> : null}
+      {loading && !tickets.length && !msg ? (
+        <div className="mt-3 text-sm text-gray-600">Loading user tickets...</div>
+      ) : null}
 
       <div className="mt-4">
         <div className="flex flex-wrap items-center gap-3">
@@ -111,7 +110,7 @@ export default function TicketsClient({
             </div>
           );
         })}
-        {!tickets.length ? (
+        {!loading && !tickets.length ? (
           <div className="border-t p-6 text-center text-sm text-gray-600">No user tickets found.</div>
         ) : null}
       </div>
