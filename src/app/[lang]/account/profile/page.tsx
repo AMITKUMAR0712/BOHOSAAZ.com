@@ -220,12 +220,14 @@ export default function AccountProfilePage() {
           </label>
 
           <label className="grid gap-1">
-            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Phone</span>
+            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Mobile number</span>
             <input
               className="rounded-lg border px-3 py-2"
+              type="tel"
+              inputMode="numeric"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="Phone"
+              placeholder="e.g. 9876543210"
             />
           </label>
         </div>
@@ -264,8 +266,8 @@ export default function AccountProfilePage() {
                       {address.address1}{address.address2 ? `, ${address.address2}` : ""}, {address.city}, {address.state} - {address.pincode}
                     </div>
                   </div>
-                  <span className="rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                    {address.isDefault ? "Default" : address.kind}
+                  <span className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.16em] ${address.isDefault ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground"}`}>
+                    {address.isDefault ? "Primary" : "Address"}
                   </span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -292,20 +294,12 @@ export default function AccountProfilePage() {
             <input className="rounded-lg border px-3 py-2" value={addr.label} onChange={(e) => setAddr({ ...addr, label: e.target.value })} placeholder="Home, Office, Parents..." />
           </label>
           <label className="grid gap-1">
-            <span className="text-xs text-muted-foreground">Type</span>
-            <select className="rounded-lg border px-3 py-2" value={addr.kind} onChange={(e) => setAddr({ ...addr, kind: e.target.value as Address["kind"], isDefault: e.target.value === "DEFAULT" })}>
-              <option value="PRIMARY">Primary</option>
-              <option value="DEFAULT">Default</option>
-              <option value="SECONDARY">Secondary</option>
-            </select>
-          </label>
-          <label className="grid gap-1">
             <span className="text-xs text-muted-foreground">Full name</span>
             <input className="rounded-lg border px-3 py-2" value={addr.fullName} onChange={(e) => setAddr({ ...addr, fullName: e.target.value })} />
           </label>
           <label className="grid gap-1">
-            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Phone</span>
-            <input className="rounded-lg border px-3 py-2" value={addr.phone} onChange={(e) => setAddr({ ...addr, phone: e.target.value })} />
+            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Mobile number</span>
+            <input className="rounded-lg border px-3 py-2" type="tel" inputMode="numeric" value={addr.phone} onChange={(e) => setAddr({ ...addr, phone: e.target.value })} placeholder="e.g. 9876543210" />
           </label>
           <label className="grid gap-1 md:col-span-2">
             <span className="text-xs text-muted-foreground">Address line 1</span>
@@ -327,9 +321,9 @@ export default function AccountProfilePage() {
             <span className="text-xs text-muted-foreground">Pincode</span>
             <input className="rounded-lg border px-3 py-2" value={addr.pincode} onChange={(e) => setAddr({ ...addr, pincode: e.target.value })} />
           </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={addr.isDefault} onChange={(e) => setAddr({ ...addr, isDefault: e.target.checked, kind: e.target.checked ? "DEFAULT" : addr.kind })} />
-            Use as default checkout address
+          <label className="flex items-center gap-2 text-sm md:col-span-2">
+            <input type="checkbox" checked={addr.isDefault} onChange={(e) => setAddr({ ...addr, isDefault: e.target.checked, kind: e.target.checked ? "DEFAULT" : "SECONDARY" })} />
+            Set as primary address (used by default at checkout)
           </label>
         </div>
 

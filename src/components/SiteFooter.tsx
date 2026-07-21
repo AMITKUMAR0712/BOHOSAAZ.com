@@ -193,7 +193,7 @@ export default function SiteFooter() {
                 <FooterLink currentPathname={pathname} href={`${lp}/account`} label="My Account" />
                 <FooterLink currentPathname={pathname} href={`${lp}/account/orders`} label="Track Orders" />
                 <FooterLink currentPathname={pathname} href={`${lp}/account/wishlist`} label="Wishlist" />
-                <FooterLink currentPathname={pathname} href={`${lp}/seller`} label="Sell on Bohosaaz" />
+                <FooterLink currentPathname={pathname} href={`${lp}/register?next=${encodeURIComponent(`${lp}/account/vendor-apply`)}`} label="Sell on Bohosaaz" />
                 <FooterLink currentPathname={pathname} href={`${lp}/contact`} label="Customer Support" />
                 <FooterLink currentPathname={pathname} href={`${lp}/faq`} label="Help & FAQ" />
               </FooterCol>

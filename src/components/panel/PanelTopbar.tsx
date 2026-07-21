@@ -1,9 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { SidebarToggleButton } from "@/components/sidebar/Sidebar";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
 export type PanelRole = "USER" | "VENDOR" | "ADMIN";
@@ -27,21 +26,7 @@ export function PanelTopbar({
   actions?: React.ReactNode;
   className?: string;
 }) {
-  const router = useRouter();
   const pathname = usePathname();
-  const [loading, setLoading] = React.useState(false);
-
-  async function onLogout() {
-    if (loading) return;
-    setLoading(true);
-    try {
-      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-    } finally {
-      router.push("/login");
-      router.refresh();
-      setLoading(false);
-    }
-  }
 
   return (
     <div className={cn("sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur-xl", className)}>
@@ -62,9 +47,6 @@ export function PanelTopbar({
             {roleLabel(role)}
           </span>
           <span className="min-w-0 truncate text-sm font-medium text-foreground">{userName}</span>
-          <Button size="sm" variant="outline" onClick={onLogout} disabled={loading} className="ml-auto rounded-xl">
-            Logout
-          </Button>
         </div>
       </div>
     </div>

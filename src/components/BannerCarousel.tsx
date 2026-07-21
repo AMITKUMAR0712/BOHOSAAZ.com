@@ -35,10 +35,12 @@ function isVideoUrl(url: string | null | undefined) {
 export function BannerCarousel({
   banners,
   homeTheme,
+  compact = false,
 }: {
   lang: string;
   banners: HomeBanner[];
   homeTheme?: HomeThemeId;
+  compact?: boolean;
 }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -109,9 +111,15 @@ export function BannerCarousel({
   })();
 
   return (
-    <section className="home-banner-screen mx-auto w-full max-w-6xl px-3 sm:px-4">
+    <section
+      className={
+        compact
+          ? "w-full"
+          : "home-banner-screen mx-auto w-full max-w-6xl px-3 sm:px-4"
+      }
+    >
       <div
-        className={chrome.shell}
+        className={`${chrome.shell} ${compact ? "aspect-4/3 h-auto w-full sm:aspect-16/10" : ""}`}
         onMouseEnter={() => {
           hoveredRef.current = true;
           setPaused(true);
@@ -121,7 +129,13 @@ export function BannerCarousel({
           setPaused(false);
         }}
       >
-        <div className="home-banner-media relative flex w-full items-center justify-center bg-black/5">
+        <div
+          className={
+            compact
+              ? "relative h-full w-full bg-black/5"
+              : "home-banner-media relative flex w-full items-center justify-center bg-black/5"
+          }
+        >
           {posterUrl ? (
             <img
               src={posterUrl}
@@ -147,7 +161,11 @@ export function BannerCarousel({
               key={storyUrl}
               src={storyUrl}
               poster={posterUrl || undefined}
-              className={`absolute inset-0 m-auto h-full w-full max-h-full max-w-full object-contain object-center transition-opacity duration-300 ${
+              className={`${
+                compact
+                  ? "absolute inset-0 h-full w-full object-cover object-center"
+                  : "absolute inset-0 m-auto h-full w-full max-h-full max-w-full object-contain object-center"
+              } transition-opacity duration-300 ${
                 mediaReady ? "opacity-100" : "opacity-0"
               }`}
               autoPlay

@@ -1190,12 +1190,6 @@ export default async function Home({
   return (
     <div className={rootClassName} data-home-theme={homeTheme}>
       {showHomeSections ? (
-        <div className="pt-1 sm:pt-2">
-          <BannerCarousel lang={lang} banners={activeBanners} homeTheme={homeTheme} />
-        </div>
-      ) : null}
-
-      {showHomeSections ? (
         <div className="mx-auto max-w-6xl px-4 mt-6">
           <AdSlot placement="HOME_TOP" langPrefix={`/${lang}`} />
         </div>
@@ -1209,7 +1203,7 @@ export default async function Home({
         <div className={heroDotsClass} />
 
         <div className="relative mx-auto max-w-6xl px-4 py-14 md:py-16">
-          <div className="grid gap-12 md:grid-cols-2 md:items-center">
+          <div className="grid gap-12 md:grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)] md:items-center">
             {/* LEFT */}
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -1279,34 +1273,42 @@ export default async function Home({
                 }
               />
 
-              <div
-                className={`${heroRightCardClass} relative overflow-hidden`}
-                style={{
-                  background:
-                    "linear-gradient(145deg, color-mix(in srgb, var(--card) 92%, white), color-mix(in srgb, var(--bg) 76%, var(--primary) 8%))",
-                  boxShadow: "0 28px 90px rgba(47, 38, 34, 0.14)",
-                }}
-              >
-                <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-primary/12 blur-3xl" />
-                <div className="pointer-events-none absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-amber-500/12 blur-3xl" />
-                <div className="pointer-events-none absolute inset-0 opacity-[0.05] bg-[radial-gradient(circle_at_top,black_1px,transparent_1px)] bg-size-[18px_18px]" />
-                <div className="grid gap-3">
-                  {[
-                    "Personalised picks for every celebration",
-                    "Authentic artisan craftsmanship",
-                    "Packaging Designed to Delight and Elevate the Unboxing Experience",
-                  ].map((line) => (
-                    <div
-                      key={line}
-                      className="relative flex items-start gap-3 rounded-2xl bg-card/72 px-4 py-3 text-sm leading-relaxed text-muted-foreground shadow-[0_12px_34px_rgba(47,38,34,0.08)] backdrop-blur md:text-base"
-                    >
-                      <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" aria-hidden />
-                      <span>{line}</span>
-                    </div>
-                  ))}
+              {activeBanners.length ? (
+                <BannerCarousel
+                  lang={lang}
+                  banners={activeBanners}
+                  homeTheme={homeTheme}
+                  compact
+                />
+              ) : (
+                <div
+                  className={`${heroRightCardClass} relative overflow-hidden`}
+                  style={{
+                    background:
+                      "linear-gradient(145deg, color-mix(in srgb, var(--card) 92%, white), color-mix(in srgb, var(--bg) 76%, var(--primary) 8%))",
+                    boxShadow: "0 28px 90px rgba(47, 38, 34, 0.14)",
+                  }}
+                >
+                  <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-primary/12 blur-3xl" />
+                  <div className="pointer-events-none absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-amber-500/12 blur-3xl" />
+                  <div className="pointer-events-none absolute inset-0 opacity-[0.05] bg-[radial-gradient(circle_at_top,black_1px,transparent_1px)] bg-size-[18px_18px]" />
+                  <div className="grid gap-3">
+                    {[
+                      "Personalised picks for every celebration",
+                      "Authentic artisan craftsmanship",
+                      "Packaging Designed to Delight and Elevate the Unboxing Experience",
+                    ].map((line) => (
+                      <div
+                        key={line}
+                        className="relative flex items-start gap-3 rounded-2xl bg-card/72 px-4 py-3 text-sm leading-relaxed text-muted-foreground shadow-[0_12px_34px_rgba(47,38,34,0.08)] backdrop-blur md:text-base"
+                      >
+                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" aria-hidden />
+                        <span>{line}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-
-              </div>
+              )}
 
               <div className="mt-6">
                 <AdSlot placement="HOME_SIDEBAR" langPrefix={`/${lang}`} />
