@@ -2,14 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { toast } from "sonner";
-import { cn } from "@/lib/cn";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BadgePercent, LayoutDashboard, Megaphone, Package, RotateCcw, Settings, Store, Tags, Users } from "lucide-react";
 import { DashboardCards } from "@/components/dashboard/DashboardCards";
-
-const SETTING_KEY = "adminLandingTheme";
 
 type ThemeId = "default" | "cards" | "split" | "compact";
 
@@ -36,42 +31,6 @@ function withBase(basePath: string, href: string) {
   const bp = (basePath || "").trim();
   if (!bp) return href;
   return `${bp}${href}`;
-}
-
-function ThemePicker({ value, onChange, saving }: { value: ThemeId; onChange: (t: ThemeId) => void; saving: boolean }) {
-  return (
-    <Card className="bg-card/70 backdrop-blur">
-      <CardHeader>
-        <CardTitle className="text-base">Landing theme</CardTitle>
-        <CardDescription>Admins can switch this anytime.</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-2">
-        {THEMES.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            disabled={saving}
-            onClick={() => onChange(t.id)}
-            className={cn(
-              "w-full text-left rounded-(--radius) border border-border px-4 py-3 transition",
-              "hover:bg-muted/40",
-              t.id === value ? "bg-muted/60" : "bg-card",
-            )}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <div className="text-sm font-semibold text-foreground truncate">{t.name}</div>
-                <div className="mt-0.5 text-xs text-muted-foreground truncate">{t.description}</div>
-              </div>
-              {t.id === value ? (
-                <span className="shrink-0 text-xs font-medium text-primary">Selected</span>
-              ) : null}
-            </div>
-          </button>
-        ))}
-      </CardContent>
-    </Card>
-  );
 }
 
 function ActionGrid({ variant, basePath }: { variant: ThemeId; basePath: string }) {
@@ -216,55 +175,15 @@ export default function AdminLandingClient({
   basePath: string;
 }) {
   const [theme, setTheme] = React.useState<ThemeId>("default");
-  const [saving, setSaving] = React.useState(false);
 
   React.useEffect(() => {
     const t = (initialTheme || "default") as ThemeId;
     if (THEMES.some((x) => x.id === t)) setTheme(t);
   }, [initialTheme]);
 
-  async function save(nextTheme: ThemeId) {
-    setTheme(nextTheme);
-    setSaving(true);
-
-    const res = await fetch(`/api/admin/settings/${encodeURIComponent(SETTING_KEY)}`, {
-      method: "PUT",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ value: nextTheme }),
-    });
-
-    const data = await res.json().catch(() => null);
-    setSaving(false);
-
-    if (!res.ok || !data?.ok) {
-      toast.error(data?.error || "Failed to save theme");
-      return;
-    }
-
-    toast.success("Theme saved");
-  }
-
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
-      <div className="min-w-0">
-        <ActionGrid variant={theme} basePath={basePath} />
-
-        <div className="mt-4 flex items-center justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={saving}
-            onClick={() => save("default")}
-          >
-            Reset to default
-            </Button>
-        </div>
-      </div>
-
-      <div id="admin-theme">
-        <ThemePicker value={theme} saving={saving} onChange={save} />
-      </div>
+    <div className="min-w-0">
+      <ActionGrid variant={theme} basePath={basePath} />
     </div>
   );
 }

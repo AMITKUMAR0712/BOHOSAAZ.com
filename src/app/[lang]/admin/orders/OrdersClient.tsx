@@ -50,6 +50,27 @@ export default function OrdersClient({ lang }: { lang: string }) {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function deleteOrder(id: string) {
+    if (!window.confirm(`Delete order ${id}? This permanently removes the order and its items. This cannot be undone.`)) return;
+    setDeletingId(id);
+    setMsg(null);
+    try {
+      const res = await fetch(`/api/admin/orders?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        setMsg(data?.error || "Failed to delete order");
+        return;
+      }
+      setOrders((prev) => prev.filter((o) => o.id !== id));
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   async function reload() {
     setLoading(true);
@@ -104,19 +125,20 @@ export default function OrdersClient({ lang }: { lang: string }) {
       </div>
 
       <div className="mt-6 overflow-hidden rounded-2xl border bg-white">
-        <div className="hidden grid-cols-[minmax(0,2fr)_minmax(180px,1.2fr)_140px_80px_120px_minmax(120px,1fr)] gap-3 bg-gray-50 p-3 text-sm font-semibold text-gray-700 lg:grid">
+        <div className="hidden grid-cols-[minmax(0,2fr)_minmax(180px,1.2fr)_140px_80px_120px_minmax(120px,1fr)_110px] gap-3 bg-gray-50 p-3 text-sm font-semibold text-gray-700 lg:grid">
           <div>Order</div>
           <div>User</div>
           <div>Status</div>
           <div>Items</div>
           <div>Total</div>
           <div>Location</div>
+          <div className="text-right">Actions</div>
         </div>
 
         {orders.map((o) => (
           <div
             key={o.id}
-            className="border-t p-4 text-sm first:border-t-0 lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(180px,1.2fr)_140px_80px_120px_minmax(120px,1fr)] lg:items-center lg:gap-3 lg:p-3"
+            className="border-t p-4 text-sm first:border-t-0 lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(180px,1.2fr)_140px_80px_120px_minmax(120px,1fr)_110px] lg:items-center lg:gap-3 lg:p-3"
           >
             <div className="min-w-0">
               <div className="flex flex-wrap items-center justify-between gap-2 lg:block">
@@ -155,6 +177,16 @@ export default function OrdersClient({ lang }: { lang: string }) {
                 <div className="text-xs font-medium uppercase tracking-wide text-gray-500 lg:hidden">Location</div>
                 <div className="truncate text-gray-700 lg:text-xs">{locationText(o)}</div>
               </div>
+            </div>
+
+            <div className="mt-4 flex lg:mt-0 lg:justify-end">
+              <button
+                className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                onClick={() => deleteOrder(o.id)}
+                disabled={deletingId === o.id}
+              >
+                {deletingId === o.id ? "Deleting…" : "Delete"}
+              </button>
             </div>
           </div>
         ))}

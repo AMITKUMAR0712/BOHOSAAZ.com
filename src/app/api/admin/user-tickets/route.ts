@@ -119,3 +119,20 @@ export async function GET(req: Request) {
     return jsonError(`Failed to load user tickets: ${formatDbError(error)}`, 500);
   }
 }
+
+export async function DELETE(req: Request) {
+  const admin = await requireAdmin();
+  if (!admin) return jsonError("Unauthorized", 401);
+
+  const url = new URL(req.url);
+  const id = (url.searchParams.get("id") || "").trim();
+  if (!id) return jsonError("Missing ticket id", 400);
+
+  try {
+    await prisma.userTicket.delete({ where: { id } });
+    return jsonOk({ deleted: true, id });
+  } catch (error) {
+    console.error("[api/admin/user-tickets] DELETE failed:", error);
+    return jsonError(`Failed to delete ticket: ${formatDbError(error)}`, 500);
+  }
+}

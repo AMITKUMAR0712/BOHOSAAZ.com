@@ -21,6 +21,27 @@ export default function TicketsClient({ lang }: { lang: string }) {
   const [tickets, setTickets] = useState<TicketRow[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function deleteTicket(id: string, subject: string) {
+    if (!window.confirm(`Delete ticket "${subject}"? This cannot be undone.`)) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/admin/support/tickets?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        toast.error(data?.error || "Failed to delete ticket");
+        return;
+      }
+      setTickets((prev) => prev.filter((t) => t.id !== id));
+      toast.success("Ticket deleted");
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   async function reload() {
     setLoading(true);
@@ -80,7 +101,8 @@ export default function TicketsClient({ lang }: { lang: string }) {
           <div className="col-span-2">Subject</div>
           <div>Vendor</div>
           <div>Status</div>
-          <div className="col-span-3">Latest</div>
+          <div className="col-span-2">Latest</div>
+          <div className="text-right">Actions</div>
         </div>
 
         {tickets.map((t) => {
@@ -98,7 +120,7 @@ export default function TicketsClient({ lang }: { lang: string }) {
                 <div className="text-xs text-gray-500">{t.creator?.email || "Unknown user"}</div>
               </div>
               <div className="font-semibold">{t.status}</div>
-              <div className="col-span-3 text-xs text-gray-700">
+              <div className="col-span-2 text-xs text-gray-700">
                 {last ? (
                   <div>
                     <span className="font-semibold">{last.senderRole}</span>: {last.message}
@@ -107,6 +129,15 @@ export default function TicketsClient({ lang }: { lang: string }) {
                 ) : (
                   <div className="text-gray-500">No messages</div>
                 )}
+              </div>
+              <div className="flex items-start justify-end">
+                <button
+                  className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                  onClick={() => deleteTicket(t.id, t.subject)}
+                  disabled={deletingId === t.id}
+                >
+                  {deletingId === t.id ? "Deleting…" : "Delete"}
+                </button>
               </div>
             </div>
           );

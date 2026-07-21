@@ -109,3 +109,20 @@ export async function GET(req: Request) {
     return jsonError(`Failed to load orders: ${formatDbError(error)}`, 500);
   }
 }
+
+export async function DELETE(req: Request) {
+  const admin = await requireAdmin();
+  if (!admin) return jsonError("Unauthorized", 401);
+
+  const url = new URL(req.url);
+  const id = (url.searchParams.get("id") || "").trim();
+  if (!id) return jsonError("Missing order id", 400);
+
+  try {
+    await prisma.order.delete({ where: { id } });
+    return jsonOk({ deleted: true, id });
+  } catch (error) {
+    console.error("[api/admin/orders] DELETE failed:", error);
+    return jsonError(`Failed to delete order: ${formatDbError(error)}`, 500);
+  }
+}
