@@ -1216,19 +1216,15 @@ export default async function Home({
                   "mt-6 font-heading text-4xl md:text-6xl tracking-tight text-foreground leading-[1.02]"
                 }
               >
-                Online Gift Shop in Noida &amp; Delhi NCR
+                Bohosaaz Editions
               </h1>
 
-              <h2
+              <p
                 className={
                   theme.heroSubtitle ??
                   "mt-4 font-heading text-xl md:text-2xl tracking-tight text-primary/90 max-w-xl leading-snug"
                 }
               >
-                Bohosaaz Editions
-              </h2>
-
-              <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-xl leading-relaxed">
                 Elevate your gifting experience with Bohosaaz&apos;s gifting editions.
               </p>
 
