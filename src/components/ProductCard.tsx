@@ -220,6 +220,10 @@ export function ProductCard({
                 key={`${imageUrl}-${index}`}
                 src={imageUrl}
                 alt={product.title}
+                width={400}
+                height={400}
+                loading={index === 0 ? "lazy" : "lazy"}
+                decoding="async"
                 className={cn(
                   "absolute inset-0 h-full w-full transform-gpu object-contain p-3 transition-all duration-700 ease-out will-change-transform sm:p-4",
                   index === imgIndex ? "opacity-100 scale-100" : "opacity-0 scale-[1.02]",

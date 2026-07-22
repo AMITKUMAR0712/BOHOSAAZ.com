@@ -3,14 +3,20 @@
 import { startTransition, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-const REFRESH_INTERVAL_MS = 8000;
+const REFRESH_INTERVAL_MS = 60_000;
+const WARMUP_MS = 15_000;
 
 function isDocumentBusy() {
   const active = document.activeElement;
   if (!active) return false;
 
   const tag = active.tagName.toLowerCase();
-  return tag === "input" || tag === "textarea" || tag === "select" || active.hasAttribute("contenteditable");
+  return (
+    tag === "input" ||
+    tag === "textarea" ||
+    tag === "select" ||
+    active.hasAttribute("contenteditable")
+  );
 }
 
 export default function GlobalAutoRefresh() {
@@ -18,7 +24,13 @@ export default function GlobalAutoRefresh() {
   const pathname = usePathname();
 
   useEffect(() => {
+    let warmedUp = false;
+    const warmupTimer = window.setTimeout(() => {
+      warmedUp = true;
+    }, WARMUP_MS);
+
     const refresh = () => {
+      if (!warmedUp) return;
       if (document.visibilityState !== "visible") return;
 
       window.dispatchEvent(new CustomEvent("bohosaaz-live-refresh"));
@@ -35,12 +47,11 @@ export default function GlobalAutoRefresh() {
     };
 
     const interval = window.setInterval(refresh, REFRESH_INTERVAL_MS);
-    window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", refresh);
 
     return () => {
+      window.clearTimeout(warmupTimer);
       window.clearInterval(interval);
-      window.removeEventListener("focus", refresh);
       document.removeEventListener("visibilitychange", refresh);
     };
   }, [pathname, router]);

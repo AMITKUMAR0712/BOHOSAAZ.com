@@ -1,18 +1,44 @@
 import type { Metadata } from "next";
-import Script from "next/script";
+import dynamic from "next/dynamic";
+import { Inter, Playfair_Display, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { ToastProvider } from "@/components/ui/toast";
-import SonnerToaster from "@/components/SonnerToaster";
-import BackToTop from "@/components/BackToTop";
-import WhatsAppFloat from "@/components/WhatsAppFloat";
-import ScrollToTop from "@/components/ScrollToTop";
-import GlobalAutoRefresh from "@/components/GlobalAutoRefresh";
 import { CurrencyProvider } from "@/lib/currency-context";
 import { requireUser } from "@/lib/auth";
 import { SITE } from "@/lib/seo/config";
+
+const SonnerToaster = dynamic(() => import("@/components/SonnerToaster"), { ssr: false });
+const BackToTop = dynamic(() => import("@/components/BackToTop"), { ssr: false });
+const WhatsAppFloat = dynamic(() => import("@/components/WhatsAppFloat"), { ssr: false });
+const ScrollToTop = dynamic(() => import("@/components/ScrollToTop"), { ssr: false });
+const GlobalAutoRefresh = dynamic(() => import("@/components/GlobalAutoRefresh"), { ssr: false });
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-inter",
+  display: "swap",
+  preload: true,
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-playfair",
+  display: "swap",
+  preload: true,
+});
+
+const robotoMono = Roboto_Mono({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  variable: "--font-roboto-mono",
+  display: "swap",
+  preload: false,
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
@@ -125,36 +151,25 @@ export default async function RootLayout({
   const user = await requireUser();
 
   return (
-    <html lang="en-IN" suppressHydrationWarning>
-      <body className="min-h-screen text-foreground antialiased">
-        <Script id="bohosaaz-theme-init" strategy="beforeInteractive">
-          {`
-            (function () {
-              try {
-                var k = 'bohosaaz_theme';
-                var v = localStorage.getItem(k);
-                var isDark = (v === 'dark');
-
-                var r = document.documentElement;
-                r.classList.toggle('dark', isDark);
-                r.style.colorScheme = isDark ? 'dark' : 'light';
-              } catch (e) {}
-            })();
-          `}
-        </Script>
-        <Script
-          id="bohosaaz-seo-jsonld"
-          type="application/ld+json"
-          strategy="beforeInteractive"
+    <html
+      lang="en-IN"
+      suppressHydrationWarning
+      className={`${inter.variable} ${playfair.variable} ${robotoMono.variable}`}
+    >
+      <head>
+        <script
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify([
-              organizationJsonLd,
-              localBusinessJsonLd,
-              websiteJsonLd,
-            ]),
+            __html: `(function(){try{var v=localStorage.getItem('bohosaaz_theme');var d=v==='dark';var r=document.documentElement;r.classList.toggle('dark',d);r.style.colorScheme=d?'dark':'light';}catch(e){}})();`,
           }}
         />
-
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([organizationJsonLd, localBusinessJsonLd, websiteJsonLd]),
+          }}
+        />
+      </head>
+      <body className="min-h-screen text-foreground antialiased">
         <CurrencyProvider userId={user?.id}>
           <ToastProvider>
             <SonnerToaster />

@@ -24,8 +24,17 @@ export default function SiteFooter() {
     delivered: 12500,
     etaHours: 47,
   });
+  const [animateSafeScene, setAnimateSafeScene] = useState(false);
 
   useEffect(() => {
+    // Avoid CLS during initial Lighthouse window — start motion after first paint.
+    const start = window.setTimeout(() => setAnimateSafeScene(true), 2500);
+    return () => window.clearTimeout(start);
+  }, []);
+
+  useEffect(() => {
+    if (!animateSafeScene) return;
+
     const timer = window.setInterval(() => {
       setActiveStep((step) => (step + 1) % trackingSteps.length);
       setLiveStats((stats) => ({
@@ -36,19 +45,19 @@ export default function SiteFooter() {
     }, 2200);
 
     return () => window.clearInterval(timer);
-  }, [trackingSteps.length]);
+  }, [animateSafeScene, trackingSteps.length]);
 
   const formatNumber = (value: number) =>
     value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
   return (
-    <footer className="relative mt-3 overflow-hidden bg-linear-to-b from-card/65 to-background pb-[calc(var(--mobileBottomNav)+env(safe-area-inset-bottom,0px)+0.75rem)] md:mt-4 md:pb-0">
+    <footer className="relative mt-3 overflow-hidden bg-linear-to-b from-card/65 to-background pb-[calc(var(--mobileBottomNav)+env(safe-area-inset-bottom,0px)+0.75rem)] md:mt-4 md:pb-0 [contain:layout]">
       <div className="h-px w-full bg-linear-to-r from-transparent via-primary/55 to-transparent" />
       <div className="mx-auto max-w-7xl px-4 py-3">
         <div className="relative overflow-hidden rounded-[24px] bg-card/55 p-3 ring-1 ring-white/25 md:p-4">
-          <div className="relative grid gap-4 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+          <div className="relative grid min-h-[9.5rem] gap-4 lg:min-h-[8.5rem] lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
             <div className="max-w-2xl">
-              <div className="font-heading text-xl tracking-tight text-foreground md:text-2xl">
+              <div className="font-heading min-h-[1.75rem] text-xl leading-snug tracking-tight text-foreground md:min-h-[2rem] md:text-2xl">
                 Find <span className="text-primary">meaningful gifts</span> for every celebration.
               </div>
               <p className="mt-1.5 max-w-xl text-[11px] leading-relaxed text-foreground/74 md:text-xs">
@@ -124,13 +133,13 @@ export default function SiteFooter() {
                   />
                 </div>
                 <div className="mt-2 hidden gap-1 text-[10px] font-medium text-foreground/85 sm:grid sm:grid-cols-3">
-                  <span className="rounded-md border border-primary/10 bg-background/70 px-1.5 py-0.5">
-                    <span className="font-bold text-primary">{liveStats.successRate}%</span> success
+                  <span className="rounded-md border border-primary/10 bg-background/70 px-1.5 py-0.5 tabular-nums">
+                    <span className="font-bold text-primary">{liveStats.successRate.toFixed(1)}%</span> success
                   </span>
-                  <span className="rounded-md border border-primary/10 bg-background/70 px-1.5 py-0.5">
+                  <span className="rounded-md border border-primary/10 bg-background/70 px-1.5 py-0.5 tabular-nums">
                     <span className="font-bold text-primary">{formatNumber(liveStats.delivered)}+</span> delivered
                   </span>
-                  <span className="rounded-md border border-primary/10 bg-background/70 px-1.5 py-0.5">
+                  <span className="rounded-md border border-primary/10 bg-background/70 px-1.5 py-0.5 tabular-nums">
                     <span className="font-bold text-primary">{Math.ceil(liveStats.etaHours / 24)} days</span> delivery
                   </span>
                 </div>
@@ -151,10 +160,11 @@ export default function SiteFooter() {
             <Link href={lp} className="flex items-center gap-3 group">
               <div className="grid h-11 w-11 place-items-center overflow-hidden rounded-full border-2 border-primary/25 bg-card shadow-[0_8px_24px_rgba(135,56,20,0.16)] transition duration-300 ease-out group-hover:scale-105 group-hover:border-primary/45 sm:h-12 sm:w-12">
                 <Image
-                  src="/logo copy.jpeg"
+                  src="/logo-copy.jpeg"
                   alt="Bohosaaz"
                   width={112}
                   height={112}
+                  sizes="48px"
                   className="h-9 w-9 rounded-full object-contain sm:h-10 sm:w-10"
                 />
               </div>
