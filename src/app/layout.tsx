@@ -1,20 +1,14 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import { Inter, Playfair_Display, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import DeferredClientChrome from "@/components/DeferredClientChrome";
 import { ToastProvider } from "@/components/ui/toast";
 import { CurrencyProvider } from "@/lib/currency-context";
 import { requireUser } from "@/lib/auth";
 import { SITE } from "@/lib/seo/config";
-
-const SonnerToaster = dynamic(() => import("@/components/SonnerToaster"), { ssr: false });
-const BackToTop = dynamic(() => import("@/components/BackToTop"), { ssr: false });
-const WhatsAppFloat = dynamic(() => import("@/components/WhatsAppFloat"), { ssr: false });
-const ScrollToTop = dynamic(() => import("@/components/ScrollToTop"), { ssr: false });
-const GlobalAutoRefresh = dynamic(() => import("@/components/GlobalAutoRefresh"), { ssr: false });
 
 const inter = Inter({
   subsets: ["latin"],
@@ -172,17 +166,13 @@ export default async function RootLayout({
       <body className="min-h-screen text-foreground antialiased">
         <CurrencyProvider userId={user?.id}>
           <ToastProvider>
-            <SonnerToaster />
-            <ScrollToTop />
-            <GlobalAutoRefresh />
+            <DeferredClientChrome />
 
             <SiteHeader />
 
             <main className="site-content">{children}</main>
 
             <SiteFooter />
-            <BackToTop />
-            <WhatsAppFloat />
           </ToastProvider>
         </CurrencyProvider>
       </body>
