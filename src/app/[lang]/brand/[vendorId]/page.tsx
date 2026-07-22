@@ -2,30 +2,38 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/ProductCard";
+import { buildMetadata } from "@/lib/seo/metadata";
+import { fitDescription } from "@/lib/seo/assert";
+import { isLocale } from "@/lib/i18n";
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ lang: string; vendorId: string }>;
 }): Promise<Metadata> {
-  const { vendorId: slug } = await params;
+  const { lang, vendorId: slug } = await params;
+  const locale = isLocale(lang) ? lang : "en";
   const brand = await prisma.brand.findUnique({
     where: { slug },
     select: { name: true, isActive: true },
   });
 
-  if (!brand || !brand.isActive) return { title: "Brand | Bohosaaz" };
-  return {
-    title: `${brand.name} Gift Products in Noida & Delhi NCR | Bohosaaz`,
-    description: `Shop ${brand.name} gift products on Bohosaaz for Noida, Greater Noida, New Delhi and Delhi NCR. Find premium gifts, birthday gifts, anniversary gifts and curated online gifting ideas.`,
-    keywords: [
-      `${brand.name} gifts`,
-      `${brand.name} gift products Noida`,
-      "gift products Delhi NCR",
-      "online gifts Greater Noida",
-      "premium gifts New Delhi",
-    ],
-  };
+  if (!brand || !brand.isActive) {
+    return buildMetadata({
+      title: "Brand",
+      description: "Browse gift brands on Bohosaaz.",
+      path: `/${locale}/brand/${slug}`,
+      noindex: true,
+    });
+  }
+
+  return buildMetadata({
+    title: `${brand.name} Gifts in Noida & Delhi NCR`,
+    description: fitDescription(
+      `Shop ${brand.name} gift products for Noida, Greater Noida, New Delhi and Delhi NCR. Premium gifts, birthday gifts and curated online gifting ideas.`
+    ),
+    path: `/${locale}/brand/${slug}`,
+  });
 }
 
 export default async function BrandPage({

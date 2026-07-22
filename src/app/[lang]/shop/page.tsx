@@ -14,24 +14,25 @@ import {
   type ShopFilterKey,
   type ShopFilterOption,
 } from "@/lib/shopFilters";
+import { buildMetadata } from "@/lib/seo/metadata";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export const metadata: Metadata = {
-  title: "Shop Gift Products in Noida, Greater Noida & Delhi NCR | Bohosaaz",
-  description:
-    "Shop gift products in Noida, Greater Noida, New Delhi and Delhi NCR by occasion, recipient, budget, style and color. Explore birthday gifts, anniversary gifts, corporate gifts, festival gifts and premium hampers.",
-  keywords: [
-    "shop gifts in Noida",
-    "gift products in Greater Noida",
-    "gift products in Delhi NCR",
-    "corporate gifts Noida",
-    "birthday gifts New Delhi",
-    "anniversary gifts Delhi NCR",
-    "online gifts Bohosaaz",
-  ],
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await params;
+  const locale = isLocale(lang) ? lang : "en";
+  return buildMetadata({
+    title: "Shop Gifts in Noida & Delhi NCR",
+    description:
+      "Shop gifts in Noida, Greater Noida, New Delhi and Delhi NCR by occasion, recipient and budget. Explore birthday, anniversary, corporate and festival gifts.",
+    path: `/${locale}/shop`,
+  });
+}
 
 type SearchParams = Record<string, string | string[] | undefined>;
 type FilterOption = readonly [string, string];

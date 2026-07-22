@@ -2,13 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { isLocale } from "@/lib/i18n";
+import { buildMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Blog | Bohosaaz",
-  description:
-    "Gift guides, craft notes and curated drops from Bohosaaz for Noida, Greater Noida, New Delhi and Delhi NCR shoppers looking for meaningful gifts.",
-  keywords: ["gift guides Noida", "gifting ideas Delhi NCR", "birthday gift ideas", "corporate gift ideas", "Bohosaaz blog"],
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await params;
+  const locale = isLocale(lang) ? lang : "en";
+  return buildMetadata({
+    title: "Gift Guides & Blog",
+    description:
+      "Gift guides, craft notes and curated drops for Noida, Greater Noida, New Delhi and Delhi NCR shoppers looking for meaningful gifts.",
+    path: `/${locale}/blog`,
+  });
+}
 
 export default async function BlogIndexPage({
   params,

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import PrivacyStatic from "@/app/privacy/page";
+import { buildMetadata } from "@/lib/seo/metadata";
 
 export async function generateMetadata(): Promise<Metadata> {
 	const page = await prisma.cmsPage.findUnique({
@@ -8,8 +9,11 @@ export async function generateMetadata(): Promise<Metadata> {
 		select: { title: true },
 	});
 
-	if (!page?.title) return { title: "Privacy | Bohosaaz" };
-	return { title: `${page.title} | Bohosaaz` };
+	return buildMetadata({
+		title: (page?.title || "Privacy Policy").replace(/\s*\|\s*Bohosaaz$/i, ""),
+		description: "Read how Bohosaaz collects, uses and protects your personal information.",
+		path: "/en/privacy",
+	});
 }
 
 export default async function PrivacyPage() {

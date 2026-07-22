@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { isLocale } from "@/lib/i18n";
 import ProductGalleryClient from "@/app/p/[slug]/ProductGalleryClient";
 import PurchasePanel from "@/app/p/[slug]/ui";
@@ -7,6 +8,9 @@ import { RatingRow } from "@/components/ui/rating-row";
 import { Accordion, AccordionItem } from "@/components/ui/accordion";
 import { headers } from "next/headers";
 import { formatPriceInCurrency } from "@/lib/currency-utils";
+import { prisma } from "@/lib/prisma";
+import { buildMetadata } from "@/lib/seo/metadata";
+import { fitDescription, fitTitleSegment } from "@/lib/seo/assert";
 
 function pickStockImage(key: string) {
   const s = key || "x";
@@ -24,6 +28,66 @@ function parseCookies(cookieHeader: string | null) {
       return [name?.trim(), decodeURIComponent(rest.join("=") || "")];
     })
   );
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string; slug: string }>;
+}): Promise<Metadata> {
+  const { lang, slug } = await params;
+  const locale = isLocale(lang) ? lang : "en";
+
+  const product = await prisma.product.findUnique({
+    where: { slug },
+    select: {
+      title: true,
+      slug: true,
+      description: true,
+      shortDescription: true,
+      metaTitle: true,
+      metaDescription: true,
+      isActive: true,
+      status: true,
+      deletedAt: true,
+      images: {
+        orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+        take: 1,
+        select: { url: true },
+      },
+    },
+  });
+
+  if (!product || product.deletedAt || !product.isActive || product.status !== "PUBLISHED") {
+    return buildMetadata({
+      title: "Product Not Found",
+      description: "This gift product is unavailable on Bohosaaz.",
+      path: `/${locale}/p/${slug}`,
+      noindex: true,
+    });
+  }
+
+  const titleSegment = fitTitleSegment(
+    (product.metaTitle || `${product.title} — Buy Online`).replace(/\s*\|\s*Bohosaaz$/i, "")
+  );
+  const description = fitDescription(
+    product.metaDescription ||
+      product.shortDescription ||
+      product.description ||
+      `Buy ${product.title} online at Bohosaaz. Premium gifts for Noida, Greater Noida and Delhi NCR.`
+  );
+
+  const image = product.images[0]?.url;
+
+  return buildMetadata({
+    title: titleSegment,
+    description,
+    path: `/${locale}/p/${product.slug}`,
+    image: image || undefined,
+    type: "product",
+    dynamicOg: !image,
+    ogType: "product",
+  });
 }
 
 export default async function ProductDetailPage({

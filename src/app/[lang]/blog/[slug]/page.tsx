@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { isLocale } from "@/lib/i18n";
+import { buildMetadata } from "@/lib/seo/metadata";
+import { fitDescription } from "@/lib/seo/assert";
+import { SITE } from "@/lib/seo/config";
 
 export async function generateMetadata({
   params,
@@ -9,19 +12,40 @@ export async function generateMetadata({
   params: Promise<{ lang: string; slug: string }>;
 }): Promise<Metadata> {
   const { lang, slug } = await params;
-  if (!isLocale(lang)) return { title: "Blog | Bohosaaz" };
+  const locale = isLocale(lang) ? lang : "en";
 
   const post = await prisma.blogPost.findUnique({
     where: { slug },
-    select: { title: true, excerpt: true, isPublished: true, publishedAt: true },
+    select: {
+      title: true,
+      excerpt: true,
+      coverImageUrl: true,
+      isPublished: true,
+      publishedAt: true,
+      updatedAt: true,
+    },
   });
 
-  if (!post || !post.isPublished) return { title: "Blog | Bohosaaz" };
+  if (!post || !post.isPublished) {
+    return buildMetadata({
+      title: "Blog Post",
+      description: "Gift guides and ideas from Bohosaaz.",
+      path: `/${locale}/blog/${slug}`,
+      noindex: true,
+    });
+  }
 
-  return {
-    title: `${post.title} | Bohosaaz`,
-    description: post.excerpt,
-  };
+  return buildMetadata({
+    title: post.title,
+    description: fitDescription(post.excerpt || SITE.description),
+    path: `/${locale}/blog/${slug}`,
+    image: post.coverImageUrl || undefined,
+    type: "article",
+    dynamicOg: !post.coverImageUrl,
+    ogType: "blog",
+    publishedTime: post.publishedAt?.toISOString(),
+    modifiedTime: post.updatedAt.toISOString(),
+  });
 }
 
 export default async function BlogPostPage({

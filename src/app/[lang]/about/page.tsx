@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import AboutStatic, { metadata as staticMetadata } from "@/app/about/page";
+import { buildMetadata } from "@/lib/seo/metadata";
 
 export async function generateMetadata(): Promise<Metadata> {
 	const page = await prisma.cmsPage.findUnique({
@@ -9,7 +10,12 @@ export async function generateMetadata(): Promise<Metadata> {
 	});
 
 	if (!page?.title) return staticMetadata;
-	return { title: `${page.title} | Bohosaaz` };
+	return buildMetadata({
+		title: page.title.replace(/\s*\|\s*Bohosaaz$/i, "").replace(/\s*•\s*Bohosaaz$/i, ""),
+		description:
+			"Learn about Bohosaaz, a premium online gifting marketplace for Noida, Greater Noida, New Delhi and Delhi NCR.",
+		path: "/en/about",
+	});
 }
 
 export default async function AboutPage() {

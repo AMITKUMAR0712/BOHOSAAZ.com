@@ -11,27 +11,25 @@ import IconByName from "@/components/IconByName";
 import { DEFAULT_OCCASION_OPTIONS, DEFAULT_RECIPIENT_OPTIONS } from "@/lib/shopFilters";
 import { formatPriceInCurrency } from "@/lib/currency-utils";
 import { AutoScrollRow } from "@/components/AutoScrollRow";
+import { buildMetadata } from "@/lib/seo/metadata";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export const metadata: Metadata = {
-  title: "Gift Products in Noida, Greater Noida & Delhi NCR | Bohosaaz",
-  description:
-    "Bohosaaz is a premium online gifting store for Noida, Greater Noida, New Delhi and Delhi NCR. Shop birthday gifts, anniversary gifts, corporate gifts, festival gifts, barware, home decor and curated gift hampers.",
-  keywords: [
-    "gift products in Noida",
-    "gift products in Greater Noida",
-    "gift products in New Delhi",
-    "gift products in Delhi NCR",
-    "online gifts Noida",
-    "birthday gifts Delhi NCR",
-    "anniversary gifts Greater Noida",
-    "corporate gifts New Delhi",
-    "premium gift hampers Noida",
-    "Bohosaaz gifts",
-  ],
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await params;
+  const locale = isLocale(lang) ? lang : "en";
+  return buildMetadata({
+    title: "Online Gift Shop in Noida & Delhi NCR",
+    description:
+      "Premium online gifting store for Noida, Greater Noida, New Delhi and Delhi NCR. Shop birthday, anniversary, corporate and festival gifts, barware, home decor and hampers.",
+    path: `/${locale}`,
+  });
+}
 
 type Category = {
   id: string;
@@ -1218,15 +1216,19 @@ export default async function Home({
                   "mt-6 font-heading text-4xl md:text-6xl tracking-tight text-foreground leading-[1.02]"
                 }
               >
-                Bohosaaz Editions
+                Online Gift Shop in Noida &amp; Delhi NCR
               </h1>
 
-              <p
+              <h2
                 className={
                   theme.heroSubtitle ??
                   "mt-4 font-heading text-xl md:text-2xl tracking-tight text-primary/90 max-w-xl leading-snug"
                 }
               >
+                Bohosaaz Editions
+              </h2>
+
+              <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-xl leading-relaxed">
                 Elevate your gifting experience with Bohosaaz&apos;s gifting editions.
               </p>
 

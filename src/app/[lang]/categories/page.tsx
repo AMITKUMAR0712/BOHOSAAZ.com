@@ -2,13 +2,22 @@ import type { Metadata } from "next";
 import { isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { CategoriesGrid, CategoriesPageHero } from "@/components/CategoriesGrid";
+import { buildMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Gift Categories in Noida & Delhi NCR | Bohosaaz",
-  description:
-    "Browse Bohosaaz gift categories for Noida, Greater Noida, New Delhi and Delhi NCR: handcrafted gifts, home decor, barware, lifestyle products, festival gifts and premium hampers.",
-  keywords: ["gift categories Noida", "gift products Delhi NCR", "home decor gifts New Delhi", "premium gifts Greater Noida"],
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await params;
+  const locale = isLocale(lang) ? lang : "en";
+  return buildMetadata({
+    title: "Gift Categories in Noida & Delhi NCR",
+    description:
+      "Browse gift categories for Noida, Greater Noida, New Delhi and Delhi NCR: handcrafted gifts, home decor, barware, lifestyle products, festival gifts and premium hampers.",
+    path: `/${locale}/categories`,
+  });
+}
 
 export default async function AllCategoriesPage({
   params,

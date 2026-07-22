@@ -12,53 +12,21 @@ import ScrollToTop from "@/components/ScrollToTop";
 import GlobalAutoRefresh from "@/components/GlobalAutoRefresh";
 import { CurrencyProvider } from "@/lib/currency-context";
 import { requireUser } from "@/lib/auth";
-
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
-const seoKeywords = [
-  "gift products in Noida",
-  "gift products in Greater Noida",
-  "gift products in New Delhi",
-  "gift products in Delhi NCR",
-  "online gifts in Noida",
-  "online gifts in Greater Noida",
-  "online gifts in New Delhi NCR",
-  "birthday gifts in Noida",
-  "anniversary gifts in Delhi NCR",
-  "corporate gifts in Noida",
-  "premium gifts in Delhi NCR",
-  "personalized gifts in Noida",
-  "handmade gifts in India",
-  "festival gifts online",
-  "Diwali gifts Delhi NCR",
-  "wedding gifts Noida",
-  "unique gifts for men",
-  "unique gifts for women",
-  "luxury gift hampers",
-  "return gifts online",
-  "Bohosaaz gifts",
-];
-
-const siteDescription =
-  "Bohosaaz is a premium online gifting marketplace for gift products in Noida, Greater Noida, New Delhi and Delhi NCR. Shop curated birthday gifts, anniversary gifts, corporate gifts, festival gifts, home decor, barware, luxury hampers and personalized gift ideas.";
+import { SITE } from "@/lib/seo/config";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE.url),
 
   title: {
-    default: "Bohosaaz | Gift Products in Noida, Greater Noida & Delhi NCR",
-    template: "%s • Bohosaaz",
+    default: "Bohosaaz | Online Gift Shop in Noida & Delhi NCR",
+    template: "%s | Bohosaaz",
   },
 
-  description: siteDescription,
-  applicationName: "Bohosaaz",
-  authors: [{ name: "Bohosaaz" }],
-  creator: "Bohosaaz",
-  publisher: "Bohosaaz",
-  keywords: seoKeywords,
-  alternates: {
-    canonical: "/",
-  },
+  description: SITE.description,
+  applicationName: SITE.name,
+  authors: [{ name: SITE.name }],
+  creator: SITE.name,
+  publisher: SITE.name,
   category: "Online gifting marketplace",
   robots: {
     index: true,
@@ -72,7 +40,6 @@ export const metadata: Metadata = {
     },
   },
 
-  // Browser tab logo / favicon
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -82,57 +49,53 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
 
-  // Social sharing preview
   openGraph: {
-    title: "Bohosaaz | Gift Products in Noida, Greater Noida & Delhi NCR",
-    description: siteDescription,
+    title: "Bohosaaz | Online Gift Shop in Noida & Delhi NCR",
+    description: SITE.description,
     type: "website",
-    url: siteUrl,
-    siteName: "Bohosaaz",
-    locale: "en_IN",
+    url: SITE.url,
+    siteName: SITE.name,
+    locale: SITE.locale,
     images: [
       {
-        url: "/logo copy.jpeg",
-        width: 512,
-        height: 512,
-        alt: "Bohosaaz gift products in Delhi NCR",
+        url: SITE.defaultOgImage,
+        width: SITE.ogImageWidth,
+        height: SITE.ogImageHeight,
+        alt: "Bohosaaz online gift shop in Noida and Delhi NCR",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bohosaaz | Gift Products in Noida & Delhi NCR",
-    description: siteDescription,
-    images: ["/logo copy.jpeg"],
+    title: "Bohosaaz | Online Gift Shop in Noida & Delhi NCR",
+    description: SITE.description,
+    images: [SITE.defaultOgImage],
   },
 };
 
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "Bohosaaz",
-  url: siteUrl,
-  logo: `${siteUrl}/logo%20copy.jpeg`,
-  sameAs: [siteUrl],
+  name: SITE.name,
+  url: SITE.url,
+  logo: `${SITE.url}${SITE.defaultOgImage}`,
+  sameAs: Object.values(SITE.social),
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer service",
+    email: SITE.contact.email,
+    availableLanguage: ["English", "Hindi"],
+  },
 };
 
 const localBusinessJsonLd = {
   "@context": "https://schema.org",
   "@type": "OnlineStore",
-  name: "Bohosaaz",
-  url: siteUrl,
-  image: `${siteUrl}/logo%20copy.jpeg`,
-  description: siteDescription,
-  areaServed: [
-    "Noida",
-    "Greater Noida",
-    "New Delhi",
-    "Delhi NCR",
-    "Ghaziabad",
-    "Gurugram",
-    "Faridabad",
-  ],
-  keywords: seoKeywords.join(", "),
+  name: SITE.name,
+  url: SITE.url,
+  image: `${SITE.url}${SITE.defaultOgImage}`,
+  description: SITE.description,
+  areaServed: [...SITE.areasServed],
   priceRange: "₹₹",
   address: {
     "@type": "PostalAddress",
@@ -145,11 +108,11 @@ const localBusinessJsonLd = {
 const websiteJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "Bohosaaz",
-  url: siteUrl,
+  name: SITE.name,
+  url: SITE.url,
   potentialAction: {
     "@type": "SearchAction",
-    target: `${siteUrl}/en/shop?q={search_term_string}`,
+    target: `${SITE.url}/en/shop?q={search_term_string}`,
     "query-input": "required name=search_term_string",
   },
 };
@@ -159,17 +122,12 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Resolve current user server-side (reads auth cookie)
   const user = await requireUser();
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en-IN" suppressHydrationWarning>
       <body className="min-h-screen text-foreground antialiased">
-        
-        <Script
-          id="bohosaaz-theme-init"
-          strategy="beforeInteractive"
-        >
+        <Script id="bohosaaz-theme-init" strategy="beforeInteractive">
           {`
             (function () {
               try {
@@ -203,17 +161,13 @@ export default async function RootLayout({
             <ScrollToTop />
             <GlobalAutoRefresh />
 
-            {/* Header */}
             <SiteHeader />
 
-            {/* Main Content */}
             <main className="site-content">{children}</main>
 
-            {/* Footer + Utilities */}
             <SiteFooter />
             <BackToTop />
             <WhatsAppFloat />
-
           </ToastProvider>
         </CurrencyProvider>
       </body>

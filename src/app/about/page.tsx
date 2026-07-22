@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "About Bohosaaz | Gift Products in Noida & Delhi NCR",
+export const metadata: Metadata = buildMetadata({
+  title: "About Us — Gift Shop Noida & Delhi NCR",
   description:
-    "Learn about Bohosaaz, a premium online gifting marketplace for Noida, Greater Noida, New Delhi and Delhi NCR with curated birthday gifts, anniversary gifts, corporate gifts and festival hampers.",
-  keywords: ["about Bohosaaz", "gift products Noida", "online gifts Delhi NCR", "premium gifting marketplace"],
-};
+    "Learn about Bohosaaz, a premium online gifting marketplace for Noida, Greater Noida, New Delhi and Delhi NCR with curated gifts and festival hampers.",
+  path: "/en/about",
+});
 
 export default function AboutPage() {
   return (

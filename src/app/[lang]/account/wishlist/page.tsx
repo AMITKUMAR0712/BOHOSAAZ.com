@@ -1,11 +1,15 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import AccountWishlistClient, { type WishlistRow } from "@/components/account/AccountWishlistClient";
+import { buildMetadata } from "@/lib/seo/metadata";
 
-export const metadata = {
-  title: "Wishlist • Bohosaaz",
-  description: "Your saved items on Bohosaaz.",
-};
+export const metadata = buildMetadata({
+  title: "Wishlist",
+  description: "Your saved gift items on Bohosaaz.",
+  path: "/en/account/wishlist",
+  noindex: true,
+  nofollow: true,
+});
 
 export default async function AccountWishlistPage({
   params,

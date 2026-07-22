@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { buildMetadata } from "@/lib/seo/metadata";
+import { isLocale } from "@/lib/i18n";
 
 const BRAND_TYPES = {
   popular: {
@@ -25,11 +27,19 @@ function getBrandType(type: string): (typeof BRAND_TYPES)[BrandTypeSlug] | null 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ type: string }>;
+  params: Promise<{ lang: string; type: string }>;
 }): Promise<Metadata> {
-  const { type } = await params;
+  const { lang, type } = await params;
+  const locale = isLocale(lang) ? lang : "en";
   const brandType = getBrandType(type);
-  return { title: `${brandType?.title ?? "Brands"} | Bohosaaz` };
+  return buildMetadata({
+    title: brandType?.title ?? "Brands",
+    description:
+      brandType?.subtitle ??
+      "Explore curated gift brands on Bohosaaz for Noida and Delhi NCR.",
+    path: `/${locale}/brands/${type}`,
+    noindex: !brandType,
+  });
 }
 
 export default async function BrandTypePage({

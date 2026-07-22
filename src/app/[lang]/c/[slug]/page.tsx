@@ -3,13 +3,39 @@ import { isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { ProductCard, type ProductCardProduct } from "@/components/ProductCard";
 import { AdSlot } from "@/components/ads/AdSlot";
+import { buildMetadata } from "@/lib/seo/metadata";
+import { fitDescription } from "@/lib/seo/assert";
 
-export const metadata: Metadata = {
-  title: "Gift Products Category in Noida & Delhi NCR | Bohosaaz",
-  description:
-    "Explore Bohosaaz category-wise gift products for Noida, Greater Noida, New Delhi and Delhi NCR, including birthday gifts, anniversary gifts, corporate gifts and premium gifting ideas.",
-  keywords: ["gift category Noida", "gift products Delhi NCR", "online gifting Greater Noida", "premium gifts New Delhi"],
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string; slug: string }>;
+}): Promise<Metadata> {
+  const { lang, slug } = await params;
+  const locale = isLocale(lang) ? lang : "en";
+
+  const category = await prisma.category.findUnique({
+    where: { slug },
+    select: { name: true, isHidden: true },
+  });
+
+  if (!category || category.isHidden) {
+    return buildMetadata({
+      title: "Gift Category",
+      description: "Browse gift categories on Bohosaaz for Noida and Delhi NCR.",
+      path: `/${locale}/c/${slug}`,
+      noindex: true,
+    });
+  }
+
+  return buildMetadata({
+    title: `${category.name} Gifts in Noida & Delhi NCR`,
+    description: fitDescription(
+      `Shop ${category.name} gift products for Noida, Greater Noida, New Delhi and Delhi NCR. Curated birthday, anniversary, corporate and festival gifting ideas.`
+    ),
+    path: `/${locale}/c/${slug}`,
+  });
+}
 
 function toBool(v: unknown) {
   if (typeof v !== "string") return false;

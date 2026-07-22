@@ -2,19 +2,22 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { isLocale } from "@/lib/i18n";
 import { ProductCard, type ProductCardProduct } from "@/components/ProductCard";
+import { buildMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Gift Offers in Noida, Greater Noida & Delhi NCR | Bohosaaz",
-  description:
-    "Shop discounted gift products in Noida, Greater Noida, New Delhi and Delhi NCR. Find gift offers on birthday gifts, home decor, barware, premium hampers and festival gifts.",
-  keywords: [
-    "gift offers in Noida",
-    "discount gifts Delhi NCR",
-    "gift products sale Greater Noida",
-    "online gift offers New Delhi",
-    "Bohosaaz offers",
-  ],
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await params;
+  const locale = isLocale(lang) ? lang : "en";
+  return buildMetadata({
+    title: "Gift Offers in Noida & Delhi NCR",
+    description:
+      "Shop discounted gift products in Noida, Greater Noida, New Delhi and Delhi NCR. Find offers on birthday gifts, home decor, barware, hampers and festival gifts.",
+    path: `/${locale}/offers`,
+  });
+}
 
 export default async function OffersPage({
   params,

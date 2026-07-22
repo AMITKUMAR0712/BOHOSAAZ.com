@@ -4,13 +4,24 @@ import { redirect } from "next/navigation";
 import { isLocale } from "@/lib/i18n";
 import { requireUser } from "@/lib/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { buildMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Seller | Bohosaaz",
-  description:
-    "Become a Bohosaaz seller and list gift products for Noida, Greater Noida, New Delhi and Delhi NCR customers looking for premium online gifts.",
-  keywords: ["sell gifts online", "Bohosaaz seller", "gift products seller Noida", "Delhi NCR gifting marketplace"],
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await params;
+  const locale = isLocale(lang) ? lang : "en";
+  return buildMetadata({
+    title: "Become a Seller",
+    description:
+      "Become a Bohosaaz seller and list gift products for Noida, Greater Noida, New Delhi and Delhi NCR customers.",
+    path: `/${locale}/seller`,
+    noindex: true,
+    nofollow: true,
+  });
+}
 
 export default async function SellerPage({
   params,

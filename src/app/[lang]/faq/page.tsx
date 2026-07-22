@@ -2,13 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/lib/i18n";
+import { buildMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "FAQ | Bohosaaz",
-  description:
-    "Answers about Bohosaaz gift products, online gifting in Noida, Greater Noida, New Delhi and Delhi NCR, shipping, returns, orders and seller support.",
-  keywords: ["Bohosaaz FAQ", "gift delivery Noida", "online gifts Delhi NCR", "gift products support"],
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await params;
+  const locale = isLocale(lang) ? lang : "en";
+  return buildMetadata({
+    title: "FAQ — Gift Delivery & Orders",
+    description:
+      "Answers about gift products, online gifting in Noida, Greater Noida, New Delhi and Delhi NCR, shipping, returns, orders and seller support.",
+    path: `/${locale}/faq`,
+  });
+}
 
 const faqs = [
   {
