@@ -25,11 +25,34 @@ export async function POST(req: NextRequest) {
 
   const { email, password } = parsed.data;
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      name: true,
+      password: true,
+      isBlocked: true,
+      blockedReason: true,
+    },
+  });
   if (!user) return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
 
   const ok = await bcrypt.compare(password, user.password);
   if (!ok) return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+
+  if (user.isBlocked) {
+    const reason = (user.blockedReason || "").trim() || "Your account has been blocked by an administrator.";
+    return NextResponse.json(
+      {
+        error: "Account blocked",
+        code: "ACCOUNT_BLOCKED",
+        blockedReason: reason,
+      },
+      { status: 403 },
+    );
+  }
 
   const safeUser = { id: user.id, email: user.email, role: user.role, name: user.name };
   const token = signToken({ sub: user.id, email: user.email, role: user.role });

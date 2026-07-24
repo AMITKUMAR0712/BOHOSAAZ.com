@@ -151,7 +151,8 @@ export default function PagesClient({
                 placeholder="about or about/team"
               />
               <span className="mt-1 block text-xs text-gray-500">
-                URL will be /{lang}/{slug.trim() || "…"} — use a-z, 0-9, hyphens; / for nested pages
+                Nested slugs show in navbar dropdowns by title: about/… → About Us, contact/… or
+                contact-us/… → Contact Us, blog/… or blogs/… → Blogs. Example: about/about2
               </span>
             </label>
 

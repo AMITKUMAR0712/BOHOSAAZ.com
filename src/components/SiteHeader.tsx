@@ -23,6 +23,7 @@ import {
   DropdownSeparator,
   DropdownTrigger,
 } from "@/components/ui/dropdown";
+import { publicCmsPath } from "@/lib/cmsSlug";
 
 function renderNumericRuns(text: string) {
   const parts = String(text).split(/(\d[\d,\.]*)/g);
@@ -70,6 +71,20 @@ type NavCategory = {
   children?: NavCategory[];
 };
 
+type CmsNavChild = {
+  id: string;
+  slug: string;
+  title: string;
+  group: "about" | "contact" | "blog";
+};
+
+type NavLink = {
+  label: string;
+  href: string;
+  group?: "about" | "contact" | "blog";
+  children?: Array<{ id: string; label: string; href: string }>;
+};
+
 export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
   const [me, setMe] = useState<Me>(null);
   const [cart, setCart] = useState<Cart>(null);
@@ -77,9 +92,13 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [navCategories, setNavCategories] = useState<NavCategory[]>([]);
+  const [cmsNavPages, setCmsNavPages] = useState<CmsNavChild[]>([]);
   const [catOpen, setCatOpen] = useState(false);
+  const [openNavGroup, setOpenNavGroup] = useState<"about" | "contact" | "blog" | null>(null);
   const catOpenT = useRef<ReturnType<typeof setTimeout> | null>(null);
   const catCloseT = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navOpenT = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navCloseT = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { currency: selectedCurrency, setCurrency } = useCurrency();
   const router = useRouter();
 
@@ -163,6 +182,23 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
     );
   }
 
+  async function loadCmsNavPages() {
+    const res = await fetch("/api/cms-pages", { cache: "no-store" });
+    const data = await res.json().catch(() => ({}));
+    const rows = Array.isArray(data?.pages) ? (data.pages as CmsNavChild[]) : [];
+    setCmsNavPages(
+      rows.filter(
+        (p) =>
+          p &&
+          typeof p === "object" &&
+          typeof p.id === "string" &&
+          typeof p.slug === "string" &&
+          typeof p.title === "string" &&
+          (p.group === "about" || p.group === "contact" || p.group === "blog"),
+      ),
+    );
+  }
+
   function normalizeNavCategory(c: unknown): NavCategory {
     const row = c as {
       id?: unknown;
@@ -234,6 +270,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
         void loadCart();
         void loadWishlistCount();
         void loadCategories();
+        void loadCmsNavPages();
       }
     }, 0);
     return () => clearTimeout(t);
@@ -360,13 +397,34 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
     getPriceInCurrency(cartTotal, cartOrderCurrency, selectedCurrency),
   );
 
-  const navLinks = [
+  const navLinks: NavLink[] = [
     { label: "Home", href: lp },
     { label: "Shop All", href: `${lp}/shop` },
     { label: "Gift Categories", href: `${lp}/categories` },
-    { label: "About Us", href: `${lp}/about` },
-    { label: "Contact Us", href: `${lp}/contact` },
-    { label: "Blogs", href: `${lp}/blog` },
+    {
+      label: "About Us",
+      href: `${lp}/about`,
+      group: "about",
+      children: cmsNavPages
+        .filter((p) => p.group === "about")
+        .map((p) => ({ id: p.id, label: p.title, href: publicCmsPath(detectedLang, p.slug) })),
+    },
+    {
+      label: "Contact Us",
+      href: `${lp}/contact`,
+      group: "contact",
+      children: cmsNavPages
+        .filter((p) => p.group === "contact")
+        .map((p) => ({ id: p.id, label: p.title, href: publicCmsPath(detectedLang, p.slug) })),
+    },
+    {
+      label: "Blogs",
+      href: `${lp}/blog`,
+      group: "blog",
+      children: cmsNavPages
+        .filter((p) => p.group === "blog")
+        .map((p) => ({ id: p.id, label: p.title, href: publicCmsPath(detectedLang, p.slug) })),
+    },
   ];
 
   const categoryHref = (slug: string) => `${lp}/c/${encodeURIComponent(slug)}`;
@@ -382,6 +440,17 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
     }
   }
 
+  function clearNavTimers() {
+    if (navOpenT.current) {
+      clearTimeout(navOpenT.current);
+      navOpenT.current = null;
+    }
+    if (navCloseT.current) {
+      clearTimeout(navCloseT.current);
+      navCloseT.current = null;
+    }
+  }
+
   function scheduleCatOpen() {
     if (catOpen) return;
     clearCatTimers();
@@ -391,6 +460,16 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
   function scheduleCatClose() {
     clearCatTimers();
     catCloseT.current = setTimeout(() => setCatOpen(false), 450);
+  }
+
+  function scheduleNavOpen(group: "about" | "contact" | "blog") {
+    clearNavTimers();
+    navOpenT.current = setTimeout(() => setOpenNavGroup(group), 120);
+  }
+
+  function scheduleNavClose() {
+    clearNavTimers();
+    navCloseT.current = setTimeout(() => setOpenNavGroup(null), 280);
   }
 
   const Icon = {
@@ -792,18 +871,78 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
                 l.href === lp
                   ? pathname === lp || pathname === `${lp}/`
                   : pathname === l.href || pathname.startsWith(`${l.href}/`);
+              const children = l.children || [];
+              const hasDropdown = Boolean(l.group && children.length);
+              const linkClass = `relative shrink-0 rounded-full border px-3 py-2 text-[11px] font-extrabold uppercase tracking-[0.14em] transition-all duration-300 hover:-translate-y-px hover:border-primary/20 hover:bg-white/28 hover:text-primary hover:shadow-[0_8px_18px_rgba(69,40,24,0.08)] sm:py-1.5 sm:text-[11px] ${
+                active
+                  ? "border-primary/18 bg-white/30 text-primary shadow-[0_8px_18px_rgba(69,40,24,0.08)] after:absolute after:-bottom-0.5 after:left-3 after:right-3 after:h-0.5 after:rounded-full after:bg-primary"
+                  : "border-transparent bg-transparent text-foreground/82"
+              }`;
+
+              if (!hasDropdown || !l.group) {
+                return (
+                  <Link key={l.label} href={l.href} className={linkClass}>
+                    {l.label}
+                  </Link>
+                );
+              }
+
+              const open = openNavGroup === l.group;
               return (
-                <Link
+                <div
                   key={l.label}
-                  href={l.href}
-                  className={`relative shrink-0 rounded-full border px-3 py-2 text-[11px] font-extrabold uppercase tracking-[0.14em] transition-all duration-300 hover:-translate-y-px hover:border-primary/20 hover:bg-white/28 hover:text-primary hover:shadow-[0_8px_18px_rgba(69,40,24,0.08)] sm:py-1.5 sm:text-[11px] ${
-                    active
-                      ? "border-primary/18 bg-white/30 text-primary shadow-[0_8px_18px_rgba(69,40,24,0.08)] after:absolute after:-bottom-0.5 after:left-3 after:right-3 after:h-0.5 after:rounded-full after:bg-primary"
-                      : "border-transparent bg-transparent text-foreground/82"
-                  }`}
+                  className="relative shrink-0"
+                  onMouseEnter={() => scheduleNavOpen(l.group!)}
+                  onMouseLeave={scheduleNavClose}
                 >
-                  {l.label}
-                </Link>
+                  <Link
+                    href={l.href}
+                    className={`${linkClass} inline-flex items-center gap-1`}
+                    aria-haspopup="menu"
+                    aria-expanded={open}
+                    onFocus={() => {
+                      clearNavTimers();
+                      setOpenNavGroup(l.group!);
+                    }}
+                  >
+                    {l.label}
+                    <span className="text-[9px] opacity-70" aria-hidden>
+                      ▾
+                    </span>
+                  </Link>
+                  {open ? (
+                    <div
+                      className="absolute left-0 top-full z-100 mt-2 min-w-[12rem] origin-top-left rounded-2xl bg-card/96 p-2 shadow-[0_18px_50px_rgba(47,38,34,0.14)] ring-1 ring-white/35 backdrop-blur-2xl"
+                      role="menu"
+                      onMouseEnter={() => {
+                        clearNavTimers();
+                        setOpenNavGroup(l.group!);
+                      }}
+                      onMouseLeave={scheduleNavClose}
+                    >
+                      <Link
+                        href={l.href}
+                        role="menuitem"
+                        className="block rounded-xl px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:bg-primary/8 hover:text-primary"
+                        onClick={() => setOpenNavGroup(null)}
+                      >
+                        {l.label} home
+                      </Link>
+                      <div className="my-1 h-px bg-border/70" />
+                      {children.map((child) => (
+                        <Link
+                          key={child.id}
+                          href={child.href}
+                          role="menuitem"
+                          className="block rounded-xl px-3 py-2 text-sm font-semibold text-foreground transition hover:bg-primary/8 hover:text-primary"
+                          onClick={() => setOpenNavGroup(null)}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
               );
             })}
           </div>
@@ -945,17 +1084,55 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
                 l.href === lp
                   ? pathname === lp || pathname === `${lp}/`
                   : pathname === l.href || pathname.startsWith(`${l.href}/`);
+              const children = l.children || [];
+
+              if (!children.length) {
+                return (
+                  <Link
+                    key={l.label}
+                    href={l.href}
+                    className={`rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-[0.12em] transition ${
+                      active ? "bg-primary/10 text-primary" : "hover:bg-muted/40 text-foreground"
+                    }`}
+                    onClick={() => setDrawerOpen(false)}
+                  >
+                    {l.label}
+                  </Link>
+                );
+              }
+
               return (
-                <Link
+                <details
                   key={l.label}
-                  href={l.href}
-                  className={`rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-[0.12em] transition ${
-                    active ? "bg-primary/10 text-primary" : "hover:bg-muted/40 text-foreground"
-                  }`}
-                  onClick={() => setDrawerOpen(false)}
+                  className="rounded-2xl border border-border bg-card/70 overflow-hidden"
                 >
-                  {l.label}
-                </Link>
+                  <summary
+                    className={`cursor-pointer list-none px-4 py-3 text-sm font-bold uppercase tracking-[0.12em] ${
+                      active ? "bg-primary/10 text-primary" : "text-foreground"
+                    }`}
+                  >
+                    {l.label}
+                  </summary>
+                  <div className="grid gap-1 border-t border-border/60 p-2">
+                    <Link
+                      href={l.href}
+                      className="rounded-xl px-3 py-2 text-sm font-semibold hover:bg-muted/40 transition"
+                      onClick={() => setDrawerOpen(false)}
+                    >
+                      {l.label} home
+                    </Link>
+                    {children.map((child) => (
+                      <Link
+                        key={child.id}
+                        href={child.href}
+                        className="rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-muted/40 hover:text-foreground transition"
+                        onClick={() => setDrawerOpen(false)}
+                      >
+                        {child.label}
+                      </Link>
+                    ))}
+                  </div>
+                </details>
               );
             })}
           </div>

@@ -24,10 +24,12 @@ export default function LoginClient({
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [blockedReason, setBlockedReason] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
+    setBlockedReason(null);
     setLoading(true);
 
     try {
@@ -38,7 +40,19 @@ export default function LoginClient({
       });
 
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || "Login failed");
+      if (!res.ok) {
+        if (data?.code === "ACCOUNT_BLOCKED" || res.status === 403) {
+          const reason =
+            typeof data?.blockedReason === "string" && data.blockedReason.trim()
+              ? data.blockedReason.trim()
+              : typeof data?.error === "string"
+                ? data.error
+                : "Your account has been blocked.";
+          setBlockedReason(reason);
+          throw new Error("Account blocked");
+        }
+        throw new Error(typeof data?.error === "string" ? data.error : "Login failed");
+      }
 
       const target = await resolvePostLoginRedirect({ next });
 
@@ -52,7 +66,7 @@ export default function LoginClient({
       router.replace(target);
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Something went wrong";
-      setErr(message);
+      if (message !== "Account blocked") setErr(message);
     } finally {
       setLoading(false);
     }
@@ -116,8 +130,22 @@ export default function LoginClient({
               <div className="mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
                 <Gift className="h-6 w-6" aria-hidden />
               </div>
-              <CardTitle className="font-heading text-xl">Login and start gifting</CardTitle>
-              <CardDescription>Access wishlist, cart and premium gift recommendations.</CardDescription>
+              {blockedReason ? (
+                <>
+                  <CardTitle className="font-heading text-xl text-danger">Account blocked</CardTitle>
+                  <h2 className="mt-3 font-heading text-2xl leading-snug tracking-tight text-foreground md:text-3xl">
+                    {blockedReason}
+                  </h2>
+                  <CardDescription className="mt-2">
+                    Please contact support if you believe this is a mistake.
+                  </CardDescription>
+                </>
+              ) : (
+                <>
+                  <CardTitle className="font-heading text-xl">Login and start gifting</CardTitle>
+                  <CardDescription>Access wishlist, cart and premium gift recommendations.</CardDescription>
+                </>
+              )}
             </CardHeader>
 
             <CardContent className="p-4 md:p-5">
