@@ -78,6 +78,18 @@ export default function AdminSidebar({ lang }: { lang: string }) {
     return <Ticket className="h-4 w-4" />;
   }
 
+  const hrefs = items.map((it) => it.href);
+
+  // Only one item active: exact match, or longest matching prefix (never treat bare /admin as a prefix).
+  const activeHref =
+    hrefs
+      .filter((href) => {
+        if (pathname === href || pathname === `${href}/`) return true;
+        if (/\/admin$/.test(href)) return false;
+        return pathname.startsWith(`${href}/`);
+      })
+      .sort((a, b) => b.length - a.length)[0] ?? null;
+
   return (
     <>
       {/* Mobile Toggle */}
@@ -101,24 +113,27 @@ export default function AdminSidebar({ lang }: { lang: string }) {
           <div className="text-sm font-bold tracking-widest uppercase text-muted-foreground">Admin Portal</div>
         </div>
         <nav className="flex flex-col gap-1 p-2 overflow-y-auto max-h-[calc(100vh-140px)] scrollbar-hide">
-          {items.map((it) => (
-            <Link
-              key={it.href}
-              href={it.href}
-              onClick={() => setIsOpen(false)}
-              className={cn(
-                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all",
-                pathname === it.href || pathname.startsWith(it.href + "/")
-                  ? "bg-primary text-primary-foreground shadow-md font-medium"
-                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-              )}
-            >
-              <span className="shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
-                {iconForHref(it.href)}
-              </span>
-              <span className="truncate">{it.label}</span>
-            </Link>
-          ))}
+          {items.map((it) => {
+            const active = it.href === activeHref;
+            return (
+              <Link
+                key={it.href}
+                href={it.href}
+                onClick={() => setIsOpen(false)}
+                className={cn(
+                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all",
+                  active
+                    ? "bg-primary text-primary-foreground shadow-md font-medium"
+                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                )}
+              >
+                <span className="shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
+                  {iconForHref(it.href)}
+                </span>
+                <span className="truncate">{it.label}</span>
+              </Link>
+            );
+          })}
         </nav>
       </aside>
 

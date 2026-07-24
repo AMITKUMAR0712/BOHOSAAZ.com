@@ -79,5 +79,50 @@ if (!fs.existsSync(standaloneServer)) {
 	);
 }
 
+// Keep uploads outside .next so rebuilds do not wipe product/brand images.
+const uploadRoot = path.join(rootDir, "public", "uploads");
+process.env.UPLOAD_ROOT = process.env.UPLOAD_ROOT || uploadRoot;
+try {
+	fs.mkdirSync(uploadRoot, { recursive: true });
+} catch (err) {
+	console.warn("[server] Failed to ensure upload root:", err);
+}
+
+function linkUploadsIntoStandalone() {
+	const linkPath = path.join(standaloneDir, "public", "uploads");
+	const publicDir = path.join(standaloneDir, "public");
+	try {
+		fs.mkdirSync(publicDir, { recursive: true });
+		let existing = null;
+		try {
+			existing = fs.lstatSync(linkPath);
+		} catch {
+			existing = null;
+		}
+		if (existing) {
+			if (existing.isSymbolicLink()) {
+				fs.unlinkSync(linkPath);
+			} else if (existing.isDirectory()) {
+				// Prefer durable folder; remove empty/copied uploads dir so we can link.
+				try {
+					fs.rmSync(linkPath, { recursive: true, force: true });
+				} catch (err) {
+					console.warn("[server] Could not replace standalone uploads dir:", err);
+					return;
+				}
+			} else {
+				fs.unlinkSync(linkPath);
+			}
+		}
+		const type = process.platform === "win32" ? "junction" : "dir";
+		fs.symlinkSync(uploadRoot, linkPath, type);
+		console.log(`[server] Linked uploads -> ${uploadRoot}`);
+	} catch (err) {
+		console.warn("[server] Uploads symlink skipped (API /api/files fallback still works):", err);
+	}
+}
+
+linkUploadsIntoStandalone();
+
 process.chdir(standaloneDir);
 require(standaloneServer);

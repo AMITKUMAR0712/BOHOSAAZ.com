@@ -1,9 +1,11 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { verifyToken, type JwtPayload } from "@/lib/auth";
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, writeFile, copyFile } from "fs/promises";
+import { existsSync } from "fs";
 import path from "path";
 import crypto from "crypto";
+import { getUploadRoot } from "@/lib/uploadPaths";
 
 export const runtime = "nodejs";
 
@@ -109,7 +111,8 @@ export async function POST(req: NextRequest) {
           ? path.join("support", userId)
         : path.join(safePurpose, userId);
 
-  const uploadsDir = path.join(process.cwd(), "public", "uploads", subdir);
+  const uploadRoot = getUploadRoot();
+  const uploadsDir = path.join(uploadRoot, subdir);
   await mkdir(uploadsDir, { recursive: true });
 
   const ext = extFromMime(mime) || path.extname(file.name || "").slice(0, 10);
@@ -118,6 +121,18 @@ export async function POST(req: NextRequest) {
 
   const buf = Buffer.from(await file.arrayBuffer());
   await writeFile(absPath, buf);
+
+  // Also mirror into cwd public (standalone) so static hosting can find the file immediately.
+  const cwdMirrorDir = path.join(process.cwd(), "public", "uploads", subdir);
+  if (path.resolve(cwdMirrorDir) !== path.resolve(uploadsDir)) {
+    try {
+      await mkdir(cwdMirrorDir, { recursive: true });
+      const mirrorPath = path.join(cwdMirrorDir, filename);
+      if (!existsSync(mirrorPath)) await copyFile(absPath, mirrorPath);
+    } catch {
+      // Durable root + /api/files rewrite is enough if mirror fails.
+    }
+  }
 
   const urlPath = `/uploads/${subdir.split(path.sep).join("/")}/${filename}`;
 

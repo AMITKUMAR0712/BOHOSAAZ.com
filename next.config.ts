@@ -13,6 +13,17 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "30mb",
     },
   },
+  // When a file is missing from standalone/public, serve it from durable UPLOAD_ROOT via API.
+  async rewrites() {
+    return {
+      afterFiles: [
+        {
+          source: "/uploads/:path*",
+          destination: "/api/files/:path*",
+        },
+      ],
+    };
+  },
   async headers() {
     return [
       {

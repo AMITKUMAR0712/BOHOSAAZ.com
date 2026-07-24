@@ -34,6 +34,25 @@ if (fs.existsSync(standaloneDir)) {
 	const publicDest = path.join(standaloneDir, "public");
 	copyDir(publicSrc, publicDest);
 
+	// Durable uploads: keep files in project public/uploads and link into standalone.
+	const uploadRoot = path.join(rootDir, "public", "uploads");
+	const standaloneUploads = path.join(publicDest, "uploads");
+	fs.mkdirSync(uploadRoot, { recursive: true });
+	try {
+		if (fs.existsSync(standaloneUploads)) {
+			const st = fs.lstatSync(standaloneUploads);
+			if (st.isSymbolicLink()) fs.unlinkSync(standaloneUploads);
+			else if (st.isDirectory()) fs.rmSync(standaloneUploads, { recursive: true, force: true });
+			else fs.unlinkSync(standaloneUploads);
+		}
+		const type = process.platform === "win32" ? "junction" : "dir";
+		fs.symlinkSync(uploadRoot, standaloneUploads, type);
+		console.log("[post-build] Linked standalone/public/uploads -> public/uploads");
+	} catch (err) {
+		console.warn("[post-build] Uploads link skipped:", err);
+		fs.mkdirSync(standaloneUploads, { recursive: true });
+	}
+
 	// Ensure Prisma query engine is available in standalone runtime.
 	const prismaClientSrc = path.join(rootDir, "node_modules", ".prisma", "client");
 	const prismaClientDest = path.join(standaloneDir, "node_modules", ".prisma", "client");

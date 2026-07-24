@@ -83,6 +83,13 @@ function getTokenFromRequest(req: NextRequest) {
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Serve durable uploads via API (standalone public/uploads is ephemeral across rebuilds).
+  if (pathname.startsWith("/uploads/")) {
+    const url = req.nextUrl.clone();
+    url.pathname = `/api/files/${pathname.slice("/uploads/".length)}`;
+    return NextResponse.rewrite(url);
+  }
+
   // Skip Next internals, API routes, static files
   if (
     pathname.startsWith("/_next") ||
@@ -164,6 +171,7 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    "/uploads/:path*",
     "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
   ],
 };
