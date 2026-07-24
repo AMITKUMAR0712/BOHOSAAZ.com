@@ -201,7 +201,9 @@ function BrandMarquee({
   brands: Brand[];
   duration: string;
 }) {
-  const marqueeBrands = brands.length ? [...brands, ...brands] : [];
+  // Duplicate only when enough items exist so the loop doesn't look like duplicate cards.
+  const shouldLoop = brands.length >= 4;
+  const marqueeBrands = shouldLoop ? [...brands, ...brands] : brands;
 
   return (
     <div className="relative overflow-hidden rounded-[30px] border border-border/60 bg-transparent p-0">
@@ -227,6 +229,7 @@ function BrandMarquee({
           contentClassName="gap-4 py-2 sm:gap-5 lg:gap-6"
           step={340}
           speed={duration === "28s" ? 0.22 : 0.18}
+          autoScroll={shouldLoop}
         >
             {marqueeBrands.map((brand, index) => (
               <Link
@@ -299,7 +302,9 @@ function ProductMarquee({
   duration: string;
   wrapperClassName?: string;
 }) {
-  const marqueeProducts = products.length ? [...products, ...products] : [];
+  // Duplicate only when enough items exist so the loop doesn't look like duplicate cards.
+  const shouldLoop = products.length >= 4;
+  const marqueeProducts = shouldLoop ? [...products, ...products] : products;
 
   return (
     <AutoScrollRow
@@ -309,6 +314,7 @@ function ProductMarquee({
       step={300}
       speed={duration === "32s" ? 0.2 : 0.18}
       arrowClassName="top-[42%] sm:top-1/2"
+      autoScroll={shouldLoop}
     >
         {marqueeProducts.map((p, index) => (
           <div

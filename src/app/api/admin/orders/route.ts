@@ -1,18 +1,44 @@
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { jsonError, jsonOk } from "@/lib/api";
 import { OrderStatus, type Prisma } from "@prisma/client";
 import { formatDbError } from "@/lib/dbError";
 
+const demoOrderWhere: Prisma.OrderWhereInput = {
+  OR: [
+    { address1: { contains: "Seed Street" } },
+    { address2: { contains: "Seed Market" } },
+    { user: { email: { endsWith: "@bohosaaz.test" } } },
+  ],
+};
+
+function isDemoOrder(order: {
+  address1: string | null;
+  address2?: string | null;
+  user: { email: string } | null;
+}) {
+  const addr1 = (order.address1 || "").toLowerCase();
+  const addr2 = (order.address2 || "").toLowerCase();
+  const email = (order.user?.email || "").toLowerCase();
+  return (
+    addr1.includes("seed street") ||
+    addr2.includes("seed market") ||
+    email.endsWith("@bohosaaz.test")
+  );
+}
+
 export async function GET(req: Request) {
   const admin = await requireAdmin();
   if (!admin) return jsonError("Unauthorized", 401);
 
   const { searchParams } = new URL(req.url);
-  const takeRaw = Number(searchParams.get("take") || 50);
-  const take = Number.isFinite(takeRaw) ? Math.min(Math.max(takeRaw, 1), 100) : 50;
 
-  const cursor = searchParams.get("cursor") || undefined;
+  const pageRaw = Number(searchParams.get("page") || 1);
+  const pageSizeRaw = Number(searchParams.get("pageSize") || searchParams.get("take") || 10);
+  const page = Number.isFinite(pageRaw) ? Math.max(1, Math.floor(pageRaw)) : 1;
+  const pageSize = Number.isFinite(pageSizeRaw) ? Math.min(Math.max(Math.floor(pageSizeRaw), 1), 100) : 10;
+
   const q = (searchParams.get("q") || "").trim();
   const status = (searchParams.get("status") || "").trim();
 
@@ -33,10 +59,15 @@ export async function GET(req: Request) {
   }
 
   try {
-    const rows = await prisma.order.findMany({
+    const total = await prisma.order.count({ where });
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const safePage = Math.min(page, totalPages);
+    const skip = (safePage - 1) * pageSize;
+
+    const orders = await prisma.order.findMany({
       where,
-      take: take + 1,
-      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      skip,
+      take: pageSize,
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -44,48 +75,14 @@ export async function GET(req: Request) {
         total: true,
         city: true,
         state: true,
+        address1: true,
+        address2: true,
         createdAt: true,
         userId: true,
+        user: { select: { id: true, email: true, name: true } },
+        _count: { select: { items: true } },
       },
     });
-
-    let nextCursor: string | null = null;
-    let orders = rows;
-    if (rows.length > take) {
-      const next = rows.pop();
-      nextCursor = next?.id || null;
-      orders = rows;
-    }
-
-    const orderIds = orders.map((o) => o.id);
-    const userIds = [...new Set(orders.map((o) => o.userId).filter(Boolean))];
-
-    const usersById = new Map<string, { id: string; email: string; name: string | null }>();
-    if (userIds.length) {
-      try {
-        const users = await prisma.user.findMany({
-          where: { id: { in: userIds } },
-          select: { id: true, email: true, name: true },
-        });
-        for (const user of users) usersById.set(user.id, user);
-      } catch (error) {
-        console.warn("[api/admin/orders] user lookup failed:", formatDbError(error));
-      }
-    }
-
-    const itemCounts = new Map<string, number>();
-    if (orderIds.length) {
-      try {
-        const grouped = await prisma.orderItem.groupBy({
-          by: ["orderId"],
-          where: { orderId: { in: orderIds } },
-          _count: { _all: true },
-        });
-        for (const row of grouped) itemCounts.set(row.orderId, row._count._all);
-      } catch (error) {
-        console.warn("[api/admin/orders] item count failed:", formatDbError(error));
-      }
-    }
 
     return jsonOk({
       orders: orders.map((order) => ({
@@ -95,14 +92,18 @@ export async function GET(req: Request) {
         city: order.city,
         state: order.state,
         createdAt: order.createdAt.toISOString(),
-        user: usersById.get(order.userId) ?? {
+        isDemo: isDemoOrder(order),
+        user: order.user ?? {
           id: order.userId,
           email: "Unknown user",
           name: null,
         },
-        _count: { items: itemCounts.get(order.id) ?? 0 },
+        _count: { items: order._count.items },
       })),
-      nextCursor,
+      page: safePage,
+      pageSize,
+      total,
+      totalPages,
     });
   } catch (error) {
     console.error("[api/admin/orders] GET failed:", error);
@@ -110,17 +111,43 @@ export async function GET(req: Request) {
   }
 }
 
+const bulkDeleteSchema = z.object({
+  ids: z.array(z.string().trim().min(1)).min(1).max(200),
+});
+
 export async function DELETE(req: Request) {
   const admin = await requireAdmin();
   if (!admin) return jsonError("Unauthorized", 401);
 
   const url = new URL(req.url);
+  const scope = (url.searchParams.get("scope") || "").trim();
   const id = (url.searchParams.get("id") || "").trim();
-  if (!id) return jsonError("Missing order id", 400);
 
   try {
+    // Permanent delete of all seeded / demo marketplace orders.
+    if (scope === "demo") {
+      const result = await prisma.order.deleteMany({ where: demoOrderWhere });
+      return jsonOk({ deleted: true, scope: "demo", count: result.count });
+    }
+
+    // Bulk permanent delete by ids (JSON body).
+    const contentType = req.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const body = await req.json().catch(() => null);
+      const parsed = bulkDeleteSchema.safeParse(body);
+      if (parsed.success) {
+        const ids = [...new Set(parsed.data.ids)];
+        const result = await prisma.order.deleteMany({
+          where: { id: { in: ids } },
+        });
+        return jsonOk({ deleted: true, count: result.count, ids });
+      }
+    }
+
+    if (!id) return jsonError("Missing order id", 400);
+
     await prisma.order.delete({ where: { id } });
-    return jsonOk({ deleted: true, id });
+    return jsonOk({ deleted: true, id, count: 1 });
   } catch (error) {
     console.error("[api/admin/orders] DELETE failed:", error);
     return jsonError(`Failed to delete order: ${formatDbError(error)}`, 500);

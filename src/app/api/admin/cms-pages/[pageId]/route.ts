@@ -2,9 +2,10 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { jsonError, jsonOk } from "@/lib/api";
+import { cmsSlugSchema } from "@/lib/cmsSlug";
 
 const patchSchema = z.object({
-  slug: z.string().trim().min(1).max(191).optional(),
+  slug: cmsSlugSchema.optional(),
   title: z.string().trim().min(1).max(191).optional(),
   content: z.string().trim().min(1).max(500_000).optional(),
 });
@@ -18,7 +19,10 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ pageId: strin
 
   const body = await req.json().catch(() => null);
   const parsed = patchSchema.safeParse(body);
-  if (!parsed.success) return jsonError("Invalid payload", 400);
+  if (!parsed.success) {
+    const slugIssue = parsed.error.issues.find((i) => i.path[0] === "slug");
+    return jsonError(slugIssue?.message || "Invalid payload", 400);
+  }
 
   const existing = await prisma.cmsPage.findUnique({
     where: { id: pageId },

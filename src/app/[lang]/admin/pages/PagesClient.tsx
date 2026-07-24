@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { publicCmsPath } from "@/lib/cmsSlug";
 
 type CmsRow = {
   id: string;
@@ -13,14 +14,6 @@ type CmsRow = {
   createdAt: string;
   updatedAt: string;
 };
-
-function publicPathForSlug(lang: string, slug: string) {
-  const s = slug.trim().replace(/^\/+/, "");
-  if (s === "about") return `/${lang}/about`;
-  if (s === "terms") return `/${lang}/terms`;
-  if (s === "privacy") return `/${lang}/privacy`;
-  return `/${lang}/${encodeURIComponent(s)}`;
-}
 
 export default function PagesClient({
   lang,
@@ -155,8 +148,11 @@ export default function PagesClient({
                 className="mt-1 w-full rounded border px-3 py-2 text-sm"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
-                placeholder="about"
+                placeholder="about or about/team"
               />
+              <span className="mt-1 block text-xs text-gray-500">
+                URL will be /{lang}/{slug.trim() || "…"} — use a-z, 0-9, hyphens; / for nested pages
+              </span>
             </label>
 
             <label className="text-sm">
@@ -187,7 +183,7 @@ export default function PagesClient({
                 Reset
               </button>
               {slug.trim() ? (
-                <Link className="text-sm underline" href={publicPathForSlug(lang, slug)} target="_blank">
+                <Link className="text-sm underline" href={publicCmsPath(lang, slug)} target="_blank">
                   View
                 </Link>
               ) : null}
@@ -204,10 +200,12 @@ export default function PagesClient({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="font-semibold truncate">{p.title || p.slug}</div>
-                    <div className="mt-0.5 text-xs text-gray-500 truncate">/{p.slug} • v{p.version}</div>
+                    <div className="mt-0.5 text-xs text-gray-500 truncate">
+                      {publicCmsPath(lang, p.slug)} • v{p.version}
+                    </div>
                     <div className="mt-1 flex items-center gap-3 text-xs text-gray-500">
                       <span>Updated: {new Date(p.updatedAt).toLocaleString()}</span>
-                      <Link className="underline" href={publicPathForSlug(lang, p.slug)} target="_blank">
+                      <Link className="underline" href={publicCmsPath(lang, p.slug)} target="_blank">
                         Open
                       </Link>
                     </div>

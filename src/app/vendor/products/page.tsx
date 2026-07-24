@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/select";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import ExportDropdown from "@/components/ExportDropdown";
 import { DEFAULT_OCCASION_OPTIONS, DEFAULT_RECIPIENT_OPTIONS } from "@/lib/shopFilters";
+import { compressImageForUpload } from "@/lib/compressImage";
 
 type Category = { id: string; name: string };
 
@@ -159,6 +160,7 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [rowImageUrls, setRowImageUrls] = useState<Record<string, string>>({});
   const [occasionFilter, setOccasionFilter] = useState("");
@@ -322,7 +324,9 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
   }, [mode, occasionFilter, recipientFilter, availabilityFilter]);
 
   async function createProduct() {
+    if (creating) return;
     setMsg(null);
+    setCreating(true);
     try {
       const tagList = toTagList(tags);
 
@@ -354,6 +358,12 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
               ...(dimH ? { height: Number(dimH) } : {}),
             }
           : null;
+
+      // Upload images first so a failed upload never leaves an orphan product with wrong stock photos.
+      const pendingImageUrls = [
+        imageUrl.trim(),
+        ...(await Promise.all(imageFiles.map((file) => uploadToServer(file)))),
+      ].filter(Boolean);
 
       const res = await fetch("/api/vendor/products", {
         method: "POST",
@@ -399,11 +409,6 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
       const createdProductId = String(data?.product?.id || "");
       if (!createdProductId) throw new Error("Product created but image setup failed");
 
-      const pendingImageUrls = [
-        imageUrl.trim(),
-        ...(await Promise.all(imageFiles.map((file) => uploadToServer(file)))),
-      ].filter(Boolean);
-
       for (const url of pendingImageUrls) {
         await attachImage(createdProductId, url);
       }
@@ -440,6 +445,8 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
     } catch (e) {
       const message = e instanceof Error ? e.message : "Something went wrong";
       setMsg(`❌ ${message}`);
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -647,8 +654,9 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
   }
 
   async function uploadToServer(file: File) {
+    const compressed = await compressImageForUpload(file);
     const form = new FormData();
-    form.append("file", file);
+    form.append("file", compressed);
     form.append("purpose", "products");
 
     const uploadRes = await fetch("/api/upload", {
@@ -1027,10 +1035,10 @@ export function VendorProductsClient({ mode = "all" }: { mode?: "all" | "create"
                   </div>
 
                   <Button
-                    disabled={title.trim().length < 3 || !categoryId || loading}
+                    disabled={title.trim().length < 3 || !categoryId || loading || creating}
                     onClick={createProduct}
                   >
-                    Create
+                    {creating ? "Creating…" : "Create"}
                   </Button>
                 </CardContent>
               </Card>

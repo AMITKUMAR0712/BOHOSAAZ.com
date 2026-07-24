@@ -10,6 +10,7 @@ export function AutoScrollRow({
   speed = 0.45,
   ariaLabel,
   arrowClassName = "",
+  autoScroll = true,
 }: {
   children: React.ReactNode;
   className?: string;
@@ -18,11 +19,15 @@ export function AutoScrollRow({
   speed?: number;
   ariaLabel: string;
   arrowClassName?: string;
+  /** When false, row is manually scrollable only (no infinite loop). */
+  autoScroll?: boolean;
 }) {
   const scrollerRef = React.useRef<HTMLDivElement | null>(null);
   const pausedRef = React.useRef(false);
 
   React.useEffect(() => {
+    if (!autoScroll) return;
+
     let frame = 0;
     let previous = performance.now();
 
@@ -42,7 +47,7 @@ export function AutoScrollRow({
 
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [speed]);
+  }, [speed, autoScroll]);
 
   function move(direction: "left" | "right") {
     const node = scrollerRef.current;

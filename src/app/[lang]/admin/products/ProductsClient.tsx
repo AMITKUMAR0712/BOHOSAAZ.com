@@ -11,6 +11,7 @@ import { Select } from "@/components/ui/select";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import ExportDropdown from "@/components/ExportDropdown";
 import { DEFAULT_OCCASION_OPTIONS, DEFAULT_RECIPIENT_OPTIONS } from "@/lib/shopFilters";
+import { compressImageForUpload } from "@/lib/compressImage";
 
 type Category = { id: string; name: string };
 
@@ -178,6 +179,7 @@ export default function ProductsClient({
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [codOnlyFilter, setCodOnlyFilter] = useState(false);
   const [selectedVendorId, setSelectedVendorId] = useState("");
   const [occasionFilter, setOccasionFilter] = useState("");
@@ -280,8 +282,9 @@ export default function ProductsClient({
   }
 
   async function uploadToServer(file: File) {
+    const compressed = await compressImageForUpload(file);
     const form = new FormData();
-    form.append("file", file);
+    form.append("file", compressed);
     form.append("purpose", "products");
 
     const uploadRes = await fetch("/api/upload", {
@@ -493,6 +496,8 @@ export default function ProductsClient({
   }
 
   async function createProduct() {
+    if (creating) return;
+    setCreating(true);
     try {
       const vParsed = variantRowsToPayload(createVariants);
       if (!vParsed.ok) throw new Error(vParsed.error);
@@ -522,6 +527,12 @@ export default function ProductsClient({
           }
           : null;
 
+      // Upload images first so a failed upload never leaves an orphan product with wrong stock photos.
+      const pendingImageUrls = [
+        imageUrl.trim(),
+        ...(await Promise.all(imageFiles.map((file) => uploadToServer(file)))),
+      ].filter(Boolean);
+
       const res = await fetch("/api/admin/products", {
         method: "POST",
         credentials: "include",
@@ -533,7 +544,7 @@ export default function ProductsClient({
           description: description.trim() ? description.trim() : null,
           categoryId,
           brandId: brandId ? brandId : null,
-          currency,
+          currency: "INR",
           mrp: null,
           ...(!hasVariants
             ? {
@@ -569,11 +580,6 @@ export default function ProductsClient({
 
       const createdProductId = String(data?.data?.product?.id || "");
       if (!createdProductId) throw new Error("Product created but image setup failed");
-
-      const pendingImageUrls = [
-        imageUrl.trim(),
-        ...(await Promise.all(imageFiles.map((file) => uploadToServer(file)))),
-      ].filter(Boolean);
 
       for (const url of pendingImageUrls) {
         await attachImage(createdProductId, url);
@@ -614,6 +620,8 @@ export default function ProductsClient({
     } catch (e) {
       const message = e instanceof Error ? e.message : "Something went wrong";
       toast.error(message);
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -721,7 +729,7 @@ export default function ProductsClient({
           description: eDescription.trim() ? eDescription.trim() : null,
           categoryId: eCategoryId,
           brandId: eBrandId ? eBrandId : null,
-          currency: eCurrency,
+          currency: "INR",
           mrp: null,
           ...(!includeVariants
             ? {
@@ -893,14 +901,9 @@ export default function ProductsClient({
 
                   <div className="grid gap-1">
                     <div className="text-xs text-muted-foreground">Currency</div>
-                    <select
-                      className="rounded-(--radius) border border-border bg-background px-3 py-2 text-sm"
-                      value={currency}
-                      onChange={(e) => setCurrency(e.target.value as "INR" | "USD")}
-                    >
-                      <option value="INR">INR (₹)</option>
-                      <option value="USD">USD ($)</option>
-                    </select>
+                    <div className="rounded-(--radius) border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
+                      INR (₹) only
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1054,8 +1057,8 @@ export default function ProductsClient({
                     ) : null}
                   </div>
 
-                  <Button disabled={title.trim().length < 3 || !categoryId || loading} onClick={createProduct}>
-                    Create
+                  <Button disabled={title.trim().length < 3 || !categoryId || loading || creating} onClick={createProduct}>
+                    {creating ? "Creating…" : "Create"}
                   </Button>
                 </CardContent>
               </Card>
@@ -1437,14 +1440,9 @@ export default function ProductsClient({
 
               <div className="grid gap-1">
                 <div className="text-xs text-muted-foreground">Currency</div>
-                <select
-                  className="rounded-(--radius) border border-border bg-background px-3 py-2 text-sm"
-                  value={eCurrency}
-                  onChange={(e) => setECurrency(e.target.value as "INR" | "USD")}
-                >
-                  <option value="INR">INR (₹)</option>
-                  <option value="USD">USD ($)</option>
-                </select>
+                <div className="rounded-(--radius) border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
+                  INR (₹) only
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

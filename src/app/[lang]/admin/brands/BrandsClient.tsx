@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { compressImageForUpload } from "@/lib/compressImage";
 
 type BrandRow = {
   id: string;
@@ -54,8 +55,9 @@ export default function BrandsClient({
   }
 
   async function uploadToServer(file: File) {
+    const compressed = await compressImageForUpload(file);
     const form = new FormData();
-    form.append("file", file);
+    form.append("file", compressed);
     form.append("purpose", "brand");
 
     const uploadRes = await fetch("/api/upload", {

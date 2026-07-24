@@ -24,10 +24,25 @@ async function ensureUniqueBrandSlug(base: string) {
   return `${base}-${Date.now().toString(36)}`;
 }
 
+const mediaUrlSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .refine(
+    (value) =>
+      (value.startsWith("/") && !value.startsWith("//")) || z.string().url().safeParse(value).success,
+    { message: "Invalid logo URL" },
+  );
+
+const optionalLogoUrlSchema = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? null : value),
+  mediaUrlSchema.optional().nullable(),
+);
+
 const createSchema = z.object({
   name: z.string().trim().min(1).max(191),
   slug: z.string().trim().min(1).max(191).optional(),
-  logoUrl: z.string().trim().url().optional().nullable(),
+  logoUrl: optionalLogoUrlSchema,
   brandType: z.enum(["POPULAR", "LUXURY"]).optional().default("POPULAR"),
   isActive: z.boolean().optional().default(true),
   sortOrder: z.number().int().optional().default(0),

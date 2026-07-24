@@ -760,8 +760,9 @@ async function main() {
     ],
   });
 
-  // Orders (including wallet payments)
-  const ordersToCreate = 120;
+  // Demo marketplace orders — disabled so seed does not re-create fake checkouts.
+  // Set SEED_DEMO_ORDERS=1 to generate sample orders for local UI testing.
+  const ordersToCreate = process.env.SEED_DEMO_ORDERS === "1" ? 120 : 0;
 
   // Preload variants for cheaper selection
   const allVariants = await prisma.productVariant.findMany({

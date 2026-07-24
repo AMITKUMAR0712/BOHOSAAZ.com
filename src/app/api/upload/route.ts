@@ -81,11 +81,15 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "File is required" }, { status: 400 });
   }
 
-  const maxBytes = purpose === "banner" ? 60 * 1024 * 1024 : 12 * 1024 * 1024;
+  // Products/brands: 25MB after client compress; banners keep a higher cap.
+  const maxBytes = purpose === "banner" ? 60 * 1024 * 1024 : 25 * 1024 * 1024;
   if (file.size <= 0) return Response.json({ error: "Empty file" }, { status: 400 });
   if (file.size > maxBytes) {
     const maxMb = Math.floor(maxBytes / 1024 / 1024);
-    return Response.json({ error: `File too large (max ${maxMb}MB)` }, { status: 413 });
+    return Response.json(
+      { error: `File too large (max ${maxMb}MB). Please use a smaller image.` },
+      { status: 413 },
+    );
   }
 
   const mime = (file.type || "").toLowerCase();

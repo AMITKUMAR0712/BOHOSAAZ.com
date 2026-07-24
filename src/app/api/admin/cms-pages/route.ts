@@ -2,13 +2,14 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { jsonError, jsonOk } from "@/lib/api";
+import { cmsSlugSchema } from "@/lib/cmsSlug";
 
 const listSchema = z.object({
   take: z.coerce.number().int().min(5).max(100).default(50),
 });
 
 const createSchema = z.object({
-  slug: z.string().trim().min(1).max(191),
+  slug: cmsSlugSchema,
   title: z.string().trim().min(1).max(191),
   content: z.string().trim().min(1).max(500_000),
 });
@@ -50,7 +51,10 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => null);
   const parsed = createSchema.safeParse(body);
-  if (!parsed.success) return jsonError("Invalid payload", 400);
+  if (!parsed.success) {
+    const slugIssue = parsed.error.issues.find((i) => i.path[0] === "slug");
+    return jsonError(slugIssue?.message || "Invalid payload", 400);
+  }
 
   const data = parsed.data;
 
