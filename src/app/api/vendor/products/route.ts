@@ -6,6 +6,7 @@ import { audit } from "@/lib/audit";
 import { rateLimit } from "@/lib/rateLimit";
 import { Prisma } from "@prisma/client";
 import { bumpDashboardScopes } from "@/lib/bumpDashboard";
+import { formatDbError } from "@/lib/dbError";
 
 function slugify(input: string) {
   return input
@@ -39,76 +40,128 @@ function giftFilterWhere(term: string): Prisma.ProductWhereInput {
 }
 
 export async function GET(req: NextRequest) {
-  const token = req.cookies.get("token")?.value;
-  if (!token) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const token = req.cookies.get("token")?.value;
+    if (!token) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  let payload: JwtPayload;
-  try { payload = verifyToken(token); } catch { return Response.json({ error: "Unauthorized" }, { status: 401 }); }
+    let payload: JwtPayload;
+    try {
+      payload = verifyToken(token);
+    } catch {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  if (payload.role !== "VENDOR") return Response.json({ error: "Forbidden" }, { status: 403 });
+    if (payload.role !== "VENDOR") return Response.json({ error: "Forbidden" }, { status: 403 });
 
-  // find vendor by userId
-  const vendor = await prisma.vendor.findUnique({ where: { userId: payload.sub } });
-  if (!vendor) return Response.json({ error: "Vendor profile not found" }, { status: 404 });
-  if (vendor.status !== "APPROVED") return Response.json({ error: "Vendor not approved" }, { status: 403 });
+    // find vendor by userId
+    const vendor = await prisma.vendor.findUnique({ where: { userId: payload.sub } });
+    if (!vendor) return Response.json({ error: "Vendor profile not found" }, { status: 404 });
+    if (vendor.status !== "APPROVED") return Response.json({ error: "Vendor not approved" }, { status: 403 });
 
-  const url = new URL(req.url);
-  const q = (url.searchParams.get("q") || "").trim();
-  const categoryId = (url.searchParams.get("categoryId") || "").trim();
-  const active = url.searchParams.get("active");
-  const lowStock = url.searchParams.get("lowStock");
-  const occasion = (url.searchParams.get("occasion") || "").trim();
-  const recipient = (url.searchParams.get("recipient") || "").trim();
-  const availability = (url.searchParams.get("availability") || "").trim();
+    const url = new URL(req.url);
+    const q = (url.searchParams.get("q") || "").trim();
+    const categoryId = (url.searchParams.get("categoryId") || "").trim();
+    const active = url.searchParams.get("active");
+    const lowStock = url.searchParams.get("lowStock");
+    const occasion = (url.searchParams.get("occasion") || "").trim();
+    const recipient = (url.searchParams.get("recipient") || "").trim();
+    const availability = (url.searchParams.get("availability") || "").trim();
 
-  const page = Math.max(1, Number(url.searchParams.get("page") || 1));
-  const pageSize = Math.min(50, Math.max(5, Number(url.searchParams.get("pageSize") || 20)));
-  const skip = (page - 1) * pageSize;
+    const page = Math.max(1, Number(url.searchParams.get("page") || 1));
+    const pageSize = Math.min(50, Math.max(5, Number(url.searchParams.get("pageSize") || 20)));
+    const skip = (page - 1) * pageSize;
 
-  const and: Prisma.ProductWhereInput[] = [{ vendorId: vendor.id, deletedAt: null }];
-  if (q) {
-    and.push({
-      OR: [
-        { title: { contains: q } },
-        { slug: { contains: q } },
-        { sku: { contains: q } },
-      ],
+    const and: Prisma.ProductWhereInput[] = [{ vendorId: vendor.id, deletedAt: null }];
+    if (q) {
+      and.push({
+        OR: [
+          { title: { contains: q } },
+          { slug: { contains: q } },
+          { sku: { contains: q } },
+        ],
+      });
+    }
+    if (categoryId) and.push({ categoryId });
+    if (active === "true") and.push({ isActive: true });
+    if (active === "false") and.push({ isActive: false });
+    if (lowStock === "true") and.push({ stock: { lte: 5 } });
+    if (occasion) and.push(giftFilterWhere(occasion));
+    if (recipient) and.push(giftFilterWhere(recipient));
+    if (availability === "in_stock") {
+      and.push({ OR: [{ stock: { gt: 0 } }, { variants: { some: { isActive: true, stock: { gt: 0 } } } }] });
+    } else if (availability === "discounted") {
+      and.push({ salePrice: { not: null } });
+    } else if (availability) {
+      and.push(giftFilterWhere(availability));
+    }
+
+    const where: Prisma.ProductWhereInput = { AND: and };
+
+    // Explicit select avoids crashing when newer product columns are missing on an unmigrated DB.
+    const productSelect = {
+      id: true,
+      vendorId: true,
+      categoryId: true,
+      brandId: true,
+      title: true,
+      slug: true,
+      description: true,
+      shortDescription: true,
+      currency: true,
+      mrp: true,
+      price: true,
+      salePrice: true,
+      sku: true,
+      barcode: true,
+      stock: true,
+      status: true,
+      isActive: true,
+      material: true,
+      weight: true,
+      length: true,
+      width: true,
+      height: true,
+      dimensions: true,
+      shippingClass: true,
+      countryOfOrigin: true,
+      warranty: true,
+      returnPolicy: true,
+      metaTitle: true,
+      metaDescription: true,
+      metaKeywords: true,
+      sizeOptions: true,
+      colorOptions: true,
+      createdAt: true,
+      updatedAt: true,
+      images: true,
+      category: { select: { id: true, name: true, slug: true } },
+    } as const;
+
+    const [total, products] = await Promise.all([
+      prisma.product.count({ where }),
+      prisma.product.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        select: productSelect,
+        skip,
+        take: pageSize,
+      }),
+    ]);
+
+    return Response.json({
+      products,
+      page,
+      pageSize,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / pageSize)),
     });
+  } catch (error) {
+    console.error("[api/vendor/products] GET failed:", formatDbError(error), error);
+    return Response.json(
+      { error: "Failed to load products", detail: formatDbError(error) },
+      { status: 500 },
+    );
   }
-  if (categoryId) and.push({ categoryId });
-  if (active === "true") and.push({ isActive: true });
-  if (active === "false") and.push({ isActive: false });
-  if (lowStock === "true") and.push({ stock: { lte: 5 } });
-  if (occasion) and.push(giftFilterWhere(occasion));
-  if (recipient) and.push(giftFilterWhere(recipient));
-  if (availability === "in_stock") {
-    and.push({ OR: [{ stock: { gt: 0 } }, { variants: { some: { isActive: true, stock: { gt: 0 } } } }] });
-  } else if (availability === "discounted") {
-    and.push({ salePrice: { not: null } });
-  } else if (availability) {
-    and.push(giftFilterWhere(availability));
-  }
-
-  const where: Prisma.ProductWhereInput = { AND: and };
-
-  const [total, products] = await Promise.all([
-    prisma.product.count({ where }),
-    prisma.product.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      include: { images: true, category: true },
-      skip,
-      take: pageSize,
-    }),
-  ]);
-
-  return Response.json({
-    products,
-    page,
-    pageSize,
-    total,
-    totalPages: Math.max(1, Math.ceil(total / pageSize)),
-  });
 }
 
 const createSchema = z.object({
@@ -187,234 +240,251 @@ const createSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const rlKey = `vendor:product:create:${req.headers.get("x-forwarded-for") || "ip"}`;
-  const limited = await rateLimit(rlKey);
-  if (!limited.success) {
-    return Response.json({ error: "Too many requests" }, { status: 429 });
-  }
-
-  const token = req.cookies.get("token")?.value;
-  if (!token) return Response.json({ error: "Unauthorized" }, { status: 401 });
-
-  let payload: JwtPayload;
-  try { payload = verifyToken(token); } catch { return Response.json({ error: "Unauthorized" }, { status: 401 }); }
-
-  if (payload.role !== "VENDOR") return Response.json({ error: "Forbidden" }, { status: 403 });
-
-  const vendor = await prisma.vendor.findUnique({ where: { userId: payload.sub } });
-  if (!vendor) return Response.json({ error: "Vendor profile not found" }, { status: 404 });
-  if (vendor.status !== "APPROVED") return Response.json({ error: "Vendor not approved" }, { status: 403 });
-
-  const body = await req.json().catch(() => null);
-  const parsed = createSchema.safeParse(body);
-  if (!parsed.success) return Response.json({ error: "Invalid payload" }, { status: 400 });
-
-  const {
-    title,
-    slug: requestedSlug,
-    price,
-    categoryId,
-    brandId,
-    salePrice,
-    currency,
-    mrp,
-    sku,
-    barcode,
-    stock,
-    description,
-    shortDescription,
-    material,
-    weight,
-    length,
-    width,
-    height,
-    dimensions,
-    shippingClass,
-    countryOfOrigin,
-    warranty,
-    returnPolicy,
-    metaTitle,
-    metaDescription,
-    metaKeywords,
-    sizeOptions,
-    colorOptions,
-    tags,
-    variants,
-  } = parsed.data;
-
-  const category = await prisma.category.findUnique({ where: { id: categoryId } });
-  if (!category) return Response.json({ error: "Category not found" }, { status: 400 });
-
-  if (brandId) {
-    const brand = await prisma.brand.findUnique({ where: { id: brandId }, select: { id: true, isActive: true } });
-    if (!brand) return Response.json({ error: "Brand not found" }, { status: 400 });
-    if (!brand.isActive) return Response.json({ error: "Brand is not active" }, { status: 400 });
-  }
-
-  // unique slug (advanced safe)
-  const base = slugify(requestedSlug || title);
-  if (!base) return Response.json({ error: "Invalid slug" }, { status: 400 });
-  let slug = base;
-  for (let i = 0; i < 10; i++) {
-    const exists = await prisma.product.findUnique({ where: { slug } });
-    if (!exists) break;
-    slug = `${base}-${Math.random().toString(36).slice(2, 6)}`;
-  }
-
-  const normalizedTags = (tags || [])
-    .map((t) => t.trim())
-    .filter(Boolean)
-    .slice(0, 20);
-
-  const normalizedVariants = (variants || [])
-    .map((v) => ({
-      ...v,
-      sku: v.sku.trim(),
-      size: v.size.trim(),
-      color: v.color ? v.color.trim() : null,
-    }))
-    .filter((v) => v.sku && v.size);
-
-  const skuSet = new Set<string>();
-  for (const v of normalizedVariants) {
-    const key = v.sku.toLowerCase();
-    if (skuSet.has(key)) {
-      return Response.json({ error: "Duplicate variant SKU" }, { status: 400 });
+  try {
+    const rlKey = `vendor:product:create:${req.headers.get("x-forwarded-for") || "ip"}`;
+    const limited = await rateLimit(rlKey);
+    if (!limited.success) {
+      return Response.json({ error: "Too many requests" }, { status: 429 });
     }
-    skuSet.add(key);
-  }
 
-  const hasVariants = normalizedVariants.length > 0;
+    const token = req.cookies.get("token")?.value;
+    if (!token) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Add 10% markup for display as requested by admin
-  const markup = 1.10;
-  
-  const basePrice = price ? +(price * markup).toFixed(2) : 0;
-  const computedStock = hasVariants
-    ? normalizedVariants.filter((v) => v.isActive).reduce((sum, v) => sum + v.stock, 0)
-    : stock;
+    let payload: JwtPayload;
+    try {
+      payload = verifyToken(token);
+    } catch {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const computedBasePrice = hasVariants
-    ? Math.min(...normalizedVariants.map((v) => +(v.price * markup).toFixed(2)))
-    : basePrice;
+    if (payload.role !== "VENDOR") return Response.json({ error: "Forbidden" }, { status: 403 });
 
-  const computedBaseSale = hasVariants
-    ? (() => {
-        const sales = normalizedVariants
-          .map((v) => v.salePrice)
-          .filter((p): p is number => typeof p === "number" && Number.isFinite(p));
-        return sales.length ? Math.min(...sales.map((p) => +(p * markup).toFixed(2))) : null;
-      })()
-    : salePrice ? +(salePrice * markup).toFixed(2) : null;
+    const vendor = await prisma.vendor.findUnique({ where: { userId: payload.sub } });
+    if (!vendor) return Response.json({ error: "Vendor profile not found" }, { status: 404 });
+    if (vendor.status !== "APPROVED") return Response.json({ error: "Vendor not approved" }, { status: 403 });
 
-  const product = await prisma.$transaction(async (tx) => {
-    const dimL = length ?? dimensions?.length ?? null;
-    const dimW = width ?? dimensions?.width ?? null;
-    const dimH = height ?? dimensions?.height ?? null;
+    const body = await req.json().catch(() => null);
+    const parsed = createSchema.safeParse(body);
+    if (!parsed.success) return Response.json({ error: "Invalid payload" }, { status: 400 });
 
-    const created = await tx.product.create({
-      data: {
-        vendorId: vendor.id,
-        categoryId,
-        brandId: brandId ?? null,
+    const {
+      title,
+      slug: requestedSlug,
+      price,
+      categoryId,
+      brandId,
+      salePrice,
+      currency,
+      mrp,
+      sku,
+      barcode,
+      stock,
+      description,
+      shortDescription,
+      material,
+      weight,
+      length,
+      width,
+      height,
+      dimensions,
+      shippingClass,
+      countryOfOrigin,
+      warranty,
+      returnPolicy,
+      metaTitle,
+      metaDescription,
+      metaKeywords,
+      sizeOptions,
+      colorOptions,
+      tags,
+      variants,
+    } = parsed.data;
+
+    const category = await prisma.category.findUnique({ where: { id: categoryId } });
+    if (!category) return Response.json({ error: "Category not found" }, { status: 400 });
+
+    if (brandId) {
+      const brand = await prisma.brand.findUnique({
+        where: { id: brandId },
+        select: { id: true, isActive: true },
+      });
+      if (!brand) return Response.json({ error: "Brand not found" }, { status: 400 });
+      if (!brand.isActive) return Response.json({ error: "Brand is not active" }, { status: 400 });
+    }
+
+    // unique slug (advanced safe)
+    const base = slugify(requestedSlug || title);
+    if (!base) return Response.json({ error: "Invalid slug" }, { status: 400 });
+    let slug = base;
+    for (let i = 0; i < 10; i++) {
+      const exists = await prisma.product.findUnique({ where: { slug } });
+      if (!exists) break;
+      slug = `${base}-${Math.random().toString(36).slice(2, 6)}`;
+    }
+
+    const normalizedTags = (tags || [])
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .slice(0, 20);
+
+    const normalizedVariants = (variants || [])
+      .map((v) => ({
+        ...v,
+        sku: v.sku.trim(),
+        size: v.size.trim(),
+        color: v.color ? v.color.trim() : null,
+      }))
+      .filter((v) => v.sku && v.size);
+
+    const skuSet = new Set<string>();
+    for (const v of normalizedVariants) {
+      const key = v.sku.toLowerCase();
+      if (skuSet.has(key)) {
+        return Response.json({ error: "Duplicate variant SKU" }, { status: 400 });
+      }
+      skuSet.add(key);
+    }
+
+    const hasVariants = normalizedVariants.length > 0;
+
+    // Add 10% markup for display as requested by admin
+    const markup = 1.1;
+
+    const basePrice = price ? +(price * markup).toFixed(2) : 0;
+    const computedStock = hasVariants
+      ? normalizedVariants.filter((v) => v.isActive).reduce((sum, v) => sum + v.stock, 0)
+      : stock;
+
+    const computedBasePrice = hasVariants
+      ? Math.min(...normalizedVariants.map((v) => +(v.price * markup).toFixed(2)))
+      : basePrice;
+
+    const computedBaseSale = hasVariants
+      ? (() => {
+          const sales = normalizedVariants
+            .map((v) => v.salePrice)
+            .filter((p): p is number => typeof p === "number" && Number.isFinite(p));
+          return sales.length ? Math.min(...sales.map((p) => +(p * markup).toFixed(2))) : null;
+        })()
+      : salePrice
+        ? +(salePrice * markup).toFixed(2)
+        : null;
+
+    const product = await prisma.$transaction(async (tx) => {
+      const dimL = length ?? dimensions?.length ?? null;
+      const dimW = width ?? dimensions?.width ?? null;
+      const dimH = height ?? dimensions?.height ?? null;
+
+      const created = await tx.product.create({
+        data: {
+          vendorId: vendor.id,
+          categoryId,
+          brandId: brandId ?? null,
+          title,
+          slug,
+          currency: "INR",
+          mrp: hasVariants ? null : (mrp ?? null),
+          price: computedBasePrice,
+          salePrice: computedBaseSale,
+          stock: computedStock,
+          sku: hasVariants ? null : (sku ?? null),
+          barcode: barcode ?? null,
+          shortDescription: shortDescription ?? null,
+          description: description ?? null,
+          status: "PENDING",
+          isActive: false,
+          material: material ?? null,
+          weight: weight ?? null,
+          length: dimL,
+          width: dimW,
+          height: dimH,
+          dimensions: dimensions ?? Prisma.DbNull,
+          shippingClass: shippingClass ?? null,
+
+          countryOfOrigin: countryOfOrigin ?? null,
+          warranty: warranty ?? null,
+          returnPolicy: returnPolicy ?? null,
+
+          metaTitle: metaTitle ?? null,
+          metaDescription: metaDescription ?? null,
+          metaKeywords: metaKeywords ?? null,
+
+          sizeOptions: sizeOptions ?? null,
+          colorOptions: colorOptions ?? null,
+        },
+        include: { images: true, category: true },
+      });
+
+      if (hasVariants) {
+        await tx.productVariant.createMany({
+          data: normalizedVariants.map((v) => ({
+            productId: created.id,
+            size: v.size,
+            color: v.color ?? null,
+            sku: v.sku,
+            price: +(v.price * markup).toFixed(2),
+            salePrice: v.salePrice ? +(v.salePrice * markup).toFixed(2) : null,
+            stock: v.stock,
+            isActive: v.isActive,
+          })),
+        });
+      }
+
+      if (normalizedTags.length) {
+        const tagRows = await Promise.all(
+          normalizedTags.map(async (name) => {
+            const tagSlug = slugify(name);
+            return tx.tag.upsert({
+              where: { slug: tagSlug },
+              update: {},
+              create: { name, slug: tagSlug },
+            });
+          }),
+        );
+
+        await tx.productTag.createMany({
+          data: tagRows.map((t) => ({ productId: created.id, tagId: t.id })),
+          skipDuplicates: true,
+        });
+      }
+
+      return created;
+    });
+
+    await audit({
+      actorId: payload.sub,
+      actorRole: payload.role,
+      action: "VENDOR_PRODUCT_CREATE",
+      entity: "Product",
+      entityId: product.id,
+      meta: {
         title,
         slug,
-        currency: "INR",
+        categoryId,
+        currency,
         mrp: hasVariants ? null : (mrp ?? null),
         price: computedBasePrice,
         salePrice: computedBaseSale,
         stock: computedStock,
-        sku: hasVariants ? null : (sku ?? null),
-        barcode: barcode ?? null,
-        shortDescription: shortDescription ?? null,
-        description: description ?? null,
-        status: "PENDING",
-        isActive: false,
-        material: material ?? null,
-        weight: weight ?? null,
-        length: dimL,
-        width: dimW,
-        height: dimH,
-        dimensions: dimensions ?? Prisma.DbNull,
-        shippingClass: shippingClass ?? null,
-
-        countryOfOrigin: countryOfOrigin ?? null,
-        warranty: warranty ?? null,
-        returnPolicy: returnPolicy ?? null,
-
-        metaTitle: metaTitle ?? null,
-        metaDescription: metaDescription ?? null,
-        metaKeywords: metaKeywords ?? null,
-
-        sizeOptions: sizeOptions ?? null,
-        colorOptions: colorOptions ?? null,
+        isActive: product.isActive,
+        hasVariants,
+        variantCount: normalizedVariants.length,
+        tags: normalizedTags,
       },
-      include: { images: true, category: true },
+      ip: req.headers.get("x-forwarded-for") || undefined,
     });
 
-    if (hasVariants) {
-      await tx.productVariant.createMany({
-        data: normalizedVariants.map((v) => ({
-          productId: created.id,
-          size: v.size,
-          color: v.color ?? null,
-          sku: v.sku,
-          price: +(v.price * markup).toFixed(2),
-          salePrice: v.salePrice ? +(v.salePrice * markup).toFixed(2) : null,
-          stock: v.stock,
-          isActive: v.isActive,
-        })),
-      });
-    }
+    await bumpDashboardScopes([
+      { kind: "vendor", vendorId: vendor.id },
+      { kind: "admin" },
+    ]);
 
-    if (normalizedTags.length) {
-      const tagRows = await Promise.all(
-        normalizedTags.map(async (name) => {
-          const tagSlug = slugify(name);
-          return tx.tag.upsert({
-            where: { slug: tagSlug },
-            update: {},
-            create: { name, slug: tagSlug },
-          });
-        })
-      );
-
-      await tx.productTag.createMany({
-        data: tagRows.map((t) => ({ productId: created.id, tagId: t.id })),
-        skipDuplicates: true,
-      });
-    }
-
-    return created;
-  });
-
-  await audit({
-    actorId: payload.sub,
-    actorRole: payload.role,
-    action: "VENDOR_PRODUCT_CREATE",
-    entity: "Product",
-    entityId: product.id,
-    meta: {
-      title,
-      slug,
-      categoryId,
-      currency,
-      mrp: hasVariants ? null : (mrp ?? null),
-      price: computedBasePrice,
-      salePrice: computedBaseSale,
-      stock: computedStock,
-      isActive: product.isActive,
-      hasVariants,
-      variantCount: normalizedVariants.length,
-      tags: normalizedTags,
-    },
-    ip: req.headers.get("x-forwarded-for") || undefined,
-  });
-
-  await bumpDashboardScopes([
-    { kind: "vendor", vendorId: vendor.id },
-    { kind: "admin" },
-  ]);
-
-  return Response.json({ product }, { status: 201 });
+    return Response.json({ product }, { status: 201 });
+  } catch (error) {
+    console.error("[api/vendor/products] POST failed:", formatDbError(error), error);
+    return Response.json(
+      { error: "Failed to create product", detail: formatDbError(error) },
+      { status: 500 },
+    );
+  }
 }
