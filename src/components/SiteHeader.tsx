@@ -183,20 +183,28 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
   }
 
   async function loadCmsNavPages() {
-    const res = await fetch("/api/cms-pages", { cache: "no-store" });
-    const data = await res.json().catch(() => ({}));
-    const rows = Array.isArray(data?.pages) ? (data.pages as CmsNavChild[]) : [];
-    setCmsNavPages(
-      rows.filter(
-        (p) =>
-          p &&
-          typeof p === "object" &&
-          typeof p.id === "string" &&
-          typeof p.slug === "string" &&
-          typeof p.title === "string" &&
-          (p.group === "about" || p.group === "contact" || p.group === "blog"),
-      ),
-    );
+    try {
+      const res = await fetch("/api/cms-pages", { cache: "no-store" });
+      const data = await res.json().catch(() => ({}));
+      const raw = Array.isArray(data?.pages)
+        ? data.pages
+        : Array.isArray(data?.data?.pages)
+          ? data.data.pages
+          : [];
+      setCmsNavPages(
+        (raw as CmsNavChild[]).filter(
+          (p) =>
+            p &&
+            typeof p === "object" &&
+            typeof p.id === "string" &&
+            typeof p.slug === "string" &&
+            typeof p.title === "string" &&
+            (p.group === "about" || p.group === "contact" || p.group === "blog"),
+        ),
+      );
+    } catch {
+      setCmsNavPages([]);
+    }
   }
 
   function normalizeNavCategory(c: unknown): NavCategory {
@@ -858,28 +866,29 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
         </div>
       </div>
 
-      {/* Compact link row */}
+      {/* Compact link row — overflow-visible so CMS dropdowns are not clipped */}
       <div
-        className={`hidden overflow-hidden border-t border-white/24 bg-[rgba(246,232,212,0.48)] backdrop-blur-2xl transition-all duration-500 ease-out sm:block ${
-          !isDashboardRoute && scrolled ? "max-h-16 opacity-100" : "max-h-20 opacity-100"
+        className={`relative z-50 hidden border-t border-white/24 bg-[rgba(246,232,212,0.48)] backdrop-blur-2xl transition-all duration-500 ease-out sm:block ${
+          !isDashboardRoute && scrolled ? "opacity-100" : "opacity-100"
         }`}
       >
         <div className={`mx-auto max-w-6xl px-3 transition-all duration-500 sm:px-4 ${!isDashboardRoute && scrolled ? "py-1" : "py-1.5"}`}>
-          <div className="mobile-scroll items-center whitespace-nowrap sm:flex sm:flex-wrap sm:justify-start sm:gap-1.5 sm:overflow-visible">
+          <div className="flex flex-wrap items-center justify-start gap-1.5 overflow-visible">
             {navLinks.map((l) => {
               const active =
                 l.href === lp
                   ? pathname === lp || pathname === `${lp}/`
                   : pathname === l.href || pathname.startsWith(`${l.href}/`);
               const children = l.children || [];
-              const hasDropdown = Boolean(l.group && children.length);
+              const canDropdown = Boolean(l.group);
+              const hasChildren = children.length > 0;
               const linkClass = `relative shrink-0 rounded-full border px-3 py-2 text-[11px] font-extrabold uppercase tracking-[0.14em] transition-all duration-300 hover:-translate-y-px hover:border-primary/20 hover:bg-white/28 hover:text-primary hover:shadow-[0_8px_18px_rgba(69,40,24,0.08)] sm:py-1.5 sm:text-[11px] ${
                 active
                   ? "border-primary/18 bg-white/30 text-primary shadow-[0_8px_18px_rgba(69,40,24,0.08)] after:absolute after:-bottom-0.5 after:left-3 after:right-3 after:h-0.5 after:rounded-full after:bg-primary"
                   : "border-transparent bg-transparent text-foreground/82"
               }`;
 
-              if (!hasDropdown || !l.group) {
+              if (!canDropdown || !l.group) {
                 return (
                   <Link key={l.label} href={l.href} className={linkClass}>
                     {l.label}
@@ -895,11 +904,15 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
                   onMouseEnter={() => scheduleNavOpen(l.group!)}
                   onMouseLeave={scheduleNavClose}
                 >
-                  <Link
-                    href={l.href}
+                  <button
+                    type="button"
                     className={`${linkClass} inline-flex items-center gap-1`}
                     aria-haspopup="menu"
                     aria-expanded={open}
+                    onClick={() => {
+                      clearNavTimers();
+                      setOpenNavGroup((prev) => (prev === l.group ? null : l.group!));
+                    }}
                     onFocus={() => {
                       clearNavTimers();
                       setOpenNavGroup(l.group!);
@@ -909,37 +922,47 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
                     <span className="text-[9px] opacity-70" aria-hidden>
                       ▾
                     </span>
-                  </Link>
+                  </button>
                   {open ? (
                     <div
-                      className="absolute left-0 top-full z-100 mt-2 min-w-[12rem] origin-top-left rounded-2xl bg-card/96 p-2 shadow-[0_18px_50px_rgba(47,38,34,0.14)] ring-1 ring-white/35 backdrop-blur-2xl"
-                      role="menu"
+                      className="absolute left-0 top-full z-[1100] pt-2"
                       onMouseEnter={() => {
                         clearNavTimers();
                         setOpenNavGroup(l.group!);
                       }}
                       onMouseLeave={scheduleNavClose}
                     >
-                      <Link
-                        href={l.href}
-                        role="menuitem"
-                        className="block rounded-xl px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:bg-primary/8 hover:text-primary"
-                        onClick={() => setOpenNavGroup(null)}
+                      <div
+                        className="min-w-[14rem] origin-top-left rounded-2xl border border-border/70 bg-card p-2 shadow-[0_18px_50px_rgba(47,38,34,0.18)] ring-1 ring-white/40"
+                        role="menu"
                       >
-                        {l.label} home
-                      </Link>
-                      <div className="my-1 h-px bg-border/70" />
-                      {children.map((child) => (
                         <Link
-                          key={child.id}
-                          href={child.href}
+                          href={l.href}
                           role="menuitem"
-                          className="block rounded-xl px-3 py-2 text-sm font-semibold text-foreground transition hover:bg-primary/8 hover:text-primary"
+                          className="block rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground transition hover:bg-primary/8 hover:text-primary"
                           onClick={() => setOpenNavGroup(null)}
                         >
-                          {child.label}
+                          {l.label}
                         </Link>
-                      ))}
+                        {hasChildren ? <div className="my-1 h-px bg-border/70" /> : null}
+                        {hasChildren ? (
+                          children.map((child) => (
+                            <Link
+                              key={child.id}
+                              href={child.href}
+                              role="menuitem"
+                              className="block rounded-xl px-3 py-2.5 text-sm font-semibold capitalize text-foreground transition hover:bg-primary/8 hover:text-primary"
+                              onClick={() => setOpenNavGroup(null)}
+                            >
+                              {child.label}
+                            </Link>
+                          ))
+                        ) : (
+                          <div className="px-3 py-2 text-xs text-muted-foreground">
+                            No CMS pages yet. Add slug like {l.group}/page-name
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ) : null}
                 </div>

@@ -16,18 +16,10 @@ function navGroupForSlug(slug: string): CmsNavGroup | null {
 /** Public list of CMS pages for navbar dropdowns (nested slugs only). */
 export async function GET() {
   const rows = await prisma.cmsPage.findMany({
-    where: {
-      OR: [
-        { slug: { startsWith: "about/" } },
-        { slug: { startsWith: "contact/" } },
-        { slug: { startsWith: "contact-us/" } },
-        { slug: { startsWith: "blog/" } },
-        { slug: { startsWith: "blogs/" } },
-      ],
-    },
+    where: { slug: { contains: "/" } },
     orderBy: [{ title: "asc" }],
     select: { id: true, slug: true, title: true },
-    take: 100,
+    take: 200,
   });
 
   const pages = rows
@@ -37,11 +29,11 @@ export async function GET() {
       return {
         id: p.id,
         slug: normalizeCmsSlug(p.slug),
-        title: p.title,
+        title: (p.title || "").trim() || normalizeCmsSlug(p.slug).split("/").pop() || "Page",
         group,
       };
     })
-    .filter(Boolean);
+    .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   return Response.json({ ok: true, pages });
 }
