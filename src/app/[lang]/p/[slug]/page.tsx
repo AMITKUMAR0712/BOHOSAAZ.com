@@ -365,9 +365,6 @@ export default async function ProductDetailPage({
                 <span className="rounded-full border border-border bg-muted/40 px-3 py-1">
                   {p?.category?.name || "Uncategorized"}
                 </span>
-                <span className="rounded-full border border-border bg-muted/40 px-3 py-1">
-                  {p?.vendor?.shopName || "Vendor"}
-                </span>
                 {Number(p.stock) <= 0 ? (
                   <span className="rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-red-500">
                     Out of stock

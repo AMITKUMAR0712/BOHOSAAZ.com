@@ -23,7 +23,6 @@ export function RatingRow({
         ))}
       </div>
       <span>Based on {count} reviews.</span>
-      <span className="text-primary underline underline-offset-4">Write a review</span>
     </div>
   );
 }

@@ -85,7 +85,7 @@ export default async function ProductDetailPage({
         <div className="lg:sticky lg:top-24 h-fit">
           <div className="rounded-(--radius) border border-border bg-card p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
             <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
-              {p?.category?.name || "Uncategorized"} • {p?.vendor?.shopName || "Vendor"}
+              {p?.category?.name || "Uncategorized"}
             </div>
 
             <h1 className="mt-2 font-heading text-3xl md:text-4xl tracking-tight text-foreground">{p.title}</h1>
