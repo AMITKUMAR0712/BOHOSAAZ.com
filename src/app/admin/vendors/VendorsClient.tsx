@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import Link from "next/link";
 import ExportDropdown from "@/components/ExportDropdown";
 import { toast } from "@/lib/toast";
+import { isLocale } from "@/lib/i18n";
 
 type Vendor = {
   id: string;
@@ -22,6 +24,9 @@ export default function VendorsClient({
 }: {
   initialVendors: Vendor[];
 }) {
+  const pathname = usePathname();
+  const seg = pathname.split("/").filter(Boolean)[0];
+  const lang = seg && isLocale(seg) ? seg : "en";
   const [vendors, setVendors] = useState<Vendor[]>(initialVendors);
   const [loading, setLoading] = useState(false);
   const [rowHint, setRowHint] = useState<Record<string, string>>({});
@@ -159,7 +164,7 @@ export default function VendorsClient({
                       <TD className="font-semibold">{v.status}</TD>
                       <TD>
                         <div className="flex flex-wrap gap-2">
-                          <Link href={`/admin/vendors/${v.id}`}>
+                          <Link href={`/${lang}/admin/vendors/${v.id}`}>
                             <Button variant="outline" size="sm">
                               View Details
                             </Button>

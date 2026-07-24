@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/lib/toast";
 import Link from "next/link";
 import { ArrowLeft, Check, X, ExternalLink } from "lucide-react";
+import { isLocale } from "@/lib/i18n";
 
 type Vendor = {
   id: string;
@@ -58,6 +59,9 @@ type Vendor = {
 
 export default function VendorDetailsClient({ initialVendor }: { initialVendor: Vendor }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const seg = pathname.split("/").filter(Boolean)[0];
+  const lang = seg && isLocale(seg) ? seg : "en";
   const [vendor, setVendor] = useState(initialVendor);
   const [loading, setLoading] = useState(false);
 
@@ -120,7 +124,7 @@ export default function VendorDetailsClient({ initialVendor }: { initialVendor: 
   return (
     <div className="mx-auto max-w-6xl p-6 md:p-10">
       <div className="mb-6">
-        <Link href="/admin/vendors" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
+        <Link href={`/${lang}/admin/vendors`} className="flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Vendors
         </Link>
       </div>
