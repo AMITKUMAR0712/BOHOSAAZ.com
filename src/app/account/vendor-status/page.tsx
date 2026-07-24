@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ActivateVendorAccess } from "./ActivateVendorAccess";
 
 type VendorStatus = "NOT_APPLIED" | "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
 
@@ -16,7 +17,7 @@ const vendorStatusLabels: Record<VendorStatus, string> = {
 const vendorStatusMessages: Record<VendorStatus, string> = {
   NOT_APPLIED: "You have not yet applied to become a vendor. Start your application to join the marketplace.",
   PENDING: "Your application is pending review. An admin will review your submission soon.",
-  APPROVED: "Your vendor application is approved. Refresh access on the application page to activate the vendor panel.",
+  APPROVED: "Your vendor application is approved. Refresh access below to activate the vendor panel.",
   REJECTED: "Your application was rejected. Update your details and resubmit for a new review.",
   SUSPENDED: "Your vendor account is suspended. Contact support for assistance and next steps.",
 };
@@ -29,10 +30,8 @@ const vendorStatusClasses: Record<VendorStatus, string> = {
   SUSPENDED: "border-slate-200 bg-slate-50 text-slate-900",
 };
 
-export default async function VendorStatusPage({ params }: { params: Promise<{ lang: string }> }) {
-  const { lang } = await params;
+export default async function VendorStatusPage() {
   const user = await requireUser();
-
   if (!user) return null;
 
   const vendor = await prisma.vendor.findUnique({
@@ -52,19 +51,19 @@ export default async function VendorStatusPage({ params }: { params: Promise<{ l
 
   const status = (vendor?.status ?? "NOT_APPLIED") as VendorStatus;
   const actionLabel =
-    status === "APPROVED"
-      ? "View application & refresh access"
-      : status === "PENDING"
+    status === "PENDING"
       ? "View application"
       : status === "REJECTED"
-      ? "Resubmit application"
-      : "Apply now";
+        ? "Resubmit application"
+        : "Apply now";
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 md:px-8 md:py-10">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold">Vendor Request Status</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Review your marketplace onboarding progress and next steps.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Review your marketplace onboarding progress and next steps.
+        </p>
       </div>
 
       <Card>
@@ -77,8 +76,13 @@ export default async function VendorStatusPage({ params }: { params: Promise<{ l
             <div>
               <div className="text-sm text-muted-foreground">Current status</div>
               <div className="mt-1 text-2xl font-semibold">{vendorStatusLabels[status]}</div>
+              {vendor?.shopName ? (
+                <div className="mt-1 text-sm text-muted-foreground">Shop: {vendor.shopName}</div>
+              ) : null}
             </div>
-            <span className={`self-center rounded-full border px-3 py-1 text-xs uppercase tracking-[0.2em] ${vendorStatusClasses[status]}`}>
+            <span
+              className={`self-center rounded-full border px-3 py-1 text-xs uppercase tracking-[0.2em] ${vendorStatusClasses[status]}`}
+            >
               {vendorStatusLabels[status]}
             </span>
           </div>
@@ -100,17 +104,16 @@ export default async function VendorStatusPage({ params }: { params: Promise<{ l
           ) : null}
 
           <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href={`/${lang}/account/vendor-apply`}
-              className="inline-flex items-center justify-center rounded-(--radius) bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:brightness-95"
-            >
-              {actionLabel}
-            </Link>
             {status === "APPROVED" ? (
-              <Link href={`/${lang}/vendor`} className="text-sm underline">
-                Open Vendor Panel
+              <ActivateVendorAccess next="/vendor/dashboard" />
+            ) : (
+              <Link
+                href="/account/vendor-apply"
+                className="inline-flex items-center justify-center rounded-(--radius) bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:brightness-95"
+              >
+                {actionLabel}
               </Link>
-            ) : null}
+            )}
           </div>
         </CardContent>
       </Card>

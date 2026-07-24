@@ -450,6 +450,10 @@ export default function VendorApplyPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Refresh failed");
       setMsg(`✅ Refreshed. Current role: ${data?.role || "updated"}`);
+      if (data?.role === "VENDOR") {
+        window.location.href = "/vendor/dashboard";
+        return;
+      }
       router.refresh();
     } catch (e) {
       setMsg(`❌ ${e instanceof Error ? e.message : "Refresh failed"}`);
@@ -476,10 +480,10 @@ export default function VendorApplyPage() {
               <Button variant="outline" onClick={refreshAccess} disabled={refreshing}>
                 {refreshing ? "Refreshing..." : "Refresh Access"}
               </Button>
-              <Link href={`${lp}/vendor`}>
+              <Link href="/account/activate-vendor?next=/vendor/dashboard">
                 <Button>Go to Vendor Dashboard</Button>
               </Link>
-              <Link href={`${lp}/vendor/kyc`} className="self-center text-sm underline">
+              <Link href="/vendor/kyc" className="self-center text-sm underline">
                 View KYC →
               </Link>
             </div>
@@ -510,7 +514,7 @@ export default function VendorApplyPage() {
                 <Button variant="outline" onClick={refreshAccess} disabled={refreshing}>
                   {refreshing ? "Refreshing..." : "Refresh Access"}
                 </Button>
-                <Link href={`${lp}/vendor/kyc`} className="self-center text-sm underline">
+                <Link href="/vendor/kyc" className="self-center text-sm underline">
                   View submitted KYC →
                 </Link>
               </div>
@@ -805,7 +809,7 @@ export default function VendorApplyPage() {
           ) : null}
 
           <div className="text-xs text-muted-foreground">
-            Need help? You can always check your submitted status in <Link className="underline" href={`${lp}/vendor/kyc`}>Vendor → KYC</Link>.
+            Need help? You can always check your submitted status in <Link className="underline" href="/account/vendor-status">Vendor status</Link>.
           </div>
         </CardContent>
       </Card>

@@ -97,7 +97,7 @@ export function MobileDrawer({
                 {role === "VENDOR" && vendorStatus === "APPROVED" ? (
                   <Link
                     className="rounded-(--radius) px-3 py-2 text-sm hover:bg-muted/60 transition"
-                    href={`${langPrefix}/vendor`}
+                    href="/account/activate-vendor?next=/vendor/dashboard"
                   >
                     Vendor Panel
                   </Link>

@@ -29,7 +29,7 @@ function vendorStatusCopy(status: string | null | undefined) {
       description: "You can manage products and orders from the vendor dashboard.",
       tone: "border-success/30 bg-success/10 text-success",
       action: "Go to vendor dashboard",
-      href: "/vendor/dashboard",
+      href: "/account/activate-vendor?next=/vendor/dashboard",
     };
   }
   return {

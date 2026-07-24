@@ -25,7 +25,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
 
   const vendorHref =
     vendor?.status === "APPROVED"
-      ? "/vendor/dashboard"
+      ? "/account/activate-vendor?next=/vendor/dashboard"
       : vendor?.status === "PENDING"
         ? "/account/vendor-status"
         : "/account/vendor-apply";
@@ -50,7 +50,12 @@ export default async function AccountLayout({ children }: { children: ReactNode 
             { href: "/account/profile", label: "Profile" },
             ...(showBecomeVendor
               ? [{ href: vendorHref, label: vendorNavLabel }]
-              : [{ href: "/vendor/dashboard", label: "Vendor dashboard" }]),
+              : [
+                  {
+                    href: "/account/activate-vendor?next=/vendor/dashboard",
+                    label: "Vendor dashboard",
+                  },
+                ]),
           ],
         },
       ]}

@@ -112,21 +112,23 @@ export function middleware(req: NextRequest) {
   const stripped = stripLang(pathname);
   const p = stripped.pathname;
 
-  // Remove language prefix for dashboards
+  // Remove language prefix for dashboards that use unprefixed panels
   if (stripped.lang && (p.startsWith("/vendor") || p.startsWith("/account"))) {
     const url = req.nextUrl.clone();
     url.pathname = p;
     return NextResponse.redirect(url);
   }
 
+  // Admin uses the full [lang]/admin sidebar — send bare /admin there
+  if (!stripped.lang && p.startsWith("/admin")) {
+    const url = req.nextUrl.clone();
+    url.pathname = `/${preferredLang(req)}${p}`;
+    return NextResponse.redirect(url);
+  }
+
   // Add language prefix for public routes
   if (!stripped.lang) {
-    if (
-      p === "/403" ||
-      p.startsWith("/admin") ||
-      p.startsWith("/vendor") ||
-      p.startsWith("/account")
-    ) {
+    if (p === "/403" || p.startsWith("/vendor") || p.startsWith("/account")) {
       // allowed
     } else {
       const url = req.nextUrl.clone();
@@ -155,6 +157,15 @@ export function middleware(req: NextRequest) {
   }
 
   if (isVendor && role !== "VENDOR") {
+    // Approved vendors often still have a stale USER JWT until refresh.
+    // Send them through an activation bridge instead of dumping to home.
+    if (role === "USER") {
+      const url = req.nextUrl.clone();
+      url.pathname = "/account/activate-vendor";
+      url.search = "";
+      url.searchParams.set("next", p);
+      return NextResponse.redirect(url);
+    }
     return redirectToHome(req);
   }
 

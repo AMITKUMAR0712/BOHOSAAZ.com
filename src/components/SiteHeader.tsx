@@ -780,7 +780,11 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
                   </DropdownItem>
                 ) : role === "VENDOR" ? (
                   <>
-                    <DropdownItem onSelect={() => (window.location.href = `${lp}/vendor/dashboard`)}>
+                    <DropdownItem
+                      onSelect={() =>
+                        (window.location.href = `/account/activate-vendor?next=/vendor/dashboard`)
+                      }
+                    >
                       Vendor Dashboard
                     </DropdownItem>
                   </>
@@ -1055,7 +1059,11 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
                 </Link>
               ) : role === "VENDOR" ? (
                 <>
-                  <Link href={`${lp}/vendor/dashboard`} className="block rounded-2xl px-4 py-3 text-sm hover:bg-muted/40 transition" onClick={() => setDrawerOpen(false)}>
+                  <Link
+                    href="/account/activate-vendor?next=/vendor/dashboard"
+                    className="block rounded-2xl px-4 py-3 text-sm hover:bg-muted/40 transition"
+                    onClick={() => setDrawerOpen(false)}
+                  >
                     Vendor Dashboard
                   </Link>
                 </>

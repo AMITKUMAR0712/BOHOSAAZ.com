@@ -15,13 +15,29 @@ export async function POST(req: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { id: payload.sub },
-    select: { id: true, email: true, role: true },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      vendor: { select: { status: true } },
+    },
   });
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const newToken = signToken({ sub: user.id, email: user.email, role: user.role });
+  // Heal stale role: approved vendor rows must carry VENDOR on the user.
+  let role = user.role;
+  if (user.vendor?.status === "APPROVED" && role === "USER") {
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: { role: "VENDOR" },
+      select: { role: true },
+    });
+    role = updated.role;
+  }
 
-  const res = NextResponse.json({ ok: true, role: user.role });
+  const newToken = signToken({ sub: user.id, email: user.email, role });
+
+  const res = NextResponse.json({ ok: true, role });
   res.cookies.set("token", newToken, {
     httpOnly: true,
     sameSite: "lax",

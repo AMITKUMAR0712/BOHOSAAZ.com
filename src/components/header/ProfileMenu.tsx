@@ -126,7 +126,7 @@ export function ProfileMenu({
               <>
                 <Divider />
                 <MenuLink
-                  href={`${langPrefix}/vendor`}
+                  href="/account/activate-vendor?next=/vendor/dashboard"
                   label="Vendor Panel"
                   highlight
                 />
