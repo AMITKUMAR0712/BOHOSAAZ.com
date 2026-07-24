@@ -24,9 +24,12 @@ export default function RegisterClient({
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const vendorNext = `${langPrefix}/account/vendor-apply`;
+  const vendorNext = `/account/vendor-apply`;
   const vendorLoginHref = `${langPrefix}/login?next=${encodeURIComponent(vendorNext)}`;
-  const startsAsVendor = next === vendorNext || next === "/account/vendor-apply";
+  const startsAsVendor =
+    next === vendorNext ||
+    next === `${langPrefix}/account/vendor-apply` ||
+    next?.endsWith("/account/vendor-apply") === true;
   const vendorFlowActive = startsAsVendor;
 
   async function onSubmit(e: React.FormEvent) {

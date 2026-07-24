@@ -9,31 +9,50 @@ type MeResponse = {
 
 function roleHome(role: string | undefined, langPrefix: string, vendorStatus?: string | null) {
   if (role === "ADMIN") return `${langPrefix}/admin/dashboard`;
-  if (role === "VENDOR") return vendorStatus === "APPROVED" ? `${langPrefix}/vendor/dashboard` : `${langPrefix}/seller`;
+  if (role === "VENDOR") {
+    return vendorStatus === "APPROVED" ? `${langPrefix}/vendor/dashboard` : `${langPrefix}/seller`;
+  }
+  // Default customer home; Sell-on-Bohosaaz uses `next` → vendor-apply.
   if (role === "USER") return langPrefix;
   return langPrefix;
 }
 
 function isRoleAllowedNext(role: string | undefined, nextPath: string) {
   // If we can't detect role, only allow storefront destinations.
-  if (!role) return !nextPath.startsWith("/admin") && !nextPath.startsWith("/vendor") && !nextPath.startsWith("/account");
+  if (!role) {
+    return (
+      !nextPath.startsWith("/admin") &&
+      !nextPath.startsWith("/vendor") &&
+      !nextPath.startsWith("/account")
+    );
+  }
 
   if (role === "ADMIN") return nextPath.startsWith("/admin");
-  if (role === "VENDOR") return (
-    nextPath.startsWith("/vendor") ||
-    nextPath.startsWith("/account/vendor-apply") ||
-    nextPath.startsWith("/account/vendor-status")
-  );
-  // USER
-  const isStorefront =
+  if (role === "VENDOR") {
+    return (
+      nextPath.startsWith("/vendor") ||
+      nextPath.startsWith("/seller") ||
+      nextPath.startsWith("/account/vendor-apply") ||
+      nextPath.startsWith("/account/vendor-status") ||
+      nextPath.startsWith("/account")
+    );
+  }
+
+  // USER — storefront + account (incl. Sell on Bohosaaz → vendor-apply / KYC)
+  if (
     nextPath === "/" ||
     nextPath.startsWith("/p/") ||
     nextPath.startsWith("/c/") ||
     nextPath.startsWith("/cart") ||
     nextPath.startsWith("/checkout") ||
-    nextPath.startsWith("/seller");
+    nextPath.startsWith("/seller") ||
+    nextPath.startsWith("/shop") ||
+    nextPath.startsWith("/account")
+  ) {
+    return true;
+  }
 
-  return isStorefront;
+  return false;
 }
 
 function detectLangFromPathname(pathname: string) {
@@ -74,15 +93,17 @@ function normalizeNext(nextPath: string, lang: string) {
     "/privacy",
     "/p/",
     "/order/",
+    "/shop",
   ];
 
   for (const p of known) {
     if (p.endsWith("/") ? nextPath.startsWith(p) : nextPath === p || nextPath.startsWith(p + "/")) {
+      // Account routes are language-stripped by middleware → keep unprefixed.
+      if (p === "/account" || nextPath.startsWith("/account")) return nextPath;
       return `${lp}${nextPath}`;
     }
   }
 
-  // Otherwise leave it as-is (still internal)
   return nextPath;
 }
 
@@ -107,11 +128,19 @@ export async function resolvePostLoginRedirect(opts?: { next?: string | null }) 
   if (nextPath) {
     const normalized = normalizeNext(nextPath, lang);
     if (normalized) {
-      const stripped = normalized.startsWith("/en/") || normalized.startsWith("/hi/") ? "/" + normalized.split("/").slice(2).join("/") : normalized;
-      if (isRoleAllowedNext(role, stripped)) return normalized;
+      const stripped =
+        normalized.startsWith("/en/") || normalized.startsWith("/hi/")
+          ? "/" + normalized.split("/").slice(2).join("/")
+          : normalized === "/en" || normalized === "/hi"
+            ? "/"
+            : normalized;
+      if (isRoleAllowedNext(role, stripped === "/" ? "/" : stripped)) {
+        // Prefer unprefixed account paths (middleware redirects /en/account → /account).
+        if (stripped.startsWith("/account")) return stripped;
+        return normalized;
+      }
     }
   }
 
-  // Default to storefront home when no valid `next` param is provided.
   return normalizedRoleHome;
 }
