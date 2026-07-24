@@ -867,12 +867,8 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
       </div>
 
       {/* Compact link row — overflow-visible so CMS dropdowns are not clipped */}
-      <div
-        className={`relative z-50 hidden border-t border-white/24 bg-[rgba(246,232,212,0.48)] backdrop-blur-2xl transition-all duration-500 ease-out sm:block ${
-          !isDashboardRoute && scrolled ? "opacity-100" : "opacity-100"
-        }`}
-      >
-        <div className={`mx-auto max-w-6xl px-3 transition-all duration-500 sm:px-4 ${!isDashboardRoute && scrolled ? "py-1" : "py-1.5"}`}>
+      <div className="relative z-50 hidden border-t border-white/24 bg-[rgba(246,232,212,0.48)] backdrop-blur-2xl sm:block">
+        <div className={`mx-auto max-w-6xl overflow-visible px-3 transition-all duration-500 sm:px-4 ${!isDashboardRoute && scrolled ? "py-1" : "py-1.5"}`}>
           <div className="flex flex-wrap items-center justify-start gap-1.5 overflow-visible">
             {navLinks.map((l) => {
               const active =
@@ -880,15 +876,15 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
                   ? pathname === lp || pathname === `${lp}/`
                   : pathname === l.href || pathname.startsWith(`${l.href}/`);
               const children = l.children || [];
-              const canDropdown = Boolean(l.group);
-              const hasChildren = children.length > 0;
-              const linkClass = `relative shrink-0 rounded-full border px-3 py-2 text-[11px] font-extrabold uppercase tracking-[0.14em] transition-all duration-300 hover:-translate-y-px hover:border-primary/20 hover:bg-white/28 hover:text-primary hover:shadow-[0_8px_18px_rgba(69,40,24,0.08)] sm:py-1.5 sm:text-[11px] ${
+              const hasDropdown = Boolean(l.group && children.length);
+              const linkClass = `relative shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] transition-all duration-300 hover:-translate-y-px hover:border-primary/20 hover:bg-white/28 hover:text-primary hover:shadow-[0_8px_18px_rgba(69,40,24,0.08)] ${
                 active
                   ? "border-primary/18 bg-white/30 text-primary shadow-[0_8px_18px_rgba(69,40,24,0.08)] after:absolute after:-bottom-0.5 after:left-3 after:right-3 after:h-0.5 after:rounded-full after:bg-primary"
                   : "border-transparent bg-transparent text-foreground/82"
               }`;
 
-              if (!canDropdown || !l.group) {
+              // No nested CMS pages → normal link (no icon / no dropdown)
+              if (!hasDropdown || !l.group) {
                 return (
                   <Link key={l.label} href={l.href} className={linkClass}>
                     {l.label}
@@ -904,14 +900,17 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
                   onMouseEnter={() => scheduleNavOpen(l.group!)}
                   onMouseLeave={scheduleNavClose}
                 >
-                  <button
-                    type="button"
+                  <Link
+                    href={l.href}
                     className={`${linkClass} inline-flex items-center gap-1`}
                     aria-haspopup="menu"
                     aria-expanded={open}
-                    onClick={() => {
+                    onClick={(e) => {
+                      // Keep parent page clickable; open menu on caret/hover only.
+                      if (open) return;
+                      e.preventDefault();
                       clearNavTimers();
-                      setOpenNavGroup((prev) => (prev === l.group ? null : l.group!));
+                      setOpenNavGroup(l.group!);
                     }}
                     onFocus={() => {
                       clearNavTimers();
@@ -919,10 +918,10 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
                     }}
                   >
                     {l.label}
-                    <span className="text-[9px] opacity-70" aria-hidden>
+                    <span className="text-[9px] leading-none opacity-70" aria-hidden>
                       ▾
                     </span>
-                  </button>
+                  </Link>
                   {open ? (
                     <div
                       className="absolute left-0 top-full z-[1100] pt-2"
@@ -939,29 +938,23 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
                         <Link
                           href={l.href}
                           role="menuitem"
-                          className="block rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground transition hover:bg-primary/8 hover:text-primary"
+                          className="block rounded-xl px-3 py-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted-foreground transition hover:bg-primary/8 hover:text-primary"
                           onClick={() => setOpenNavGroup(null)}
                         >
                           {l.label}
                         </Link>
-                        {hasChildren ? <div className="my-1 h-px bg-border/70" /> : null}
-                        {hasChildren ? (
-                          children.map((child) => (
-                            <Link
-                              key={child.id}
-                              href={child.href}
-                              role="menuitem"
-                              className="block rounded-xl px-3 py-2.5 text-sm font-semibold capitalize text-foreground transition hover:bg-primary/8 hover:text-primary"
-                              onClick={() => setOpenNavGroup(null)}
-                            >
-                              {child.label}
-                            </Link>
-                          ))
-                        ) : (
-                          <div className="px-3 py-2 text-xs text-muted-foreground">
-                            No CMS pages yet. Add slug like {l.group}/page-name
-                          </div>
-                        )}
+                        <div className="my-1 h-px bg-border/70" />
+                        {children.map((child) => (
+                          <Link
+                            key={child.id}
+                            href={child.href}
+                            role="menuitem"
+                            className="block rounded-xl px-3 py-2 text-[13px] font-semibold text-foreground transition hover:bg-primary/8 hover:text-primary"
+                            onClick={() => setOpenNavGroup(null)}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
                       </div>
                     </div>
                   ) : null}
