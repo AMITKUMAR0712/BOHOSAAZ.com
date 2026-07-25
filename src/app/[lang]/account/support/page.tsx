@@ -51,6 +51,16 @@ export default function AccountSupportPage() {
   }
 
   useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const linkedOrderId = query.get("orderId")?.trim() || "";
+    const linkedSubject = query.get("subject")?.trim() || "";
+    if (linkedOrderId) {
+      setCategory("ORDER");
+      setOrderId(linkedOrderId);
+      setSubject(linkedSubject || `Help with order #${linkedOrderId}`);
+      setMessage(`I need help with order #${linkedOrderId}.`);
+    }
+
     const t = setTimeout(() => {
       void load();
     }, 0);

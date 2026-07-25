@@ -67,7 +67,7 @@ export default function AccountSidebar({
       <div className="mobile-scroll md:flex md:flex-col md:gap-2 md:overflow-visible">
         <NavItem href={base} label="Dashboard" icon={<LayoutDashboard className="h-4 w-4" />} />
         <NavItem href={`${base}/profile`} label="Profile & Address" icon={<User className="h-4 w-4" />} />
-        <NavItem href={`${base}/cart`} label="Cart" icon={<ShoppingCart className="h-4 w-4" />} />
+        <NavItem href={`${base}/cart`} label="Add to cart" icon={<ShoppingCart className="h-4 w-4" />} />
         <NavItem href={`${base}/wishlist`} label="Wishlist" icon={<Heart className="h-4 w-4" />} />
         <NavItem href={`${base}/orders`} label="Orders" icon={<Package className="h-4 w-4" />} />
         <NavItem href={`${base}/returns`} label="Return / Refund" icon={<RotateCcw className="h-4 w-4" />} />

@@ -424,10 +424,10 @@ export default async function ShopPage({
             <div>
               <div className="inline-flex rounded-full border border-border bg-background/70 px-3 py-1 text-[11px] uppercase tracking-[0.28em] text-muted-foreground">Gift Finder</div>
               <h1 className="mt-2 max-w-3xl font-heading text-2xl tracking-tight text-foreground sm:text-3xl md:text-4xl">
-                Discover gifts by occasion, person and feeling.
+                Discover gifts by budget, style and feeling.
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
-                Search all products with clean filters for occasion, recipient, budget, category, availability and color.
+                Search all products with clean filters for budget, category, availability and color.
               </p>
             </div>
             <div className="rounded-[22px] border border-border bg-background/65 p-4 shadow-sm md:rounded-[28px] md:p-5">
@@ -533,7 +533,7 @@ export default async function ShopPage({
         ) : (
           <div className="rounded-[32px] border border-dashed border-border bg-card/80 p-8 text-center shadow-sm md:p-10">
             <div className="font-heading text-2xl text-foreground">No products found</div>
-            <p className="mt-2 text-sm text-muted-foreground">Try changing occasion, budget, color or reset filters.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Try changing budget, color or reset filters.</p>
             <Link href={`/${lang}/shop`} className="mt-6 inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-6 text-sm font-semibold text-primary-foreground">
               Reset Filters
             </Link>

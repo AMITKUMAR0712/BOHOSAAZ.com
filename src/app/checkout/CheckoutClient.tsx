@@ -135,14 +135,105 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
     setPincode(address.pincode);
   }, []);
 
-  const loadAddresses = useCallback(async () => {
+  const loadAddresses = useCallback(async (options?: { selectId?: string; skipApply?: boolean }) => {
     const res = await fetch("/api/addresses", { credentials: "include", cache: "no-store" });
     const data = await res.json().catch(() => ({}));
     const rows = Array.isArray(data?.addresses) ? (data.addresses as SavedAddress[]) : [];
     setAddresses(rows);
+
+    if (options?.skipApply) return rows;
+
+    if (options?.selectId) {
+      const selected = rows.find((row) => row.id === options.selectId);
+      if (selected) applyAddress(selected);
+      return rows;
+    }
+
     const preferred = rows.find((row) => row.isDefault) ?? rows[0];
     if (preferred) applyAddress(preferred);
+    return rows;
   }, [applyAddress]);
+
+  const sameAddress = useCallback(
+    (a: {
+      fullName: string;
+      phone: string;
+      address1: string;
+      address2?: string | null;
+      city: string;
+      state: string;
+      pincode: string;
+    },
+    list: SavedAddress[]) =>
+      list.find(
+        (row) =>
+          row.fullName.trim().toLowerCase() === a.fullName.trim().toLowerCase() &&
+          row.phone.trim() === a.phone.trim() &&
+          row.address1.trim().toLowerCase() === a.address1.trim().toLowerCase() &&
+          (row.address2 || "").trim().toLowerCase() === (a.address2 || "").trim().toLowerCase() &&
+          row.city.trim().toLowerCase() === a.city.trim().toLowerCase() &&
+          row.state.trim().toLowerCase() === a.state.trim().toLowerCase() &&
+          row.pincode.trim() === a.pincode.trim(),
+      ),
+    [],
+  );
+
+  /** Persist checkout form address into the user's address book so it appears on profile + next checkout. */
+  const persistShippingAddress = useCallback(async () => {
+    if (fullName.trim().length < 2) return null;
+    if (phone.trim().length < 8) return null;
+    if (address1.trim().length < 5) return null;
+    if (city.trim().length < 2) return null;
+    if (state.trim().length < 2) return null;
+    if (pincode.trim().length < 4) return null;
+
+    const payload = {
+      fullName: fullName.trim(),
+      phone: phone.trim(),
+      address1: address1.trim(),
+      address2: address2.trim() || null,
+      city: city.trim(),
+      state: state.trim(),
+      pincode: pincode.trim(),
+      isDefault: addresses.length === 0,
+      kind: addresses.length === 0 ? "DEFAULT" : "SECONDARY",
+    };
+
+    const existing = sameAddress(payload, addresses);
+    if (existing) {
+      setSelectedAddressId(existing.id);
+      return existing;
+    }
+
+    const res = await fetch("/api/addresses", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return null;
+
+    const saved = data?.address as SavedAddress | undefined;
+    if (saved?.id) {
+      await loadAddresses({ selectId: saved.id });
+      return saved;
+    }
+
+    await loadAddresses({ skipApply: true });
+    return null;
+  }, [
+    address1,
+    address2,
+    addresses,
+    city,
+    fullName,
+    loadAddresses,
+    phone,
+    pincode,
+    sameAddress,
+    state,
+  ]);
 
   useEffect(() => {
     void loadCart();
@@ -151,8 +242,16 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
 
   async function placeCOD() {
     setMsg(null);
+    const shippingError = validateShipping();
+    if (shippingError) {
+      toast({ variant: "danger", title: "Checkout", message: shippingError });
+      setMsg(shippingError);
+      return;
+    }
+
     setPlacing(true);
     try {
+      await persistShippingAddress();
       const res = await fetch("/api/checkout/create", {
         method: "POST",
         credentials: "include",
@@ -199,6 +298,7 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
 
     setPlacing(true);
     try {
+      await persistShippingAddress();
       const payload: Record<string, unknown> = {
         paymentMethod: "RAZORPAY",
         ...(checkoutOrderId ? { orderId: checkoutOrderId } : {}),
@@ -363,36 +463,59 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
               </div>
 
               <div className="p-4 sm:p-5">
-                {addresses.length ? (
-                  <div className="mb-5 rounded-2xl border border-border bg-muted/20 p-3">
-                    <div className="text-sm font-semibold text-foreground">Saved addresses</div>
+                <div className="mb-5 rounded-2xl border border-border bg-muted/20 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="text-sm font-semibold text-foreground">
+                      Your addresses{addresses.length ? ` (${addresses.length})` : ""}
+                    </div>
+                    <Link
+                      href={lp ? `${lp}/account/profile` : "/account/profile"}
+                      className="text-xs font-semibold text-primary underline underline-offset-4"
+                    >
+                      Manage in profile
+                    </Link>
+                  </div>
+
+                  {addresses.length ? (
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       {addresses.map((address) => (
                         <button
                           key={address.id}
                           type="button"
                           className={`rounded-2xl border px-3 py-3 text-left text-sm transition ${
-                            selectedAddressId === address.id ? "border-primary bg-primary/10 text-foreground" : "border-border bg-card/70 hover:bg-muted/35"
+                            selectedAddressId === address.id
+                              ? "border-primary bg-primary/10 text-foreground"
+                              : "border-border bg-card/70 hover:bg-muted/35"
                           }`}
                           onClick={() => applyAddress(address)}
                         >
                           <div className="flex items-center justify-between gap-3">
                             <span className="font-semibold">{address.label || address.fullName}</span>
                             <span className="rounded-full bg-background/70 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                              {address.isDefault ? "Default" : address.kind || "Secondary"}
+                              {address.isDefault ? "Primary" : "Saved"}
                             </span>
                           </div>
                           <div className="mt-1 text-xs text-muted-foreground">
-                            {address.address1}, {address.city}, {address.state} - {address.pincode}
+                            {address.fullName} • {address.phone}
+                          </div>
+                          <div className="mt-1 text-xs text-muted-foreground">
+                            {address.address1}
+                            {address.address2 ? `, ${address.address2}` : ""}, {address.city}, {address.state} -{" "}
+                            {address.pincode}
                           </div>
                         </button>
                       ))}
                     </div>
-                    <Link href={`${lp}/account/profile`} className="mt-3 inline-block text-xs font-semibold text-primary underline underline-offset-4">
-                      Manage addresses
-                    </Link>
-                  </div>
-                ) : null}
+                  ) : (
+                    <div className="mt-3 rounded-xl border border-dashed border-border bg-card/50 p-3 text-sm text-muted-foreground">
+                      No saved address yet. Fill the form below — it will be saved to your profile and shown here next time.
+                    </div>
+                  )}
+                </div>
+
+                <div className="mb-3 text-sm font-semibold text-foreground">
+                  {selectedAddressId ? "Selected / edit delivery address" : "Enter delivery address"}
+                </div>
 
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   <Input placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
@@ -410,8 +533,32 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
                   <Input placeholder="Pincode" value={pincode} onChange={(e) => setPincode(e.target.value)} />
                 </div>
 
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={placing}
+                    onClick={async () => {
+                      const shippingError = validateShipping();
+                      if (shippingError) {
+                        toast({ variant: "danger", title: "Address", message: shippingError });
+                        return;
+                      }
+                      const saved = await persistShippingAddress();
+                      if (saved) {
+                        toast({ variant: "success", title: "Address saved", message: "This address is now in your profile and checkout list." });
+                      } else {
+                        toast({ variant: "danger", title: "Address", message: "Could not save address. Please try again." });
+                      }
+                    }}
+                  >
+                    Save address to profile
+                  </Button>
+                </div>
+
                 <div className="mt-6 rounded-(--radius) border border-border bg-muted/25 p-4 text-sm text-muted-foreground">
-                  Please ensure your phone number is reachable for delivery updates.
+                  Please ensure your phone number is reachable for delivery updates. All saved addresses appear here and in Profile & Address.
                 </div>
               </div>
             </Card>

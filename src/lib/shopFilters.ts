@@ -90,7 +90,7 @@ const fieldDefaults: Record<ShopFilterKey, ShopFilterFieldConfig> = {
   },
   occasion: {
     key: "occasion",
-    enabled: true,
+    enabled: false,
     label: "Occasion",
     placeholder: "Any occasion",
     section: "intent",
@@ -101,7 +101,7 @@ const fieldDefaults: Record<ShopFilterKey, ShopFilterFieldConfig> = {
   },
   recipient: {
     key: "recipient",
-    enabled: true,
+    enabled: false,
     label: "Recipient",
     placeholder: "For anyone",
     section: "intent",
@@ -235,9 +235,11 @@ function normalizeField(key: ShopFilterKey, value: unknown): ShopFilterFieldConf
   }
 
   const row = value as Partial<Record<keyof ShopFilterFieldConfig, unknown>>;
+  // Occasion & Recipient filters are retired from the storefront UI.
+  const forcedOff = key === "occasion" || key === "recipient";
   return {
     key,
-    enabled: typeof row.enabled === "boolean" ? row.enabled : fallback.enabled,
+    enabled: forcedOff ? false : typeof row.enabled === "boolean" ? row.enabled : fallback.enabled,
     label: cleanText(row.label, fallback.label),
     placeholder: cleanText(row.placeholder, fallback.placeholder),
     section: row.section === "intent" || row.section === "refine" ? row.section : fallback.section,

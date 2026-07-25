@@ -43,11 +43,12 @@ export default async function AccountLayout({ children }: { children: ReactNode 
           title: "User",
           items: [
             { href: "/account", label: "Dashboard", match: "exact" },
+            { href: "/account/cart", label: "Add to cart" },
             { href: "/account/orders", label: "My Orders" },
             { href: "/account/returns", label: "Return / Refund" },
             { href: "/account/wishlist", label: "Wishlist" },
             { href: "/account/support", label: "Support" },
-            { href: "/account/profile", label: "Profile" },
+            { href: "/account/profile", label: "Profile & Address" },
             ...(showBecomeVendor
               ? [{ href: vendorHref, label: vendorNavLabel }]
               : [

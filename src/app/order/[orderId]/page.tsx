@@ -349,11 +349,20 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
                   </div>
                 </div>
                 <div className="mt-5 grid gap-3">
-                  <ActionLink href="/contact-us" variant="outline" className="w-full justify-start">
+                  <ActionLink
+                    href={`/account/support?orderId=${encodeURIComponent(order.id)}&subject=${encodeURIComponent(`Help with order #${order.id}`)}`}
+                    variant="outline"
+                    className="w-full justify-start"
+                  >
                     <Headphones className="h-4 w-4" />
                     Contact support
                   </ActionLink>
-                  <ActionLink href={`/api/export/user/orders/${order.id}/invoice.pdf`} variant="soft" className="w-full justify-start">
+                  <ActionLink
+                    href={`/api/export/user/orders/${order.id}/invoice.pdf`}
+                    variant="soft"
+                    className="w-full justify-start"
+                    download={`Bohosaaz_Order_${order.id}_Invoice.pdf`}
+                  >
                     <Download className="h-4 w-4" />
                     Download invoice
                   </ActionLink>
@@ -403,12 +412,14 @@ function ActionLink({
   variant = "primary",
   size = "md",
   className = "",
+  download,
 }: {
   href: string;
   children: ReactNode;
   variant?: "primary" | "outline" | "soft";
   size?: "md" | "lg";
   className?: string;
+  download?: string;
 }) {
   const variantClass =
     variant === "outline"
@@ -418,10 +429,20 @@ function ActionLink({
         : "bg-primary text-primary-foreground shadow-(--shadowBtn) hover:brightness-95 hover:shadow-(--shadowBtnHover)";
   const sizeClass = size === "lg" ? "h-12 px-7 text-base" : "h-11 px-5";
 
+  const classes = `inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-(--radius) text-sm font-semibold tracking-[-0.01em] transition-all duration-200 hover:-translate-y-px active:translate-y-px ${variantClass} ${sizeClass} ${className}`;
+
+  if (download) {
+    return (
+      <a href={href} download={download} className={classes}>
+        {children}
+      </a>
+    );
+  }
+
   return (
     <Link
       href={href}
-      className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-(--radius) text-sm font-semibold tracking-[-0.01em] transition-all duration-200 hover:-translate-y-px active:translate-y-px ${variantClass} ${sizeClass} ${className}`}
+      className={classes}
     >
       {children}
     </Link>

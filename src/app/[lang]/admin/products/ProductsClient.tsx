@@ -10,7 +10,6 @@ import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import ExportDropdown from "@/components/ExportDropdown";
-import { DEFAULT_OCCASION_OPTIONS, DEFAULT_RECIPIENT_OPTIONS } from "@/lib/shopFilters";
 import { compressImageForUpload } from "@/lib/compressImage";
 
 type Category = { id: string; name: string };
@@ -182,8 +181,6 @@ export default function ProductsClient({
   const [creating, setCreating] = useState(false);
   const [codOnlyFilter, setCodOnlyFilter] = useState(false);
   const [selectedVendorId, setSelectedVendorId] = useState("");
-  const [occasionFilter, setOccasionFilter] = useState("");
-  const [recipientFilter, setRecipientFilter] = useState("");
   const [availabilityFilter, setAvailabilityFilter] = useState("");
   const [rowImageUrls, setRowImageUrls] = useState<Record<string, string>>({});
 
@@ -357,8 +354,6 @@ export default function ProductsClient({
     const silent = options?.silent ?? false;
     if (!silent) setLoading(true);
     const params = new URLSearchParams({ take: "50" });
-    if (occasionFilter) params.set("occasion", occasionFilter);
-    if (recipientFilter) params.set("recipient", recipientFilter);
     if (availabilityFilter) params.set("availability", availabilityFilter);
     const res = await fetch(`/api/admin/products?${params}`, { credentials: "include" });
     const data = await res.json().catch(() => null);
@@ -381,7 +376,7 @@ export default function ProductsClient({
   useEffect(() => {
     void reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [occasionFilter, recipientFilter, availabilityFilter]);
+  }, [availabilityFilter]);
 
   useEffect(() => {
     const syncProducts = () => {
@@ -403,7 +398,7 @@ export default function ProductsClient({
       document.removeEventListener("visibilitychange", syncProducts);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [occasionFilter, recipientFilter, availabilityFilter]);
+  }, [availabilityFilter]);
 
   const vendorSummaries = useMemo(() => {
     const vendors = new Map<
@@ -1142,24 +1137,6 @@ export default function ProductsClient({
               <div className="mb-4 grid gap-3">
                 <div className="grid gap-2 md:grid-cols-3">
                   <label className="grid gap-1">
-                    <span className="text-xs text-muted-foreground">Occasion</span>
-                    <Select value={occasionFilter} onChange={(event) => setOccasionFilter(event.target.value)}>
-                      <option value="">All occasions</option>
-                      {DEFAULT_OCCASION_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </Select>
-                  </label>
-                  <label className="grid gap-1">
-                    <span className="text-xs text-muted-foreground">Recipient</span>
-                    <Select value={recipientFilter} onChange={(event) => setRecipientFilter(event.target.value)}>
-                      <option value="">All recipients</option>
-                      {DEFAULT_RECIPIENT_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </Select>
-                  </label>
-                  <label className="grid gap-1">
                     <span className="text-xs text-muted-foreground">Availability</span>
                     <Select value={availabilityFilter} onChange={(event) => setAvailabilityFilter(event.target.value)}>
                       <option value="">Any availability</option>
@@ -1179,13 +1156,11 @@ export default function ProductsClient({
                   <Button variant={codOnlyFilter ? "soft" : "outline"} size="sm" onClick={() => setCodOnlyFilter((value) => !value)}>
                     {codOnlyFilter ? "Show all products" : "Show COD products"}
                   </Button>
-                  {(occasionFilter || recipientFilter || availabilityFilter) ? (
+                  {availabilityFilter ? (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setOccasionFilter("");
-                        setRecipientFilter("");
                         setAvailabilityFilter("");
                       }}
                     >

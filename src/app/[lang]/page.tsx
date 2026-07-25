@@ -8,7 +8,6 @@ import { ProductCard } from "@/components/ProductCard";
 import { BannerCarousel, type HomeBanner } from "@/components/BannerCarousel";
 import { AdSlot } from "@/components/ads/AdSlot";
 import IconByName from "@/components/IconByName";
-import { DEFAULT_OCCASION_OPTIONS, DEFAULT_RECIPIENT_OPTIONS } from "@/lib/shopFilters";
 import { formatPriceInCurrency } from "@/lib/currency-utils";
 import { AutoScrollRow } from "@/components/AutoScrollRow";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -783,8 +782,6 @@ export default async function Home({
 
   const q = typeof sp.q === "string" ? sp.q.trim() : "";
   const category = typeof sp.category === "string" ? sp.category.trim() : "";
-  const occasion = typeof sp.occasion === "string" ? sp.occasion.trim() : "";
-  const recipient = typeof sp.recipient === "string" ? sp.recipient.trim() : "";
   const budget = typeof sp.budget === "string" ? sp.budget.trim() : "";
   const availability = typeof sp.availability === "string" ? sp.availability.trim() : "";
   const size = typeof sp.size === "string" ? sp.size.trim() : "";
@@ -802,8 +799,6 @@ export default async function Home({
     const next = new URLSearchParams();
     if (q) next.set("q", q);
     if (category) next.set("category", category);
-    if (occasion) next.set("occasion", occasion);
-    if (recipient) next.set("recipient", recipient);
     if (budget) next.set("budget", budget);
     if (availability) next.set("availability", availability);
     if (size) next.set("size", size);
@@ -823,8 +818,6 @@ export default async function Home({
     const qs2 = new URLSearchParams();
     const q2 = next.get("q") || "";
     const c2 = next.get("category") || "";
-    const occasion2 = next.get("occasion") || "";
-    const recipient2 = next.get("recipient") || "";
     const budget2 = next.get("budget") || "";
     const availability2 = next.get("availability") || "";
     const s2 = next.get("size") || "";
@@ -837,8 +830,6 @@ export default async function Home({
 
     if (q2) qs2.set("q", q2);
     if (c2) qs2.set("category", c2);
-    if (occasion2) qs2.set("occasion", occasion2);
-    if (recipient2) qs2.set("recipient", recipient2);
     if (budget2) qs2.set("budget", budget2);
     if (availability2) qs2.set("availability", availability2);
     if (s2) qs2.set("size", s2);
@@ -858,8 +849,6 @@ export default async function Home({
   const qs = new URLSearchParams();
   if (q) qs.set("q", q);
   if (category) qs.set("category", category);
-  if (occasion) qs.set("occasion", occasion);
-  if (recipient) qs.set("recipient", recipient);
   if (budget) qs.set("budget", budget);
   if (availability) qs.set("availability", availability);
   if (size) qs.set("size", size);
@@ -890,8 +879,6 @@ export default async function Home({
     Boolean(
       q ||
       category ||
-      occasion ||
-      recipient ||
       budget ||
       availability ||
       size ||
@@ -906,8 +893,6 @@ export default async function Home({
   const appliedCount =
     (q ? 1 : 0) +
     (category ? 1 : 0) +
-    (occasion ? 1 : 0) +
-    (recipient ? 1 : 0) +
     (budget ? 1 : 0) +
     (availability ? 1 : 0) +
     (size ? 1 : 0) +
@@ -1027,18 +1012,6 @@ export default async function Home({
   type ColorFilterOption = readonly [string, string, string];
   const cookieStore = await cookies();
   const selectedCurrency = cookieStore.get("bohosaaz_currency")?.value === "USD" ? "USD" : "INR";
-  const mergeFilterOptions = (...groups: readonly FilterOption[][]): FilterOption[] => {
-    const seen = new Set<string>();
-    const merged: FilterOption[] = [];
-    for (const group of groups) {
-      for (const option of group) {
-        if (seen.has(option[0])) continue;
-        seen.add(option[0]);
-        merged.push(option);
-      }
-    }
-    return merged;
-  };
 
   const popularBrands = brands.filter((brand) => brand.brandType !== "LUXURY");
   const luxuryBrands = brands.filter((brand) => brand.brandType === "LUXURY");
@@ -1060,7 +1033,7 @@ export default async function Home({
       };
     }
 
-    const slugMatch = slug.match(/^(occasion|recipient|availability)-(.+)$/);
+    const slugMatch = slug.match(/^(availability)-(.+)$/);
     if (!slugMatch) return null;
     return {
       group: slugMatch[1].replace("-", "_"),
@@ -1083,10 +1056,6 @@ export default async function Home({
     return acc;
   }, {});
 
-  const defaultOccasionOptions: FilterOption[] = DEFAULT_OCCASION_OPTIONS.map((option) => [option.value, option.label]);
-  const defaultRecipientOptions: FilterOption[] = DEFAULT_RECIPIENT_OPTIONS.map((option) => [option.value, option.label]);
-  const occasionOptions = mergeFilterOptions(defaultOccasionOptions, groupedTagOptions.occasion ?? []);
-  const recipientOptions = mergeFilterOptions(defaultRecipientOptions, groupedTagOptions.recipient ?? []);
   const tagAvailabilityOptions = groupedTagOptions.availability ?? [];
 
   const priceStats = await prisma.product.aggregate({
@@ -1407,7 +1376,7 @@ export default async function Home({
               <form method="GET" className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_230px] lg:items-start">
                 <div className="rounded-[30px] border border-primary/15 bg-linear-to-br from-background/90 via-card/75 to-primary/8 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_18px_55px_rgba(47,38,34,0.06)] lg:col-start-1">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
-                  <div className="md:col-span-4">
+                  <div className="md:col-span-6">
                     <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Search</label>
                     <input
                       name="q"
@@ -1417,23 +1386,7 @@ export default async function Home({
                     />
                   </div>
 
-                  <div className="md:col-span-2">
-                    <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Occasion</label>
-                    <select name="occasion" defaultValue={occasion} className={premiumFilterFieldClass}>
-                      <option value="">Any occasion</option>
-                      {occasionOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                    </select>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Recipient</label>
-                    <select name="recipient" defaultValue={recipient} className={premiumFilterFieldClass}>
-                      <option value="">For anyone</option>
-                      {recipientOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                    </select>
-                  </div>
-
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-3">
                     <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Budget</label>
                     <select name="budget" defaultValue={budget} className={premiumFilterFieldClass}>
                       <option value="">Any budget</option>
@@ -1441,7 +1394,7 @@ export default async function Home({
                     </select>
                   </div>
 
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-3">
                     <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Sort</label>
                     <select name="sort" defaultValue={sort} className={premiumFilterFieldClass}>
                       <option value="latest">Latest</option>
@@ -1514,12 +1467,6 @@ export default async function Home({
                     ) : null}
                     {category ? (
                       <FilterChip label={`Category`} href={buildHref({ category: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
-                    ) : null}
-                    {occasion ? (
-                      <FilterChip label={`Occasion: ${optionLabel(occasionOptions, occasion)}`} href={buildHref({ occasion: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
-                    ) : null}
-                    {recipient ? (
-                      <FilterChip label={`Recipient: ${optionLabel(recipientOptions, recipient)}`} href={buildHref({ recipient: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
                     ) : null}
                     {budget ? (
                       <FilterChip label={`Budget: ${optionLabel(budgetOptions, budget)}`} href={buildHref({ budget: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />

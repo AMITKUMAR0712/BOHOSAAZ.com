@@ -46,7 +46,12 @@ export default function ShopFiltersClient({ initialConfig }: { initialConfig: Sh
   const [config, setConfig] = React.useState(() => normalizeShopFilterConfig(initialConfig));
   const [saving, setSaving] = React.useState(false);
 
-  const enabledCount = config.fields.filter((field) => field.enabled).length;
+  const enabledCount = config.fields.filter(
+    (field) => field.enabled && field.key !== "occasion" && field.key !== "recipient"
+  ).length;
+  const editableFields = config.fields.filter(
+    (field) => field.key !== "occasion" && field.key !== "recipient"
+  );
 
   function updateField(key: ShopFilterFieldConfig["key"], patch: Partial<ShopFilterFieldConfig>) {
     setConfig((current) =>
@@ -111,7 +116,7 @@ export default function ShopFiltersClient({ initialConfig }: { initialConfig: Sh
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          {config.fields.map((field) => (
+          {editableFields.map((field) => (
             <div
               key={field.key}
               className="grid gap-4 rounded-[24px] border border-border bg-background/55 p-4 lg:grid-cols-[minmax(0,1fr)_180px]"
