@@ -141,7 +141,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
       ];
 
   return (
-    <main className="relative overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+    <main className="relative overflow-hidden px-4 pt-2 pb-8 sm:px-6 sm:pt-3 lg:px-8">
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top_left,rgba(146,64,14,0.22),transparent_34%),linear-gradient(180deg,rgba(255,247,237,0.82),transparent)]" />
 
       <div className="mx-auto max-w-7xl">
@@ -159,8 +159,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
                 We have received your order and are preparing it with care. You will get updates as soon as the seller starts packing and shipping.
               </p>
 
-              <div className="mt-7 grid gap-3 sm:grid-cols-3">
-                <InfoPill label="Order ID" value={`#${order.id.slice(-10).toUpperCase()}`} />
+              <div className="mt-7 grid gap-3 sm:grid-cols-2">
                 <InfoPill label="Placed on" value={placedAt} />
                 <InfoPill label="Estimated delivery" value={eta} />
               </div>

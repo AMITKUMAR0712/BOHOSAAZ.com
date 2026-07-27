@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyToken, type JwtPayload } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { rateLimit } from "@/lib/rateLimit";
 import { bumpLiveVersion } from "@/lib/live";
@@ -17,52 +17,18 @@ const ALLOWED = [
   "REFUNDED",
 ] as const;
 
-function canTransition(from: string, to: string) {
-  if (from === to) return true;
-
-  const chain = ["PLACED", "PACKED", "SHIPPED", "DELIVERED"] as const;
-  const fromIdx = chain.indexOf(from as (typeof chain)[number]);
-  const toIdx = chain.indexOf(to as (typeof chain)[number]);
-
-  // cancel only before shipped
-  if (to === "CANCELLED") return from !== "SHIPPED" && from !== "DELIVERED" && from !== "REFUNDED";
-
-  // once cancelled, no changes
-  if (from === "CANCELLED") return false;
-
-  // return / refund flow
-  if (to === "RETURN_REQUESTED") return from === "DELIVERED" || from === "SHIPPED";
-  if (to === "RETURN_APPROVED") return from === "RETURN_REQUESTED";
-  if (to === "REFUNDED") return from === "RETURN_APPROVED" || from === "RETURN_REQUESTED";
-  if (from === "RETURN_REQUESTED" || from === "RETURN_APPROVED" || from === "REFUNDED") {
-    return false;
-  }
-
-  // normal forward-only transitions
-  if (fromIdx === -1 || toIdx === -1) return false;
-  return toIdx === fromIdx + 1;
-}
-
 export async function PATCH(
   req: NextRequest,
   ctx: { params: Promise<{ itemId: string }> }
 ) {
   const ip = req.headers.get("x-forwarded-for") || "ip";
-  const rlKey = `vendor:order-item:patch:${ip}`;
-  const limited = await rateLimit(rlKey);
+  const limited = await rateLimit(`admin:order-item:patch:${ip}`);
   if (!limited.success) {
     return Response.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  const token = req.cookies.get("token")?.value;
-  if (!token) return Response.json({ error: "Unauthorized" }, { status: 401 });
-
-  let payload: JwtPayload;
-  try { payload = verifyToken(token); } catch {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (payload.role !== "VENDOR") return Response.json({ error: "Forbidden" }, { status: 403 });
+  const admin = await requireAdmin();
+  if (!admin) return Response.json({ error: "Forbidden" }, { status: 403 });
 
   const { itemId } = await ctx.params;
   const body = await req.json().catch(() => null);
@@ -81,19 +47,8 @@ export async function PATCH(
   });
   if (!item) return Response.json({ error: "Item not found" }, { status: 404 });
 
-  // exclude cart
   if (item.order.status === "PENDING") {
     return Response.json({ error: "Cart item cannot be updated" }, { status: 400 });
-  }
-
-  // vendor ownership check
-  const vendor = await prisma.vendor.findUnique({ where: { userId: payload.sub } });
-  if (!vendor) return Response.json({ error: "Vendor not found" }, { status: 404 });
-  if (vendor.status !== "APPROVED") return Response.json({ error: "Vendor not approved" }, { status: 403 });
-  if (item.product.vendorId !== vendor.id) return Response.json({ error: "Forbidden" }, { status: 403 });
-
-  if (!canTransition(item.status, status)) {
-    return Response.json({ error: `Invalid status transition: ${item.status} → ${status}` }, { status: 400 });
   }
 
   const now = new Date();
@@ -116,9 +71,9 @@ export async function PATCH(
   const updated = await prisma.orderItem.update({ where: { id: itemId }, data });
 
   await audit({
-    actorId: payload.sub,
-    actorRole: payload.role,
-    action: "VENDOR_ORDER_ITEM_UPDATE",
+    actorId: admin.id,
+    actorRole: "ADMIN",
+    action: "ADMIN_ORDER_ITEM_UPDATE",
     entity: "OrderItem",
     entityId: itemId,
     meta: {
@@ -128,12 +83,13 @@ export async function PATCH(
       trackingNumber,
       orderId: item.orderId,
       productId: item.productId,
+      vendorId: item.product.vendorId,
     },
     ip: req.headers.get("x-forwarded-for") || undefined,
   });
 
   await Promise.all([
-    bumpLiveVersion({ kind: "vendor", vendorId: vendor.id }),
+    bumpLiveVersion({ kind: "vendor", vendorId: item.product.vendorId }),
     bumpLiveVersion({ kind: "user", userId: item.order.userId }),
     bumpLiveVersion({ kind: "admin" }),
   ]);

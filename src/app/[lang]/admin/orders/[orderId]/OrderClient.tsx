@@ -15,6 +15,32 @@ type OrderStatus =
   | "RETURN_APPROVED"
   | "REFUNDED";
 
+type ItemStatus =
+  | "PLACED"
+  | "PACKED"
+  | "SHIPPED"
+  | "DELIVERED"
+  | "CANCELLED"
+  | "RETURN_REQUESTED"
+  | "RETURN_APPROVED"
+  | "REFUNDED";
+
+type OrderItemView = {
+  id: string;
+  quantity: number;
+  price: number;
+  status: string;
+  trackingCourier: string | null;
+  trackingNumber: string | null;
+  packedAt: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  product: { id: string; title: string; slug: string; vendor: { id: string; shopName: string } };
+  _nextStatus?: string;
+  _courier?: string;
+  _tracking?: string;
+};
+
 type OrderView = {
   id: string;
   status: OrderStatus;
@@ -32,18 +58,7 @@ type OrderView = {
 
   user: { id: string; email: string; name: string | null };
 
-  items: Array<{
-    id: string;
-    quantity: number;
-    price: number;
-    status: string;
-    trackingCourier: string | null;
-    trackingNumber: string | null;
-    packedAt: string | null;
-    shippedAt: string | null;
-    deliveredAt: string | null;
-    product: { id: string; title: string; slug: string; vendor: { id: string; shopName: string } };
-  }>;
+  items: OrderItemView[];
 
   VendorOrder: Array<{
     id: string;
@@ -55,12 +70,24 @@ type OrderView = {
   }>;
 };
 
+const ITEM_STATUSES: ItemStatus[] = [
+  "PLACED",
+  "PACKED",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED",
+  "RETURN_REQUESTED",
+  "RETURN_APPROVED",
+  "REFUNDED",
+];
+
 export default function OrderClient({ orderId }: { orderId: string }) {
   const [order, setOrder] = useState<OrderView | null>(null);
   const [status, setStatus] = useState<OrderStatus>("PENDING");
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingItem, setSavingItem] = useState<Record<string, boolean>>({});
   const [creatingAwb, setCreatingAwb] = useState<Record<string, boolean>>({});
 
   async function loadOrder() {
@@ -130,9 +157,35 @@ export default function OrderClient({ orderId }: { orderId: string }) {
       return;
     }
     setStatus(next);
-    setMsg("Updated");
+    setMsg("✅ Order status updated");
     setSaving(false);
     await loadOrder();
+  }
+
+  async function saveItem(it: OrderItemView) {
+    setMsg(null);
+    setSavingItem((prev) => ({ ...prev, [it.id]: true }));
+    try {
+      const res = await fetch(`/api/admin/order-items/${it.id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: it._nextStatus || it.status || "PLACED",
+          trackingCourier: it._courier ?? it.trackingCourier ?? null,
+          trackingNumber: it._tracking ?? it.trackingNumber ?? null,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Update failed");
+      setMsg("✅ Item updated");
+      await loadOrder();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error";
+      setMsg(`❌ ${message}`);
+    } finally {
+      setSavingItem((prev) => ({ ...prev, [it.id]: false }));
+    }
   }
 
   if (loading) {
@@ -201,41 +254,80 @@ export default function OrderClient({ orderId }: { orderId: string }) {
         </div>
 
         <div className="rounded-2xl border overflow-hidden">
-          <div className="bg-gray-50 p-3 text-sm font-semibold">Items</div>
+          <div className="bg-gray-50 p-3 text-sm font-semibold">Items — status, tracking & Delhivery (all vendors)</div>
           <div className="divide-y">
             {order.items.map((it) => (
               <div key={it.id} className="p-3 text-sm">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="font-semibold">{it.product?.title || "Unknown product"}</div>
+                <div className="font-semibold">{it.product?.title || "Unknown product"}</div>
+                <div className="mt-1 text-xs text-gray-600">
+                  Vendor: {it.product?.vendor?.shopName || "Unknown vendor"} • Qty: {it.quantity} • Price: ₹
+                  {Number(it.price ?? 0).toFixed(2)}
+                </div>
+
+                <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-3">
+                  <select
+                    className="rounded-lg border px-3 py-2 text-sm"
+                    defaultValue={it.status || "PLACED"}
+                    onChange={(e) => {
+                      it._nextStatus = e.target.value;
+                    }}
+                  >
+                    {ITEM_STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+
+                  <input
+                    className="rounded-lg border px-3 py-2 text-sm"
+                    placeholder="Courier (optional)"
+                    defaultValue={it.trackingCourier || ""}
+                    onChange={(e) => {
+                      it._courier = e.target.value;
+                    }}
+                  />
+
+                  <input
+                    className="rounded-lg border px-3 py-2 text-sm"
+                    placeholder="Tracking No. (optional)"
+                    defaultValue={it.trackingNumber || ""}
+                    onChange={(e) => {
+                      it._tracking = e.target.value;
+                    }}
+                  />
+                </div>
+
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <button
+                    className="rounded-lg bg-black px-3 py-1.5 text-xs text-white disabled:opacity-50"
+                    disabled={savingItem[it.id]}
+                    onClick={() => void saveItem(it)}
+                  >
+                    {savingItem[it.id] ? "Saving..." : "Save"}
+                  </button>
+
+                  {!it.trackingNumber && it.status !== "DELIVERED" && it.status !== "CANCELLED" ? (
+                    <button
+                      className="rounded bg-primary px-3 py-1.5 text-xs text-primary-foreground disabled:opacity-50"
+                      disabled={creatingAwb[it.id]}
+                      onClick={() => {
+                        if (confirm("Create Delhivery AWB for this item?")) {
+                          void createDelhiveryAwb(it.id);
+                        }
+                      }}
+                    >
+                      {creatingAwb[it.id] ? "Creating AWB..." : "Create Delhivery AWB"}
+                    </button>
+                  ) : null}
+
+                  {it.trackingCourier || it.trackingNumber ? (
                     <div className="text-xs text-gray-600">
-                      Vendor: {it.product?.vendor?.shopName || "Unknown vendor"} • Qty: {it.quantity} • Price: ₹
-                      {Number(it.price ?? 0).toFixed(2)}
+                      Tracking: {it.trackingCourier || "-"} • {it.trackingNumber || "-"}
                     </div>
-                    <div className="text-xs text-gray-600">Item status: {it.status}</div>
-                  </div>
-                  <div className="text-xs text-gray-700 flex flex-col items-end gap-2">
-                    {it.trackingCourier || it.trackingNumber ? (
-                      <div>
-                        {it.trackingCourier || "Courier"}: {it.trackingNumber || "-"}
-                      </div>
-                    ) : (
-                      <div className="text-gray-500">No tracking</div>
-                    )}
-                    {!it.trackingNumber && it.status !== "DELIVERED" && it.status !== "CANCELLED" && (
-                      <button
-                        className="rounded bg-primary px-3 py-1 text-xs text-primary-foreground disabled:opacity-50"
-                        disabled={creatingAwb[it.id]}
-                        onClick={() => {
-                          if (confirm("Create Delhivery AWB for this item?")) {
-                            void createDelhiveryAwb(it.id);
-                          }
-                        }}
-                      >
-                        {creatingAwb[it.id] ? "Creating AWB..." : "Create Delhivery AWB"}
-                      </button>
-                    )}
-                  </div>
+                  ) : (
+                    <div className="text-xs text-gray-500">No tracking</div>
+                  )}
                 </div>
               </div>
             ))}

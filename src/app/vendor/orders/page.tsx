@@ -224,6 +224,9 @@ export default function VendorOrdersPage() {
                               <option value="SHIPPED">SHIPPED</option>
                               <option value="DELIVERED">DELIVERED</option>
                               <option value="CANCELLED">CANCELLED</option>
+                              <option value="RETURN_REQUESTED">RETURN_REQUESTED</option>
+                              <option value="RETURN_APPROVED">RETURN_APPROVED</option>
+                              <option value="REFUNDED">REFUNDED</option>
                             </Select>
 
                             <Input
@@ -282,10 +285,12 @@ export default function VendorOrdersPage() {
                               </Button>
                             )}
 
-                            {(it.trackingCourier || it.trackingNumber) && (
+                            {it.trackingCourier || it.trackingNumber ? (
                               <div className="text-xs text-muted-foreground">
                                 Tracking: {it.trackingCourier || "-"} • {it.trackingNumber || "-"}
                               </div>
+                            ) : (
+                              <div className="text-xs text-muted-foreground">No tracking</div>
                             )}
                           </div>
                         </div>

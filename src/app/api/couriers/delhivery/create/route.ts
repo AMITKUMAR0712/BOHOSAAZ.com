@@ -19,7 +19,9 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (payload.role !== "VENDOR") return Response.json({ error: "Forbidden" }, { status: 403 });
+  if (payload.role !== "VENDOR" && payload.role !== "ADMIN") {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const body = await req.json().catch(() => null);
   const parsed = BodySchema.safeParse(body);
@@ -36,15 +38,17 @@ export async function POST(req: NextRequest) {
 
   if (!item) return Response.json({ error: "Order item not found" }, { status: 404 });
 
-  const vendor = await prisma.vendor.findUnique({ where: { userId: payload.sub } });
-  if (!vendor) return Response.json({ error: "Vendor not found" }, { status: 404 });
-  if (vendor.status !== "APPROVED") return Response.json({ error: "Vendor not approved" }, { status: 403 });
+  if (payload.role === "VENDOR") {
+    const vendor = await prisma.vendor.findUnique({ where: { userId: payload.sub } });
+    if (!vendor) return Response.json({ error: "Vendor not found" }, { status: 404 });
+    if (vendor.status !== "APPROVED") return Response.json({ error: "Vendor not approved" }, { status: 403 });
 
-  if (item.vendorOrderId && item.vendorOrder?.vendorId !== vendor.id) {
-    return Response.json({ error: "Forbidden" }, { status: 403 });
-  }
-  if (!item.vendorOrderId && item.product.vendorId !== vendor.id) {
-    return Response.json({ error: "Forbidden" }, { status: 403 });
+    if (item.vendorOrderId && item.vendorOrder?.vendorId !== vendor.id) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+    if (!item.vendorOrderId && item.product.vendorId !== vendor.id) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
   }
 
   try {
