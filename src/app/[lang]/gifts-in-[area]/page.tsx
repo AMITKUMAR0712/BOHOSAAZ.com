@@ -2,12 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/lib/i18n";
 import { buildMetadata } from "@/lib/seo/metadata";
-import { getLocalGiftArea, LOCAL_GIFT_AREAS } from "@/lib/seo/local-areas";
+import { getLocalGiftArea } from "@/lib/seo/local-areas";
 import { LocalGiftAreaPage } from "@/components/seo/LocalGiftAreaPage";
 
-export function generateStaticParams() {
-  return LOCAL_GIFT_AREAS.map((area) => ({ area: area.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,

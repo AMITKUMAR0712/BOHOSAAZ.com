@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { SITE } from "@/lib/seo/config";
 import { LOCAL_GIFT_AREAS } from "@/lib/seo/local-areas";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = SITE.url;
   const now = new Date();

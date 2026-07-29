@@ -10,6 +10,10 @@ import { CurrencyProvider } from "@/lib/currency-context";
 import { requireUser } from "@/lib/auth";
 import { SITE } from "@/lib/seo/config";
 
+// requireUser() → cookies() in this layout. Must be dynamic or Next throws DYNAMIC_SERVER_USAGE.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
