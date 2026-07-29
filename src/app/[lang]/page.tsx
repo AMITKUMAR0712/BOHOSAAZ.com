@@ -11,8 +11,6 @@ import IconByName from "@/components/IconByName";
 import { formatPriceInCurrency } from "@/lib/currency-utils";
 import { AutoScrollRow } from "@/components/AutoScrollRow";
 import { buildMetadata } from "@/lib/seo/metadata";
-import { LOCAL_GIFT_AREAS, localGiftPath } from "@/lib/seo/local-areas";
-import { SEO_PILLAR_POSTS } from "@/lib/seo/pillar-posts";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -1582,42 +1580,6 @@ export default async function Home({
                 brands={luxuryBrands}
                 duration="34s"
               />
-            </div>
-          </section>
-
-          {/* Local SEO / GEO service areas */}
-          <section className="mx-auto max-w-6xl px-4 pb-14">
-            <SectionHeader
-              eyebrow="Delhi NCR"
-              title="Gifts near you"
-              eyebrowClassName={theme.sectionEyebrow}
-              titleClassName={theme.sectionTitle}
-              actionClassName={theme.sectionAction}
-            />
-            <p className="mt-2 max-w-2xl text-xs leading-relaxed text-muted-foreground md:text-sm">
-              Curated online gifting for Noida, Greater Noida, New Delhi, Gurugram and Ghaziabad — plus practical gift guides.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              {LOCAL_GIFT_AREAS.map((area) => (
-                <Link
-                  key={area.slug}
-                  href={localGiftPath(area.slug, lang)}
-                  className="inline-flex h-10 items-center rounded-2xl border border-border bg-background/70 px-4 text-sm font-medium transition hover:bg-muted/40"
-                >
-                  Gifts in {area.name}
-                </Link>
-              ))}
-            </div>
-            <div className="mt-4 flex flex-wrap gap-3">
-              {SEO_PILLAR_POSTS.slice(0, 4).map((post) => (
-                <Link
-                  key={post.slug}
-                  href={`/${lang}/blog/${post.slug}`}
-                  className="inline-flex h-10 items-center rounded-2xl border border-primary/15 bg-primary/5 px-4 text-sm font-medium text-foreground transition hover:bg-primary/10"
-                >
-                  {post.title}
-                </Link>
-              ))}
             </div>
           </section>
 

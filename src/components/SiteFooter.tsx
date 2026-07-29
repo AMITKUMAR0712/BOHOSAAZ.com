@@ -198,15 +198,6 @@ export default function SiteFooter() {
                 <FooterLink currentPathname={pathname} href={`${lp}/blog`} label="Blog" />
               </FooterCol>
 
-              <FooterCol title="Service areas">
-                <FooterLink currentPathname={pathname} href={`${lp}/gifts-in-noida`} label="Gifts in Noida" />
-                <FooterLink currentPathname={pathname} href={`${lp}/gifts-in-greater-noida`} label="Greater Noida" />
-                <FooterLink currentPathname={pathname} href={`${lp}/gifts-in-new-delhi`} label="New Delhi" />
-                <FooterLink currentPathname={pathname} href={`${lp}/gifts-in-delhi-ncr`} label="Delhi NCR" />
-                <FooterLink currentPathname={pathname} href={`${lp}/gifts-in-gurugram`} label="Gurugram" />
-                <FooterLink currentPathname={pathname} href={`${lp}/gifts-in-ghaziabad`} label="Ghaziabad" />
-              </FooterCol>
-
               {/* Account */}
               <FooterCol title="Account">
                 <FooterLink currentPathname={pathname} href={`${lp}/account`} label="My Account" />

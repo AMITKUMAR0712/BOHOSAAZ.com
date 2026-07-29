@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { SITE } from "@/lib/seo/config";
-import { LOCAL_GIFT_AREAS } from "@/lib/seo/local-areas";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -26,7 +25,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/en/return",
     "/en/brands/popular",
     "/en/brands/luxury",
-    ...LOCAL_GIFT_AREAS.map((area) => `/en/gifts-in-${area.slug}`),
   ];
 
   const staticRoutes: MetadataRoute.Sitemap = staticPaths.map((path) => ({
@@ -34,11 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: now,
     changeFrequency: path === "" || path === "/en" ? "daily" : "weekly",
     priority:
-      path === "" || path === "/en"
-        ? 1
-        : path.includes("/shop") || path.includes("/gifts-in-")
-          ? 0.9
-          : 0.7,
+      path === "" || path === "/en" ? 1 : path.includes("/shop") ? 0.9 : 0.7,
   }));
 
   try {
