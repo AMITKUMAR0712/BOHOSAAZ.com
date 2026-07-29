@@ -14,7 +14,8 @@ import { buildMetadata } from "@/lib/seo/metadata";
 import { LOCAL_GIFT_AREAS, localGiftPath } from "@/lib/seo/local-areas";
 import { SEO_PILLAR_POSTS } from "@/lib/seo/pillar-posts";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function generateMetadata({
   params,
