@@ -3,8 +3,52 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { isLocale } from "@/lib/i18n";
 import { buildMetadata } from "@/lib/seo/metadata";
-import { fitDescription } from "@/lib/seo/assert";
+import { fitDescription, absoluteUrl } from "@/lib/seo/assert";
 import { SITE } from "@/lib/seo/config";
+import { blogPostingJsonLd, breadcrumbJsonLd, faqPageJsonLd } from "@/lib/seo/jsonld";
+import { extractFaqsFromMarkdown } from "@/lib/seo/extract-faqs";
+import { JsonLd } from "@/components/seo/JsonLd";
+
+function renderBlogBody(body: string) {
+  const blocks = body.split(/\n{2,}/);
+  return blocks.map((block, index) => {
+    const trimmed = block.trim();
+    if (!trimmed) return null;
+
+    if (trimmed.startsWith("## ")) {
+      return (
+        <h2 key={index} className="mt-8 font-heading text-2xl tracking-tight text-foreground md:text-3xl">
+          {trimmed.replace(/^##\s+/, "")}
+        </h2>
+      );
+    }
+
+    if (trimmed.startsWith("### ")) {
+      return (
+        <h3 key={index} className="mt-6 font-heading text-xl tracking-tight text-foreground">
+          {trimmed.replace(/^###\s+/, "")}
+        </h3>
+      );
+    }
+
+    if (/^\d+\.\s/.test(trimmed) || trimmed.startsWith("- ")) {
+      const items = trimmed.split(/\n/).map((line) => line.replace(/^\d+\.\s+|^-\s+/, "").trim()).filter(Boolean);
+      return (
+        <ul key={index} className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-muted-foreground md:text-base">
+          {items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      );
+    }
+
+    return (
+      <p key={index} className="mt-4 text-sm leading-7 text-muted-foreground md:text-base">
+        {trimmed}
+      </p>
+    );
+  });
+}
 
 export async function generateMetadata({
   params,
@@ -66,14 +110,38 @@ export default async function BlogPostPage({
       isPublished: true,
       publishedAt: true,
       createdAt: true,
+      updatedAt: true,
     },
   });
 
   if (!post || !post.isPublished) notFound();
   if (post.publishedAt && post.publishedAt > new Date()) notFound();
 
+  const description = fitDescription(post.excerpt || SITE.description);
+  const faqs = extractFaqsFromMarkdown(post.body);
+  const pagePath = `/${lang}/blog/${slug}`;
+
   return (
     <div className="relative mx-auto max-w-4xl px-4 py-8 md:py-12">
+      <JsonLd
+        data={[
+          blogPostingJsonLd({
+            title: post.title,
+            description,
+            slug,
+            body: post.body,
+            coverImageUrl: post.coverImageUrl,
+            publishedAt: post.publishedAt,
+            updatedAt: post.updatedAt,
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", path: `/${lang}` },
+            { name: "Blog", path: `/${lang}/blog` },
+            { name: post.title, path: pagePath },
+          ]),
+          ...(faqs.length ? [faqPageJsonLd(faqs, absoluteUrl(pagePath))] : []),
+        ]}
+      />
       <div className="pointer-events-none absolute -left-24 top-20 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 top-72 h-80 w-80 rounded-full bg-amber-500/10 blur-3xl" />
       <div className="relative overflow-hidden rounded-[44px] border border-border/80 bg-card/75 p-6 shadow-premium backdrop-blur-xl md:p-10">
@@ -93,13 +161,9 @@ export default async function BlogPostPage({
         ) : null}
       </div>
 
-      <div className="relative mt-8 rounded-[36px] border border-border/80 bg-card/85 p-6 shadow-[0_18px_60px_rgba(47,38,34,0.06)] backdrop-blur-xl md:p-8">
-        <div className="prose prose-sm max-w-none dark:prose-invert">
-          <div className="whitespace-pre-wrap text-sm leading-7 text-foreground md:text-base">
-            {post.body}
-          </div>
-        </div>
-      </div>
+      <article className="relative mt-8 rounded-[36px] border border-border/80 bg-card/85 p-6 shadow-[0_18px_60px_rgba(47,38,34,0.06)] backdrop-blur-xl md:p-8">
+        {renderBlogBody(post.body)}
+      </article>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { audit } from "@/lib/audit";
 import { rateLimit } from "@/lib/rateLimit";
 import { bumpLiveVersion } from "@/lib/live";
 import { createDelhiveryShipmentForOrderItem } from "@/lib/delhivery";
+import { rollupOrderStatusFromAllItems, syncVendorOrderFromItems } from "@/lib/orderStatusSync";
 
 const ALLOWED = [
   "PLACED",
@@ -68,7 +69,12 @@ export async function PATCH(
   }
   if (status === "DELIVERED") data.deliveredAt = item.deliveredAt ?? now;
 
-  const updated = await prisma.orderItem.update({ where: { id: itemId }, data });
+  const updated = await prisma.$transaction(async (tx) => {
+    const row = await tx.orderItem.update({ where: { id: itemId }, data });
+    await syncVendorOrderFromItems(tx, item.orderId, item.product.vendorId);
+    await rollupOrderStatusFromAllItems(tx, item.orderId);
+    return row;
+  });
 
   await audit({
     actorId: admin.id,

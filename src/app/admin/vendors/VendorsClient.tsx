@@ -169,6 +169,11 @@ export default function VendorsClient({
                               View Details
                             </Button>
                           </Link>
+                          <Link href={`/${lang}/admin/vendors/${v.id}?edit=1`}>
+                            <Button variant="outline" size="sm">
+                              Edit
+                            </Button>
+                          </Link>
                           <Button
                             variant="primary"
                             size="sm"

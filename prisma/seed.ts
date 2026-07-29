@@ -1143,7 +1143,7 @@ async function main() {
     skipDuplicates: true,
   });
 
-  // ✅ Sample blog posts
+  // ✅ Sample + SEO pillar blog posts
   const now = new Date();
   await prisma.blogPost.createMany({
     data: [
@@ -1173,6 +1173,50 @@ async function main() {
         coverImageUrl: null,
         isPublished: false,
         publishedAt: null,
+      },
+      {
+        slug: "corporate-gift-ideas-delhi-ncr",
+        title: "Corporate Gift Ideas for Delhi NCR Offices",
+        excerpt:
+          "Practical corporate gift ideas for New Delhi, Noida, Gurugram and Ghaziabad teams — from festival hampers to polished desk-worthy presents.",
+        body: "Corporate gifting in Delhi NCR works best when the present feels thoughtful, useful and easy to receive at an office desk.\n\n## What makes a strong corporate gift?\n\nChoose gifts that look premium without being overly personal.\n\n## FAQ\n\n### Does Bohosaaz deliver corporate gifts in Noida and New Delhi?\nYes. Bohosaaz serves Noida, Greater Noida, New Delhi, Ghaziabad and Gurugram.",
+        coverImageUrl: null,
+        tags: ["corporate", "delhi-ncr", "gift-guide"],
+        isPublished: true,
+        publishedAt: now,
+      },
+      {
+        slug: "birthday-gifts-under-2000-noida",
+        title: "Birthday Gifts Under ₹2000 in Noida",
+        excerpt:
+          "Find birthday gift ideas under ₹2000 for Noida and Greater Noida — curated, meaningful presents without overspending.",
+        body: "A great birthday gift in Noida does not need a huge budget.\n\n## FAQ\n\n### Can I find birthday gifts under ₹2000 on Bohosaaz?\nYes. Use Shop budget filters and browse birthday-friendly categories.",
+        coverImageUrl: null,
+        tags: ["birthday", "noida", "budget"],
+        isPublished: true,
+        publishedAt: now,
+      },
+      {
+        slug: "festival-hamper-guide-delhi-ncr",
+        title: "Festival Hamper Guide for Delhi NCR",
+        excerpt:
+          "A practical festival hamper guide for Diwali and celebrations across Delhi NCR.",
+        body: "Festival hampers are one of the easiest ways to gift families and corporate contacts across Delhi NCR.\n\n## FAQ\n\n### Are festival hampers good for corporate gifting?\nYes. They scale well for teams and clients.",
+        coverImageUrl: null,
+        tags: ["festival", "hamper", "delhi-ncr"],
+        isPublished: true,
+        publishedAt: now,
+      },
+      {
+        slug: "how-to-choose-anniversary-gifts",
+        title: "How to Choose Anniversary Gifts Online",
+        excerpt:
+          "A simple framework to choose anniversary gifts online in Noida and Delhi NCR.",
+        body: "Anniversary gifts work best when they feel personal without being stressful to choose.\n\n## FAQ\n\n### Does Bohosaaz help with anniversary gifting in Delhi NCR?\nYes. Bohosaaz is built for curated online gifting across Noida and Delhi NCR.",
+        coverImageUrl: null,
+        tags: ["anniversary", "gift-guide"],
+        isPublished: true,
+        publishedAt: now,
       },
     ],
     skipDuplicates: true,

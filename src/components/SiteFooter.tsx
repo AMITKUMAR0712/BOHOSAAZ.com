@@ -186,7 +186,7 @@ export default function SiteFooter() {
 
           {/* Right */}
           <div className="lg:col-span-8">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               {/* Pages */}
               <FooterCol title="Pages">
                 <FooterLink currentPathname={pathname} href={lp} label="Home" />
@@ -196,6 +196,15 @@ export default function SiteFooter() {
                 <FooterLink currentPathname={pathname} href={`${lp}/brands/luxury`} label="Luxury Brands" />
                 <FooterLink currentPathname={pathname} href={`${lp}/about`} label="About Bohosaaz" />
                 <FooterLink currentPathname={pathname} href={`${lp}/blog`} label="Blog" />
+              </FooterCol>
+
+              <FooterCol title="Service areas">
+                <FooterLink currentPathname={pathname} href={`${lp}/gifts-in-noida`} label="Gifts in Noida" />
+                <FooterLink currentPathname={pathname} href={`${lp}/gifts-in-greater-noida`} label="Greater Noida" />
+                <FooterLink currentPathname={pathname} href={`${lp}/gifts-in-new-delhi`} label="New Delhi" />
+                <FooterLink currentPathname={pathname} href={`${lp}/gifts-in-delhi-ncr`} label="Delhi NCR" />
+                <FooterLink currentPathname={pathname} href={`${lp}/gifts-in-gurugram`} label="Gurugram" />
+                <FooterLink currentPathname={pathname} href={`${lp}/gifts-in-ghaziabad`} label="Ghaziabad" />
               </FooterCol>
 
               {/* Account */}

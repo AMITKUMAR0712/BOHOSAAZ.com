@@ -2,7 +2,6 @@ import Link from "next/link";
 import PurchasePanel from "./ui";
 import { Card } from "@/components/ui/card";
 import ProductGalleryClient from "./ProductGalleryClient";
-import { RatingRow } from "@/components/ui/rating-row";
 import { Accordion, AccordionItem } from "@/components/ui/accordion";
 import { headers } from "next/headers";
 import { formatPriceInCurrency } from "@/lib/currency-utils";
@@ -91,7 +90,9 @@ export default async function ProductDetailPage({
             <h1 className="mt-2 font-heading text-3xl md:text-4xl tracking-tight text-foreground">{p.title}</h1>
 
             <div className="mt-3">
-              <RatingRow rating={4.8} count={129} />
+              <span className="inline-flex items-center rounded-full border border-border/80 bg-background/70 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                Curated for gifting
+              </span>
             </div>
 
             <div className="mt-6">

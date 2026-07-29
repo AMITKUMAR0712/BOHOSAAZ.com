@@ -853,9 +853,9 @@ model BlogPost {
   id            String   @id @default(cuid())
   slug          String   @unique
   title         String
-  excerpt       String
-  body          String
-  coverImageUrl String?
+  excerpt       String   @db.Text
+  body          String   @db.Text
+  coverImageUrl String?  @db.VarChar(2048)
   tags          Json?
   isPublished   Boolean  @default(false)
   publishedAt   DateTime?

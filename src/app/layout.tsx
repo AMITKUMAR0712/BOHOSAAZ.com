@@ -98,13 +98,17 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: SITE.name,
   url: SITE.url,
-  logo: `${SITE.url}${SITE.defaultOgImage}`,
+  logo: `${SITE.url}/icon.png`,
+  email: SITE.contact.email,
+  telephone: SITE.contact.whatsapp,
   sameAs: Object.values(SITE.social),
   contactPoint: {
     "@type": "ContactPoint",
     contactType: "customer service",
     email: SITE.contact.email,
+    telephone: SITE.contact.whatsapp,
     availableLanguage: ["English", "Hindi"],
+    areaServed: [...SITE.areasServed],
   },
 };
 
@@ -115,6 +119,8 @@ const localBusinessJsonLd = {
   url: SITE.url,
   image: `${SITE.url}${SITE.defaultOgImage}`,
   description: SITE.description,
+  email: SITE.contact.email,
+  telephone: SITE.contact.whatsapp,
   areaServed: [...SITE.areasServed],
   priceRange: "₹₹",
   address: {

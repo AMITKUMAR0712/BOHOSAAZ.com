@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Modal } from "@/components/ui/modal";
 import ExportDropdown from "@/components/ExportDropdown";
+import { VendorOrderStatusSelect } from "@/components/vendor/VendorOrderStatusSelect";
 
 type VendorOrderItem = {
   id: string;
@@ -122,7 +123,7 @@ export default function VendorOrdersPage() {
           <div>
             <CardTitle>Vendor Orders</CardTitle>
             <CardDescription>
-              Only orders containing your products. Update item status & tracking.
+              Status applies only to your products. Changes show to admin and the customer.
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -167,11 +168,31 @@ export default function VendorOrdersPage() {
                       <div>
                         <div className="text-sm font-semibold">Order: {o.orderId}</div>
                         <div className="text-xs text-muted-foreground">
-                          Order Status: <span className="font-semibold text-foreground">{o.status}</span> • Total
-                          (your items): ₹{o.total}
+                          Total (your items): ₹{o.total}
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <VendorOrderStatusSelect
+                          orderId={o.orderId}
+                          value={o.status}
+                          onSaved={(next, items) => {
+                            setOrders((prev) =>
+                              prev.map((row) => {
+                                if (row.orderId !== o.orderId) return row;
+                                const byId = new Map((items || []).map((i) => [i.id, i.status]));
+                                return {
+                                  ...row,
+                                  status: next,
+                                  items: row.items.map((item) => ({
+                                    ...item,
+                                    status: byId.get(item.id) || next,
+                                  })),
+                                };
+                              })
+                            );
+                          }}
+                          onMessage={setMsg}
+                        />
                         <div className="text-xs text-muted-foreground">{new Date(o.createdAt).toLocaleString()}</div>
                         <Link
                           className="rounded-(--radius) border border-border px-3 py-1 text-xs hover:bg-muted/40"

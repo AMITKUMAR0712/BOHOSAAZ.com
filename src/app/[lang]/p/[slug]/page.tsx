@@ -4,13 +4,14 @@ import { isLocale } from "@/lib/i18n";
 import ProductGalleryClient from "@/app/p/[slug]/ProductGalleryClient";
 import PurchasePanel from "@/app/p/[slug]/ui";
 import { Card } from "@/components/ui/card";
-import { RatingRow } from "@/components/ui/rating-row";
 import { Accordion, AccordionItem } from "@/components/ui/accordion";
 import { headers } from "next/headers";
 import { formatPriceInCurrency } from "@/lib/currency-utils";
 import { prisma } from "@/lib/prisma";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { fitDescription, fitTitleSegment } from "@/lib/seo/assert";
+import { breadcrumbJsonLd, productJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 function pickStockImage(key: string) {
   const s = key || "x";
@@ -255,6 +256,37 @@ export default async function ProductDetailPage({
 
   return (
     <div className="relative overflow-x-hidden mobile-bottom-safe">
+      <JsonLd
+        data={[
+          productJsonLd({
+            name: p.title,
+            description: fitDescription(
+              p.metaDescription ||
+                p.shortDescription ||
+                p.description ||
+                `Buy ${p.title} online at Bohosaaz.`
+            ),
+            slug: p.slug,
+            sku: p.sku,
+            brandName: p.brand?.name,
+            categoryName: p.category?.name,
+            imageUrls: images.map((img) => img.url),
+            currency: p.currency,
+            price: Number(p.price ?? 0),
+            salePrice: p.salePrice,
+            mrp: p.mrp,
+            stock: p.stock,
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", path: `/${lang}` },
+            { name: "Shop", path: `/${lang}/shop` },
+            ...(p.category?.name
+              ? [{ name: p.category.name, path: `/${lang}/categories` }]
+              : []),
+            { name: p.title, path: `/${lang}/p/${p.slug}` },
+          ]),
+        ]}
+      />
       {/* ✅ Premium Background */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 h-88 w-2xl sm:h-104 sm:w-3xl rounded-full bg-muted/30 blur-3xl" />
@@ -381,8 +413,12 @@ export default async function ProductDetailPage({
               </h1>
 
               <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
-                <RatingRow rating={4.8} count={129} />
-                <span className="text-xs text-muted-foreground">• Verified Reviews</span>
+                <span className="inline-flex items-center rounded-full border border-border/80 bg-background/70 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                  Curated for gifting
+                </span>
+                {p.category?.name ? (
+                  <span className="text-xs text-muted-foreground">• {p.category.name}</span>
+                ) : null}
               </div>
 
               <div className="my-4 h-px w-full bg-border sm:my-6" />

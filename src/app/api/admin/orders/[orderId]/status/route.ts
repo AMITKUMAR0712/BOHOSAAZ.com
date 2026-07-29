@@ -58,6 +58,12 @@ export async function POST(
   await bumpDashboardScopes([
     { kind: "admin" },
     { kind: "user", userId: updated.userId },
+    ...(
+      await prisma.vendorOrder.findMany({
+        where: { orderId },
+        select: { vendorId: true },
+      })
+    ).map((vo) => ({ kind: "vendor" as const, vendorId: vo.vendorId })),
   ]);
 
   return jsonOk({ order: updated });

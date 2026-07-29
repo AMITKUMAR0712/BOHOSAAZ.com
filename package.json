@@ -11,6 +11,7 @@
     "seed": "prisma db seed",
     "import:ramhari": "tsx scripts/import-ramhari-products.ts",
     "seo:slugs": "tsx scripts/seo-slugs.ts",
+    "seo:blog": "tsx scripts/upsert-seo-blog-posts.ts",
     "set-password": "tsx scripts/set-user-password.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate:deploy": "prisma migrate deploy",

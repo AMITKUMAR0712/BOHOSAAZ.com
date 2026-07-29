@@ -25,6 +25,14 @@ export type BuildMetadataInput = {
   ogType?: "product" | "blog" | "page";
 };
 
+/** Map /hi/... → /en/... so untranslated Hindi shells do not create duplicate indexable URLs. */
+export function toCanonicalEnPath(path: string): string {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  if (normalized === "/hi") return "/en";
+  if (normalized.startsWith("/hi/")) return `/en/${normalized.slice(4)}`;
+  return normalized;
+}
+
 /**
  * Central metadata builder. Every storefront page should use this helper.
  */
@@ -34,14 +42,16 @@ export function buildMetadata(input: BuildMetadataInput): Metadata {
   assertSeoLimits(title, description);
 
   const path = input.path.startsWith("/") ? input.path : `/${input.path}`;
-  const canonicalPath = path === "" ? "/" : path;
+  const isHiShell = path === "/hi" || path.startsWith("/hi/");
+  const canonicalPath = toCanonicalEnPath(path === "" ? "/" : path);
   const pageUrl = absoluteUrl(canonicalPath);
 
   const image =
     input.image ||
     (input.dynamicOg ? ogImageUrl(title, input.ogType) : SITE.defaultOgImage);
 
-  const index = !input.noindex;
+  // /hi is a locale prefix shell without unique translated content — keep it out of the index.
+  const index = !input.noindex && !isHiShell;
   const follow = !input.nofollow;
 
   const ogType =

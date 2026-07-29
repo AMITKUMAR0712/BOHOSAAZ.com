@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken, type JwtPayload } from "@/lib/auth";
+import { deriveStatusFromItems } from "@/lib/orderStatusSync";
 
 function maskName(name: string | null | undefined) {
   const n = String(name || "").trim();
@@ -91,7 +92,8 @@ export async function GET(req: NextRequest) {
     if (!grouped[oid]) {
       grouped[oid] = {
         orderId: oid,
-        status: it.order.status,
+        // Placeholder — overwritten with THIS vendor's item statuses below
+        status: "PLACED",
         total: 0,
         createdAt: it.order.createdAt,
         // IMPORTANT: no customer email/phone/address exposure.
@@ -121,6 +123,10 @@ export async function GET(req: NextRequest) {
         img: it.product.images?.find((x) => x.isPrimary)?.url || it.product.images?.[0]?.url || null,
       },
     });
+  }
+
+  for (const order of Object.values(grouped)) {
+    order.status = deriveStatusFromItems(order.items.map((i) => i.status));
   }
 
   const orders = Object.values(grouped).sort(

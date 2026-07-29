@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { VendorOrderStatusSelect } from "@/components/vendor/VendorOrderStatusSelect";
 
 type OrderStatus =
   | "PENDING"
@@ -81,6 +82,26 @@ const ITEM_STATUSES: ItemStatus[] = [
   "REFUNDED",
 ];
 
+function vendorStatusFromItems(items: OrderItemView[], vendorId: string) {
+  const statuses = items
+    .filter((it) => it.product?.vendor?.id === vendorId)
+    .map((it) => it.status);
+  if (!statuses.length) return "PLACED";
+  const unique = [...new Set(statuses.map((s) => s.toUpperCase()))];
+  if (unique.length === 1) return unique[0];
+  const rank: Record<string, number> = {
+    PLACED: 1,
+    PACKED: 2,
+    SHIPPED: 3,
+    DELIVERED: 4,
+    CANCELLED: 5,
+    RETURN_REQUESTED: 6,
+    RETURN_APPROVED: 7,
+    REFUNDED: 8,
+  };
+  return unique.sort((a, b) => (rank[b] ?? 0) - (rank[a] ?? 0))[0];
+}
+
 export default function OrderClient({ orderId }: { orderId: string }) {
   const [order, setOrder] = useState<OrderView | null>(null);
   const [status, setStatus] = useState<OrderStatus>("PENDING");
@@ -157,7 +178,7 @@ export default function OrderClient({ orderId }: { orderId: string }) {
       return;
     }
     setStatus(next);
-    setMsg("✅ Order status updated");
+    setMsg("✅ Order header status updated (payment/overall). Per-vendor status is below.");
     setSaving(false);
     await loadOrder();
   }
@@ -212,6 +233,7 @@ export default function OrderClient({ orderId }: { orderId: string }) {
             value={status}
             disabled={saving}
             onChange={(e) => saveStatus(e.target.value as OrderStatus)}
+            title="Overall order header status"
           >
             <option value="PENDING">PENDING</option>
             <option value="COD_PENDING">COD_PENDING</option>
@@ -254,14 +276,59 @@ export default function OrderClient({ orderId }: { orderId: string }) {
         </div>
 
         <div className="rounded-2xl border overflow-hidden">
-          <div className="bg-gray-50 p-3 text-sm font-semibold">Items — status, tracking & Delhivery (all vendors)</div>
+          <div className="bg-gray-50 p-3 text-sm font-semibold">
+            Per-vendor status (changes only that vendor + customer items)
+          </div>
+          <div className="divide-y">
+            {order.VendorOrder.length ? (
+              order.VendorOrder.map((vo) => {
+                const vendorId = vo.vendor?.id;
+                const current = vendorId
+                  ? vendorStatusFromItems(order.items, vendorId)
+                  : vo.status;
+                return (
+                  <div
+                    key={vo.id}
+                    className="flex flex-wrap items-center justify-between gap-3 p-3 text-sm"
+                  >
+                    <div>
+                      <div className="font-semibold">{vo.vendor?.shopName || "Unknown vendor"}</div>
+                      <div className="text-xs text-gray-700">
+                        Subtotal: ₹{Number(vo.subtotal ?? 0).toFixed(2)} • Payout: ₹
+                        {Number(vo.payout ?? 0).toFixed(2)}
+                      </div>
+                    </div>
+                    {vendorId ? (
+                      <VendorOrderStatusSelect
+                        orderId={order.id}
+                        adminVendorId={vendorId}
+                        value={current}
+                        onMessage={setMsg}
+                        onSaved={() => void loadOrder()}
+                      />
+                    ) : (
+                      <div className="text-xs text-gray-600">Status: {vo.status}</div>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <div className="p-3 text-sm text-gray-600">No vendor sub-orders</div>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border overflow-hidden">
+          <div className="bg-gray-50 p-3 text-sm font-semibold">
+            Items — status, tracking & Delhivery (all vendors)
+          </div>
           <div className="divide-y">
             {order.items.map((it) => (
               <div key={it.id} className="p-3 text-sm">
                 <div className="font-semibold">{it.product?.title || "Unknown product"}</div>
                 <div className="mt-1 text-xs text-gray-600">
-                  Vendor: {it.product?.vendor?.shopName || "Unknown vendor"} • Qty: {it.quantity} • Price: ₹
-                  {Number(it.price ?? 0).toFixed(2)}
+                  Vendor: {it.product?.vendor?.shopName || "Unknown vendor"} • Qty: {it.quantity} •
+                  Price: ₹{Number(it.price ?? 0).toFixed(2)}
                 </div>
 
                 <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-3">
@@ -331,26 +398,6 @@ export default function OrderClient({ orderId }: { orderId: string }) {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border overflow-hidden">
-          <div className="bg-gray-50 p-3 text-sm font-semibold">Vendor Orders</div>
-          <div className="divide-y">
-            {order.VendorOrder.length ? (
-              order.VendorOrder.map((vo) => (
-                <div key={vo.id} className="p-3 text-sm">
-                  <div className="font-semibold">{vo.vendor?.shopName || "Unknown vendor"}</div>
-                  <div className="text-xs text-gray-600">Status: {vo.status}</div>
-                  <div className="text-xs text-gray-700">
-                    Subtotal: ₹{Number(vo.subtotal ?? 0).toFixed(2)} • Payout: ₹
-                    {Number(vo.payout ?? 0).toFixed(2)}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="p-3 text-sm text-gray-600">No vendor sub-orders</div>
-            )}
           </div>
         </div>
       </div>

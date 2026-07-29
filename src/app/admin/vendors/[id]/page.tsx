@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
@@ -32,5 +33,9 @@ export default async function VendorDetailsPage({
 
   if (!vendor) notFound();
 
-  return <VendorDetailsClient initialVendor={vendor as any} />;
+  return (
+    <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading vendor...</div>}>
+      <VendorDetailsClient initialVendor={vendor as any} />
+    </Suspense>
+  );
 }

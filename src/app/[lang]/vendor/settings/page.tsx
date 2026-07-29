@@ -81,6 +81,19 @@ export default function VendorSettingsPage() {
       </CardHeader>
 
       <CardContent>
+        <div className="mb-5 rounded-2xl border border-border bg-muted/20 p-4">
+          <div className="text-sm font-semibold">Shop / KYC application</div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Need to correct shop name, documents or bank details? Submit an edit for admin re-approval.
+          </p>
+          <a
+            href="/account/vendor-apply?edit=1"
+            className="mt-3 inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted/40"
+          >
+            Edit application
+          </a>
+        </div>
+
         {msg ? <div className="mb-4 text-sm text-muted-foreground">{msg}</div> : null}
 
         {loading ? (

@@ -1,13 +1,18 @@
 import { prisma } from "@/lib/prisma";
 import { verifyCourierSignature } from "@/lib/secrets";
 import { bumpLiveVersion } from "@/lib/live";
+import { rollupOrderStatusFromAllItems, syncVendorOrderFromItems } from "@/lib/orderStatusSync";
 
 function normalizeCourierStatus(raw: unknown) {
   const status = typeof raw === "string" ? raw.trim().toUpperCase() : "";
   if (!status) return "";
 
   if (/DELIVER|DELIVERED|DELIVERANCE|SUCCEEDED/.test(status)) return "DELIVERED";
-  if (/IN_TRANSIT|IN TRANSIT|OUT_FOR_DELIVERY|OUT FOR DELIVERY|OUT_FOR_DELIVERY|OD|ON THE WAY|ON THE WAY|PICKED|DISPATCH|SHIPPED|ARRIVED|PICKUP/.test(status)) {
+  if (
+    /IN_TRANSIT|IN TRANSIT|OUT_FOR_DELIVERY|OUT FOR DELIVERY|OD|ON THE WAY|PICKED|DISPATCH|SHIPPED|ARRIVED|PICKUP/.test(
+      status
+    )
+  ) {
     return "SHIPPED";
   }
   return status;
@@ -20,7 +25,6 @@ export async function POST(req: Request) {
   const payload = await req.json().catch(() => null);
   if (!payload) return Response.json({ ok: true });
 
-  // Example payload mapping
   const tracking = String(
     payload.tracking_number ||
       payload.waybill ||
@@ -39,28 +43,34 @@ export async function POST(req: Request) {
     where: { trackingNumber: tracking },
     select: {
       id: true,
+      orderId: true,
       order: { select: { userId: true } },
+      product: { select: { vendorId: true } },
       vendorOrder: { select: { vendorId: true } },
     },
   });
   if (!item) return Response.json({ ok: true });
 
-  if (status === "IN_TRANSIT") {
-    await prisma.orderItem.update({
-      where: { id: item.id },
-      data: { status: "SHIPPED", shippedAt: new Date() },
-    });
-  }
+  if (status === "SHIPPED" || status === "DELIVERED") {
+    await prisma.$transaction(async (tx) => {
+      await tx.orderItem.update({
+        where: { id: item.id },
+        data:
+          status === "DELIVERED"
+            ? { status: "DELIVERED", deliveredAt: new Date() }
+            : { status: "SHIPPED", shippedAt: new Date() },
+      });
 
-  if (status === "DELIVERED") {
-    await prisma.orderItem.update({
-      where: { id: item.id },
-      data: { status: "DELIVERED", deliveredAt: new Date() },
+      const vendorId = item.product?.vendorId || item.vendorOrder?.vendorId;
+      if (vendorId) {
+        await syncVendorOrderFromItems(tx, item.orderId, vendorId);
+      }
+      await rollupOrderStatusFromAllItems(tx, item.orderId);
     });
   }
 
   const userId = item.order?.userId;
-  const vendorId = item.vendorOrder?.vendorId;
+  const vendorId = item.product?.vendorId || item.vendorOrder?.vendorId;
   await Promise.all([
     userId ? bumpLiveVersion({ kind: "user", userId }) : Promise.resolve(),
     vendorId ? bumpLiveVersion({ kind: "vendor", vendorId }) : Promise.resolve(),

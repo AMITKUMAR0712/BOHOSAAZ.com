@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import ContactClient from "@/app/contact/ContactClient";
 import { buildMetadata } from "@/lib/seo/metadata";
+import { contactPageJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = buildMetadata({
   title: "Contact — Gift Support Noida & Delhi NCR",
@@ -10,5 +12,10 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default function ContactPage() {
-  return <ContactClient />;
+  return (
+    <>
+      <JsonLd data={contactPageJsonLd()} />
+      <ContactClient />
+    </>
+  );
 }

@@ -3,6 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/lib/i18n";
 import { buildMetadata } from "@/lib/seo/metadata";
+import { STOREFRONT_FAQS } from "@/lib/seo/faqs";
+import { faqPageJsonLd } from "@/lib/seo/jsonld";
+import { absoluteUrl } from "@/lib/seo/assert";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 export async function generateMetadata({
   params,
@@ -19,34 +23,6 @@ export async function generateMetadata({
   });
 }
 
-const faqs = [
-  {
-    question: "How do I find the right gift?",
-    answer:
-      "Use the Shop Gifts page to filter by occasion, recipient, budget, category, color and availability. The results update according to your selected filters.",
-  },
-  {
-    question: "Are the products gift-ready?",
-    answer:
-      "Many Bohosaaz products are curated for gifting and may include thoughtful packaging. Check product details for gift wrapping, personalization and delivery information.",
-  },
-  {
-    question: "How can I track my order?",
-    answer:
-      "After login, open My Account and go to Track Orders. You can also contact support with your order number if you need help.",
-  },
-  {
-    question: "What is the return policy?",
-    answer:
-      "Eligible products can be returned according to the return policy shown on the product and order pages. Personalized or made-to-order gifts may have special conditions.",
-  },
-  {
-    question: "Can I sell on Bohosaaz?",
-    answer:
-      "Yes. Artisan sellers and gifting brands can apply from the seller portal. The team reviews applications for quality, authenticity and brand fit.",
-  },
-];
-
 export default async function FaqPage({
   params,
 }: {
@@ -55,8 +31,15 @@ export default async function FaqPage({
   const { lang } = await params;
   if (!isLocale(lang)) return notFound();
 
+  const faqs = STOREFRONT_FAQS.map((faq) => ({
+    question: faq.question,
+    answer: faq.answer,
+  }));
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 md:py-14">
+      <JsonLd data={faqPageJsonLd(faqs, absoluteUrl(`/${lang}/faq`))} />
+
       <section className="relative overflow-hidden rounded-[40px] border border-border/80 bg-card/80 p-6 shadow-premium backdrop-blur-xl md:p-10">
         <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
         <div className="relative">
@@ -65,7 +48,7 @@ export default async function FaqPage({
             Frequently asked questions.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
-            Quick answers for gifting, shipping, returns, order tracking and seller support.
+            Quick answers for gifting in Noida & Delhi NCR, shipping, returns, order tracking and seller support.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link

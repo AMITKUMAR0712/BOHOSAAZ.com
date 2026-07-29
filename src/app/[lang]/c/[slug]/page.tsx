@@ -5,6 +5,8 @@ import { ProductCard, type ProductCardProduct } from "@/components/ProductCard";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { fitDescription } from "@/lib/seo/assert";
+import { breadcrumbJsonLd, itemListJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 export async function generateMetadata({
   params,
@@ -88,8 +90,38 @@ export default async function CategoryPage({
     return Array.isArray(maybeProducts) ? (maybeProducts as ProductCardProduct[]) : [];
   })();
 
+  const hasActiveFilters = Boolean(q || size || color || minPrice || maxPrice || inStock || discountOnly || (sort && sort !== "latest"));
+  const categoryName = cat?.name || slug;
+  const pagePath = `/${lang}/c/${slug}`;
+  const collectionDescription = fitDescription(
+    `Shop ${categoryName} gift products for Noida, Greater Noida, New Delhi and Delhi NCR on Bohosaaz.`
+  );
+
   return (
     <div className="relative mx-auto max-w-6xl px-4 py-8 md:py-12">
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "Home", path: `/${lang}` },
+            { name: "Categories", path: `/${lang}/categories` },
+            { name: categoryName, path: pagePath },
+          ]),
+          ...(!hasActiveFilters
+            ? [
+                itemListJsonLd({
+                  name: `${categoryName} Gifts`,
+                  description: collectionDescription,
+                  path: pagePath,
+                  items: products.map((product) => ({
+                    name: product.title,
+                    path: `/${lang}/p/${product.slug}`,
+                    image: product.images?.[0]?.url,
+                  })),
+                }),
+              ]
+            : []),
+        ]}
+      />
       <div className="pointer-events-none absolute -left-20 top-16 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 top-48 h-72 w-72 rounded-full bg-amber-500/10 blur-3xl" />
 
@@ -101,10 +133,10 @@ export default async function CategoryPage({
               Gift Collection
             </div>
             <h1 className="mt-4 font-heading text-4xl tracking-tight text-foreground md:text-6xl">
-              {cat?.name || slug}
+              {categoryName}
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
-              Browse thoughtful gifts, curated picks and premium pieces selected for meaningful moments.
+              Browse thoughtful {categoryName.toLowerCase()} gifts for Noida, Greater Noida and Delhi NCR — curated picks for meaningful moments.
             </p>
           </div>
           <div className="rounded-[30px] border border-primary/10 bg-background/70 p-5 shadow-[0_16px_45px_rgba(47,38,34,0.07)] backdrop-blur">
