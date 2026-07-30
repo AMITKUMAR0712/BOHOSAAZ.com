@@ -9,6 +9,7 @@ import {
   BookOpenText,
   CircleDollarSign,
   CreditCard,
+  FileText,
   HandCoins,
   LayoutDashboard,
   Megaphone,
@@ -65,6 +66,7 @@ export function PanelSidebar({
     if (href.includes("/refunds") || href.includes("/returns")) return <Receipt className="h-4 w-4" />;
     if (href.includes("/payments")) return <CreditCard className="h-4 w-4" />;
     if (href.includes("/settings")) return <Settings className="h-4 w-4" />;
+    if (href.includes("/policy")) return <FileText className="h-4 w-4" />;
 
     return null;
   }
