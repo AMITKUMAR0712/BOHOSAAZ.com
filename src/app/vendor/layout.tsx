@@ -31,7 +31,7 @@ export default async function VendorLayout({ children }: { children: ReactNode }
             { href: "/vendor/earnings", label: "Earnings" },
             { href: "/vendor/kyc", label: "KYC" },
             { href: "/vendor/support", label: "Support" },
-            { href: "/vendor/policy", label: "Vendor Policy" },
+            { href: "/vendor/policy", label: "Vendor Policies" },
           ],
         },
       ]}

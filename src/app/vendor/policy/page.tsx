@@ -2,8 +2,8 @@ export default function VendorPolicyPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="rounded-2xl border bg-white p-6 sm:p-10 shadow-sm">
-        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">
-          Vendor related BohoSaaz Policies
+        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 text-center">
+        Bohosaaz Vendor Policies Handbook
         </h1>
 
         {/* CHAPTER 1 */}
