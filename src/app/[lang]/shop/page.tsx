@@ -420,21 +420,14 @@ export default async function ShopPage({
       <section className="site-container -mt-140 pt-2 sm:-mt-148 sm:pt-4 xl:-mt-144">
         <div className="relative overflow-hidden rounded-[24px] border border-border/80 bg-card/80 p-4 shadow-premium backdrop-blur-xl md:rounded-[30px] md:p-5">
           <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-          <div className="relative grid gap-6 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
-            <div>
-              <div className="inline-flex rounded-full border border-border bg-background/70 px-3 py-1 text-[11px] uppercase tracking-[0.28em] text-muted-foreground">Gift Finder</div>
-              <h1 className="mt-2 max-w-3xl font-heading text-2xl tracking-tight text-foreground sm:text-3xl md:text-4xl">
-                Discover gifts by budget, style and feeling.
-              </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
-                Search all products with clean filters for budget, category, availability and color.
-              </p>
-            </div>
-            <div className="rounded-[22px] border border-border bg-background/65 p-4 shadow-sm md:rounded-[28px] md:p-5">
-              <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Live catalog</div>
-              <div className="mt-2 font-heading text-3xl text-foreground">{products.length}</div>
-              <p className="mt-1 text-sm text-muted-foreground">gifts currently matching your selection</p>
-            </div>
+          <div className="relative">
+            <div className="inline-flex rounded-full border border-border bg-background/70 px-3 py-1 text-[11px] uppercase tracking-[0.28em] text-muted-foreground">FIND YOUR PERFECT GIFT</div>
+            <h1 className="mt-2 max-w-3xl font-heading text-2xl tracking-tight text-foreground sm:text-3xl md:text-4xl">
+              Find a gift that tells a story.
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
+              Search all products with clean filters for budget, category, availability and color.
+            </p>
           </div>
         </div>
       </section>

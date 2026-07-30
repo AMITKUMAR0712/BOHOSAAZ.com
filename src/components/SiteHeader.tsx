@@ -610,7 +610,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
           </span>
           <span className="hidden leading-tight sm:block">
             <span className="block font-heading text-[15px] font-semibold tracking-tight text-foreground transition group-hover:text-primary">Bohosaaz</span>
-            <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Meaningful gifting</span>
+            <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Art Of Meaningful Gifting</span>
           </span>
         </Link>
 

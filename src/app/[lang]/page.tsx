@@ -1179,11 +1179,11 @@ export default async function Home({
           <div className="grid gap-12 md:grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)] md:items-center">
             {/* LEFT */}
             <div>
-              <div className="flex flex-wrap items-center gap-2">
+              {/* <div className="flex flex-wrap items-center gap-2">
                 <Chip label="Thoughtful Gifts" className={theme.chip} dotClassName={theme.chipDot} />
                 <Chip label="Handcrafted" className={theme.chip} dotClassName={theme.chipDot} />
                 <Chip label="Made with Love" className={theme.chip} dotClassName={theme.chipDot} />
-              </div>
+              </div> */}
 
               <h1
                 className={
@@ -1223,10 +1223,19 @@ export default async function Home({
 
               <div className="mt-8 flex flex-wrap gap-3 text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
                 <span className="rounded-full border border-border bg-background/65 px-3 py-1 backdrop-blur">
-                  Gift-Ready Packaging
+                Ready-to-Gift Packaging
                 </span>
                 <span className="rounded-full border border-border bg-background/65 px-3 py-1 backdrop-blur">
                   Artisan Crafted
+                </span>
+                <span className="rounded-full border border-border bg-background/65 px-3 py-1 backdrop-blur">
+                Thoughtful Gifts
+                </span>
+                <span className="rounded-full border border-border bg-background/65 px-3 py-1 backdrop-blur">
+                Handcrafted
+                </span>
+                <span className="rounded-full border border-border bg-background/65 px-3 py-1 backdrop-blur">
+                Made with Love
                 </span>
               </div>
             </div>
@@ -1352,10 +1361,10 @@ export default async function Home({
               <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-primary/8 via-transparent to-amber-500/8" />
               <div>
                 <div className="relative text-[11px] uppercase tracking-[0.26em] text-primary/80">
-                  Filters
+                Find the Perfect Gift
                 </div>
                 <div className="relative mt-1 text-base font-semibold text-foreground">
-                  Refine your results{" "}
+                Discover meaningful gifts tailored to your budget & preferences{" "}
                   {hasFilters ? (
                     <span className="ml-2 text-xs font-medium text-muted-foreground">
                       • {appliedCount} applied
@@ -1373,8 +1382,8 @@ export default async function Home({
             </summary>
 
             <div className="px-6 pb-6">
-              <form method="GET" className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_230px] lg:items-start">
-                <div className="rounded-[30px] border border-primary/15 bg-linear-to-br from-background/90 via-card/75 to-primary/8 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_18px_55px_rgba(47,38,34,0.06)] lg:col-start-1">
+              <form method="GET" className="grid gap-4">
+                <div className="rounded-[30px] border border-primary/15 bg-linear-to-br from-background/90 via-card/75 to-primary/8 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_18px_55px_rgba(47,38,34,0.06)]">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
                   <div className="md:col-span-6">
                     <label className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Search</label>
@@ -1434,34 +1443,23 @@ export default async function Home({
                       </div>
                     </div>
                   ) : null}
-                </div>
 
-                {availability === "in_stock" ? <input type="hidden" name="inStock" value="1" /> : null}
-                {availability === "discounted" ? <input type="hidden" name="discountOnly" value="1" /> : null}
-
-                <div className="flex flex-col rounded-[30px] border border-primary/15 bg-linear-to-br from-primary/12 via-card/85 to-background/80 p-4 shadow-[0_18px_55px_rgba(47,38,34,0.08)] lg:col-start-2 lg:row-start-1">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.24em] text-primary/80">Ready</div>
-                    <div className="mt-1 font-heading text-2xl tracking-tight text-foreground">Apply filters</div>
-                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                      Build a cleaner shortlist with your selected gifting preferences.
-                    </p>
-                  </div>
-
-                  <div className="pt-5">
-                    <button className="h-12 w-full rounded-2xl bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-[0_18px_45px_rgba(0,0,0,0.10)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.14)] hover:-translate-y-px active:translate-y-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <button className="h-11 rounded-2xl bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-[0_18px_45px_rgba(0,0,0,0.10)] transition hover:-translate-y-px hover:shadow-[0_24px_60px_rgba(0,0,0,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                       Find Gifts
                     </button>
-
-                    <a href={`/${lang}`} className="mt-3 h-12 w-full rounded-2xl border border-border bg-background/65 px-8 text-sm font-semibold inline-flex items-center justify-center hover:bg-muted/40 hover:-translate-y-px active:translate-y-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                    <a href={`/${lang}`} className="inline-flex h-11 items-center justify-center rounded-2xl border border-border bg-background/65 px-6 text-sm font-semibold transition hover:-translate-y-px hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                       Reset
                     </a>
                   </div>
                 </div>
 
+                {availability === "in_stock" ? <input type="hidden" name="inStock" value="1" /> : null}
+                {availability === "discounted" ? <input type="hidden" name="discountOnly" value="1" /> : null}
+
                 {/* Active chips (removable) */}
                 {hasFilters ? (
-                  <div className="flex flex-wrap gap-2 rounded-[26px] border border-border/70 bg-background/55 p-3 pt-3 shadow-inner lg:col-span-2">
+                  <div className="flex flex-wrap gap-2 rounded-[26px] border border-border/70 bg-background/55 p-3 pt-3 shadow-inner">
                     {q ? (
                       <FilterChip label={`Search: ${q}`} href={buildHref({ q: null })} className={theme.filterChip} closeClassName={theme.filterChipClose} />
                     ) : null}
