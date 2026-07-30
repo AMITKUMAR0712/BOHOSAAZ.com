@@ -129,7 +129,7 @@ export default function RegisterClient({
                 <Gift className="h-6 w-6" aria-hidden />
               </div>
               <CardTitle className="font-heading text-xl">
-                {vendorFlowActive ? "Create your vendor account" : "Create your gifting account"}
+                {vendorFlowActive ? "Register as a Vendor" : "Create your gifting account"}
               </CardTitle>
               <CardDescription>
                 {vendorFlowActive
@@ -185,8 +185,8 @@ export default function RegisterClient({
                   </div>
                 ) : null}
 
-                <Button type="submit" size="lg" disabled={loading} className="w-full rounded-2xl uppercase tracking-[0.14em]">
-                  {loading ? "Creating..." : vendorFlowActive ? "Create vendor account" : "Start gifting"}
+                <Button type="submit" size="lg" disabled={loading} className="w-full rounded-2xl  tracking-[0.14em]">
+                  {loading ? "Creating..." : vendorFlowActive ? "Create Vendor's Account" : "Start gifting"}
                 </Button>
 
                 <div className="rounded-2xl border border-border bg-background/60 p-3 text-sm text-muted-foreground">

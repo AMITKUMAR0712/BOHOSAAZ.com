@@ -196,6 +196,11 @@ export default function SiteFooter() {
                 <FooterLink currentPathname={pathname} href={`${lp}/brands/luxury`} label="Luxury Brands" />
                 <FooterLink currentPathname={pathname} href={`${lp}/about`} label="About Bohosaaz" />
                 <FooterLink currentPathname={pathname} href={`${lp}/blog`} label="Blog" />
+                <FooterLink
+                  currentPathname={pathname}
+                  href={`${lp}/customer-guidelines-policies`}
+                  label="Customer Guidelines & Policies"
+                />
               </FooterCol>
 
               {/* Account */}
@@ -264,21 +269,6 @@ export default function SiteFooter() {
             © {new Date().getFullYear()}{" "}
             <span className="font-semibold text-foreground">Bohosaaz</span>. All
             rights reserved.
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-            <Link href={`${lp}/terms`} className="hover:text-foreground transition underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-              Terms
-            </Link>
-            <Link href={`${lp}/privacy`} className="hover:text-foreground transition underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-              Privacy
-            </Link>
-            <Link href={`${lp}/return`} className="hover:text-foreground transition underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-              Returns
-            </Link>
-            <Link href={`${lp}/faq`} className="hover:text-foreground transition underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-              FAQ
-            </Link>
           </div>
         </div>
       </div>

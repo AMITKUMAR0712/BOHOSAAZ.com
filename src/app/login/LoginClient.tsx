@@ -192,7 +192,7 @@ export default function LoginClient({
                 ) : null}
 
                 <Button type="submit" size="lg" disabled={loading} className="w-full rounded-2xl uppercase tracking-[0.14em]">
-                  {loading ? "Signing in..." : "Continue to gifts"}
+                  {loading ? "Signing in..." : "Log In to Sell"}
                 </Button>
 
                 <div className="rounded-2xl border border-border bg-background/60 p-3 text-sm text-muted-foreground">
