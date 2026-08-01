@@ -13,7 +13,7 @@ export async function GET(
   const { id } = await ctx.params;
 
   const order = await prisma.order.findFirst({
-    where: { id, userId: me.id, status: { not: "PENDING" } },
+    where: { id, userId: me.id },
     include: {
       items: {
         include: {
