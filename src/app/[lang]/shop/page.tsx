@@ -437,7 +437,7 @@ export default async function ShopPage({
           <summary className="relative flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 md:px-6 md:py-5">
             <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-primary/8 via-transparent to-amber-500/8" />
             <div className="relative">
-              <div className="text-[11px] uppercase tracking-[0.26em] text-primary/80">Premium Filters</div>
+              <div className="text-[11px] uppercase tracking-[0.26em] text-primary/80"></div>
               <div className="mt-1 text-sm font-semibold text-foreground sm:text-base">
                 Build the perfect gift shortlist
                 {activeFilters.length ? (
