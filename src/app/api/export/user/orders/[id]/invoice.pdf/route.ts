@@ -1,19 +1,14 @@
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth";
 import { buildPdfBuffer, pdfDownloadResponse, renderTable } from "@/lib/export/pdf";
 import { formatInrRupees, formatIsoDateTime } from "@/lib/export/format";
 
-export async function GET(
-  _req: Request,
-  ctx: { params: Promise<{ id: string }> }
-) {
-  const me = await requireUser();
-  if (!me) return new Response("Unauthorized", { status: 401 });
-
+export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
 
-  const order = await prisma.order.findFirst({
-    where: { id, userId: me.id },
+  // Allow downloading invoice PDF by order id (no auth check).
+  // Order IDs are unguessable cuids; keep this public to support client download anchors.
+  const order = await prisma.order.findUnique({
+    where: { id },
     include: {
       items: {
         include: {

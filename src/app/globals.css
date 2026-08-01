@@ -189,7 +189,7 @@ main {
 }
 
 main.site-content {
-  --site-header-offset: 252px;
+  --site-header-offset: 92px;
   padding-top: var(--site-header-offset);
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--mobileBottomNav));
 }
