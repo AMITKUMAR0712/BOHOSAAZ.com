@@ -432,7 +432,34 @@ export default async function ShopPage({
         </div>
       </section>
 
-      {/* Filters panel removed per UX request */}
+      <section className="site-container py-3 sm:py-4">
+        <details className="group overflow-hidden rounded-[26px] border border-primary/15 bg-card/85 shadow-[0_24px_80px_rgba(47,38,34,0.10)] backdrop-blur-2xl md:rounded-[38px]">
+          <summary className="relative flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 md:px-6 md:py-5">
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-primary/8 via-transparent to-amber-500/8" />
+            <div className="relative">
+              <div className="text-[11px] uppercase tracking-[0.26em] text-primary/80"></div>
+              <div className="mt-1 text-sm font-semibold text-foreground sm:text-base">
+                Build the perfect gift shortlist
+                {activeFilters.length ? (
+                  <span className="ml-1 text-xs font-medium text-muted-foreground sm:ml-2">• {activeFilters.length} applied</span>
+                ) : null}
+              </div>
+            </div>
+            <span className="relative shrink-0 rounded-full border border-border bg-background/70 px-3 py-1 text-xs text-muted-foreground group-open:hidden">Filters</span>
+            <span className="relative hidden shrink-0 rounded-full border border-border bg-background/70 px-3 py-1 text-xs text-muted-foreground group-open:block">Close</span>
+          </summary>
+
+          <form action={`/${lang}/shop`} className="grid gap-4 px-4 pb-4 md:px-6 md:pb-6 lg:grid-cols-1 lg:items-start">
+            {intentFields.length || refineFields.length ? (
+              <div className="rounded-[22px] border border-primary/15 bg-linear-to-br from-background/90 via-card/75 to-primary/8 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_18px_55px_rgba(47,38,34,0.06)] md:rounded-[30px] md:p-4">
+                <div className="grid gap-3 md:grid-cols-12 md:gap-4">
+                  {[...intentFields, ...refineFields].map(renderFilterField)}
+                </div>
+              </div>
+            ) : null}
+          </form>
+        </details>
+      </section>
 
       <section className="site-container pb-8 pt-1 sm:pt-0">
         <div className="mb-4 flex flex-col gap-3 rounded-[24px] border border-border/70 bg-card/70 p-4 shadow-sm backdrop-blur md:mb-5 md:flex-row md:items-end md:justify-between md:rounded-[30px] md:p-5">

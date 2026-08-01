@@ -356,15 +356,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
                     <Headphones className="h-4 w-4" />
                     Contact support
                   </ActionLink>
-                  <ActionLink
-                    href={`/api/export/user/orders/${order.id}/invoice.pdf`}
-                    variant="soft"
-                    className="w-full justify-start"
-                    download={`Bohosaaz_Order_${order.id}_Invoice.pdf`}
-                  >
-                    <Download className="h-4 w-4" />
-                    Download invoice
-                  </ActionLink>
+                  {/* Download invoice intentionally removed per request */}
                 </div>
               </CardContent>
             </Card>
