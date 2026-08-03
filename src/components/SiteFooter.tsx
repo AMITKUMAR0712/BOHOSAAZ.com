@@ -217,7 +217,7 @@ export default function SiteFooter() {
               <FooterCol title="Social">
                 <a
                   className="text-muted-foreground hover:text-foreground transition flex items-center gap-2 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  href="https://www.instagram.com/bohosaaz"
+                  href="https://www.instagram.com/bohosaaz_official/"
                   target="_blank"
                   rel="noreferrer"
                 >

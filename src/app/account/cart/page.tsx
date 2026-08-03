@@ -38,10 +38,10 @@ export default async function AccountCartPage() {
   return (
     <div className="grid gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+        {/* <div>
           <div className="text-xl font-semibold">Add to cart</div>
           <div className="mt-1 text-sm text-muted-foreground">Read-only summary of your current cart.</div>
-        </div>
+        </div> */}
         <div className="flex gap-2">
           <Link className="rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted/40" href="/en/cart">
             Go to Cart

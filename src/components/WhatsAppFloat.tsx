@@ -26,7 +26,7 @@ export default function WhatsAppFloat({ className }: { className?: string }) {
   const envText = process.env.NEXT_PUBLIC_WHATSAPP_TEXT;
 
   // Fallback requested by user; can be overridden by env or Setting keys.
-  const defaultNumber = "9992196879";
+  const defaultNumber = "9870210896";
 
   const [href, setHref] = React.useState<string | null>(() => {
     if (envNumber) return buildWaHref(envNumber, envText);

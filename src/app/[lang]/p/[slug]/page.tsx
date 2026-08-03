@@ -359,10 +359,7 @@ export default async function ProductDetailPage({
                     <span className="font-medium text-foreground">2–5 days</span>
                   </div>
                   <div className="h-px w-full bg-border/60" />
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Returns</span>
-                    <span className="font-medium text-foreground">Easy</span>
-                  </div>
+                 
                   <div className="h-px w-full bg-border/60" />
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Payments</span>
@@ -550,9 +547,7 @@ export default async function ProductDetailPage({
 
                 <AccordionItem title="Delivery & Returns">
                   <div className="text-sm leading-relaxed text-muted-foreground">
-                    Delivery times vary by location. Returns are accepted on eligible
-                    items as per policy. Damaged items can be exchanged within
-                    48 hours of delivery.
+                    Please record a continuous unboxing video from the moment the package is opened. This video is mandatory as proof to process any return or exchange request. Requests without a valid unboxing video may not be eligible for approval.
                   </div>
                 </AccordionItem>
 

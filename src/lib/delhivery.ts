@@ -236,13 +236,22 @@ export async function createDelhiveryShipmentForOrderItem(itemId: string) {
     throw new Error("Delhivery create shipment returned invalid response.");
   }
 
-  const trackingNumber = extractTrackingNumber(payload) || extractTrackingNumber(payload?.data) || extractTrackingNumber(payload?.response);
+  const packages = Array.isArray((payload as Record<string, unknown> | null)?.packages)
+    ? ((payload as Record<string, unknown>).packages as unknown[])
+    : [];
+
+  const trackingNumber =
+    extractTrackingNumber(payload) ||
+    extractTrackingNumber((payload as Record<string, unknown> | null)?.data) ||
+    extractTrackingNumber((payload as Record<string, unknown> | null)?.response) ||
+    extractTrackingNumber(packages[0]);
+
   if (!trackingNumber) {
     const errorMessage =
-      typeof payload?.message === "string"
-        ? payload.message
-        : typeof payload?.error === "string"
-          ? payload.error
+      typeof (payload as Record<string, unknown> | null)?.message === "string"
+        ? (payload as Record<string, unknown>).message
+        : typeof (payload as Record<string, unknown> | null)?.error === "string"
+          ? (payload as Record<string, unknown>).error
           : JSON.stringify(payload);
     throw new Error(`Delhivery did not return a tracking number. ${errorMessage}`);
   }

@@ -424,7 +424,7 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
         <div>
           <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Checkout</div>
           <h1 className="mt-2 font-heading text-3xl md:text-4xl tracking-tight text-foreground">Secure checkout</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Online payment is the default. COD appears only for admin-enabled COD products.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Online payment is the default payment method. Cash on Delivery (COD) is available only for selected products</p>
         </div>
         <Link className="text-sm text-muted-foreground hover:text-foreground transition" href={backToCartHref}>
           ← Back to cart
@@ -558,7 +558,7 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
                 </div>
 
                 <div className="mt-6 rounded-(--radius) border border-border bg-muted/25 p-4 text-sm text-muted-foreground">
-                  Please ensure your phone number is reachable for delivery updates. All saved addresses appear here and in Profile & Address.
+                 Please ensure your phone number is active and reachable for delivery updates. All saved addresses are displayed here and can also be managed in the Profile section.
                 </div>
               </div>
             </Card>

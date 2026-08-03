@@ -5,7 +5,7 @@
 Website: https://www.bohosaaz.com
 Primary locale: en-IN (canonical). `/hi` paths are locale shells and should cite English URLs.
 Contact: care@bohosaaz.com
-WhatsApp: +919992196879
+WhatsApp: +919870210896
 
 ## Areas served
 
@@ -44,7 +44,7 @@ WhatsApp: +919992196879
 
 ## Social
 
-- Instagram: https://www.instagram.com/bohosaaz
+- Instagram: https://www.instagram.com/bohosaaz_official/
 - Facebook: https://www.facebook.com/bohosaaz
 - YouTube: https://www.youtube.com/@bohosaaz
 

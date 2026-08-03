@@ -14,12 +14,12 @@ export const SITE = {
   description:
     "Bohosaaz is a premium online gifting marketplace for gift products in Noida, Greater Noida, New Delhi and Delhi NCR. Shop curated birthday gifts, anniversary gifts, corporate gifts, festival gifts, home decor, barware, luxury hampers and personalized gift ideas.",
   social: {
-    instagram: "https://www.instagram.com/bohosaaz",
+    instagram: "https://www.instagram.com/bohosaaz_official/",
     facebook: "https://www.facebook.com/bohosaaz",
     youtube: "https://www.youtube.com/@bohosaaz",
   },
   contact: {
-    whatsapp: "+919992196879",
+    whatsapp: "+919870210896",
     email: "care@bohosaaz.com",
     // phone, street address, postalCode, geo — confirm before LocalBusiness schema
   },

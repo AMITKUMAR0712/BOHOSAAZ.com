@@ -39,10 +39,10 @@ export default async function AccountCartPage({
           <div className="mt-1 text-sm text-gray-600">Read-only summary of your current cart.</div>
         </div>
         <div className="flex gap-2">
-          <Link className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50" href={`/${lang}/cart`}>
+          <Link className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50" href={`/${lang}/cart`} >
             Go to Cart
           </Link>
-          <Link className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50" href={`/${lang}/checkout`}>
+          <Link className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"  href={`/${lang}/checkout`}>
             Checkout
           </Link>
         </div>

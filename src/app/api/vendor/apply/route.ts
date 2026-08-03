@@ -57,58 +57,66 @@ export async function POST(req: NextRequest) {
 
   const mapped = vendorApplicationToDb({ shop, kyc });
 
-  const result = await prisma.$transaction(async (tx) => {
-    const vendor = await tx.vendor.upsert({
-      where: { userId: user.id },
-      update: {
-        ...mapped.vendor,
-        status: "PENDING",
-        statusReason: null,
-      },
-      create: {
-        userId: user.id,
-        status: "PENDING",
-        ...mapped.vendor,
-      },
-      select: { id: true, userId: true, status: true },
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const vendor = await tx.vendor.upsert({
+        where: { userId: user.id },
+        update: {
+          ...mapped.vendor,
+          status: "PENDING",
+          statusReason: null,
+        },
+        create: {
+          userId: user.id,
+          status: "PENDING",
+          ...mapped.vendor,
+        },
+        select: { id: true, userId: true, status: true },
+      });
+
+      await tx.vendorBankAccount.upsert({
+        where: { vendorId: vendor.id },
+        update: mapped.bank,
+        create: { vendorId: vendor.id, ...mapped.bank },
+      });
+
+      await tx.vendorKyc.upsert({
+        where: { vendorId: vendor.id },
+        update: {
+          status: "SUBMITTED",
+          ...mapped.kyc,
+          rejectionReason: null,
+          submittedAt: new Date(),
+          verifiedAt: null,
+        },
+        create: {
+          vendorId: vendor.id,
+          status: "SUBMITTED",
+          submittedAt: new Date(),
+          ...mapped.kyc,
+        },
+      });
+
+      return vendor;
     });
 
-    await tx.vendorBankAccount.upsert({
-      where: { vendorId: vendor.id },
-      update: mapped.bank,
-      create: { vendorId: vendor.id, ...mapped.bank },
-    });
-
-    await tx.vendorKyc.upsert({
-      where: { vendorId: vendor.id },
-      update: {
-        status: "SUBMITTED",
-        ...mapped.kyc,
-        rejectionReason: null,
-        submittedAt: new Date(),
-        verifiedAt: null,
+    return Response.json(
+      {
+        ok: true,
+        vendor: result,
+        reapprovalRequired: mode === "edit",
+        message:
+          mode === "edit"
+            ? "Changes submitted. Waiting for admin re-approval."
+            : "Application submitted.",
       },
-      create: {
-        vendorId: vendor.id,
-        status: "SUBMITTED",
-        submittedAt: new Date(),
-        ...mapped.kyc,
-      },
-    });
-
-    return vendor;
-  });
-
-  return Response.json(
-    {
-      ok: true,
-      vendor: result,
-      reapprovalRequired: mode === "edit",
-      message:
-        mode === "edit"
-          ? "Changes submitted. Waiting for admin re-approval."
-          : "Application submitted.",
-    },
-    { status: existing ? 200 : 201 }
-  );
+      { status: existing ? 200 : 201 }
+    );
+  } catch (err) {
+    console.error("Vendor apply failed:", err);
+    return Response.json(
+      { error: err instanceof Error ? err.message : "Failed to save vendor application. Please try again." },
+      { status: 500 }
+    );
+  }
 }

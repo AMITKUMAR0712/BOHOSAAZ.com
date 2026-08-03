@@ -156,7 +156,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
                 Thank you for shopping with Bohosaaz.
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
-                We have received your order and are preparing it with care. You will get updates as soon as the seller starts packing and shipping.
+                We’ve received your order and are preparing it with care. You’ll receive updates as your order is packed and shipped
               </p>
 
               <div className="mt-7 grid gap-3 sm:grid-cols-2">
