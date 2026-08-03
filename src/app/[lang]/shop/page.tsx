@@ -417,7 +417,7 @@ export default async function ShopPage({
     <main className="relative overflow-hidden bg-background mobile-bottom-safe">
       <div className="pointer-events-none absolute -left-28 top-6 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-28 top-64 h-80 w-80 rounded-full bg-amber-500/10 blur-3xl" />
-      <section className="site-container -mt-20 pt-2 sm:-mt-24 sm:pt-4 xl:-mt-20">
+      <section className="site-container pt-2 sm:pt-4">
         <div className="relative overflow-hidden rounded-[24px] border border-border/80 bg-card/80 p-4 shadow-premium backdrop-blur-xl md:rounded-[30px] md:p-5">
           <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
           <div className="relative">

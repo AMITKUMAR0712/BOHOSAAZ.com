@@ -106,6 +106,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
   const { toast } = useToast();
 
   const [scrolled, setScrolled] = useState(false);
+  const headerRef = useRef<HTMLElement | null>(null);
 
   // Dashboards use their own chrome.
   const isDashboardRoute = (() => {
@@ -124,6 +125,30 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, [isDashboardRoute]);
+
+  // The header's real rendered height (row count, wrapping, scroll-compact
+  // state) drives how much space main.site-content must reserve. Hardcoded
+  // px guesses drift out of sync with the actual markup, causing content to
+  // either gap below or overlap under the fixed header. Measuring it live
+  // keeps the two always in sync.
+  useEffect(() => {
+    const headerEl = headerRef.current;
+    const contentEl = document.querySelector<HTMLElement>("main.site-content");
+    if (!headerEl || !contentEl) return;
+
+    const apply = () => {
+      contentEl.style.setProperty("--site-header-offset", `${headerEl.offsetHeight}px`);
+    };
+
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(headerEl);
+    window.addEventListener("resize", apply);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", apply);
+    };
   }, [isDashboardRoute]);
 
   const detectedLang = (() => {
@@ -341,7 +366,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
             --site-header-offset: 76px;
           }
         `}</style>
-        <header className="fixed inset-x-0 top-0 z-999 w-full border-b border-border/70 bg-background/92 shadow-[0_12px_40px_rgba(47,38,34,0.08)] backdrop-blur-2xl supports-backdrop-filter:bg-background/80">
+        <header ref={headerRef} className="fixed inset-x-0 top-0 z-999 w-full border-b border-border/70 bg-background/92 shadow-[0_12px_40px_rgba(47,38,34,0.08)] backdrop-blur-2xl supports-backdrop-filter:bg-background/80">
           <div className="mx-auto max-w-6xl px-4 py-2.5 flex items-center gap-3">
             <Link href={lp} className="flex items-center gap-2 shrink-0">
               <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-full border-2 border-primary/25 bg-card shadow-[0_10px_30px_rgba(135,56,20,0.18),0_0_0_5px_rgba(184,134,50,0.08)]">
@@ -576,6 +601,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
       }
     `}</style>
     <header
+      ref={headerRef}
       className={`fixed inset-x-0 top-0 z-999 w-full border-b border-primary/10 bg-[rgba(238,224,204,0.88)] backdrop-blur-2xl supports-backdrop-filter:bg-[rgba(238,224,204,0.76)] transition-[box-shadow,background-color,border-color] duration-500 ease-out ${
         !isDashboardRoute && scrolled
           ? "shadow-[0_16px_44px_rgba(69,40,24,0.14)] ring-1 ring-white/25"

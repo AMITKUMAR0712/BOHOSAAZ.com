@@ -447,32 +447,9 @@ textarea::placeholder {
   padding-top: 1rem;
 }
 
-@media (max-width: 767px) {
-  .compact-content-page > .site-container:first-of-type,
-  .compact-auth-page > .relative.mx-auto.grid {
-    margin-bottom: -38rem;
-    transform: translateY(-38rem);
-  }
-
-}
-
 @media (min-width: 768px) {
   .compact-auth-page {
     padding-top: 1.25rem;
-  }
-
-  .compact-content-page > .site-container:first-of-type,
-  .compact-auth-page > .relative.mx-auto.grid {
-    margin-bottom: -39rem;
-    transform: translateY(-39rem);
-  }
-}
-
-@media (min-width: 1280px) {
-  .compact-content-page > .site-container:first-of-type,
-  .compact-auth-page > .relative.mx-auto.grid {
-    margin-bottom: -37rem;
-    transform: translateY(-37rem);
   }
 }
 
