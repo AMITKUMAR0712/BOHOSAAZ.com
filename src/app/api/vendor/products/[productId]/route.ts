@@ -155,10 +155,8 @@ export async function PATCH(
     return Response.json({ error: "Product must be approved before it can be active" }, { status: 400 });
   }
 
-  const markup = 1.10;
-  
-  const nextPrice = b.price !== undefined ? +(b.price * markup).toFixed(2) : product.price;
-  const nextSale = b.salePrice !== undefined ? (b.salePrice ? +(b.salePrice * markup).toFixed(2) : null) : product.salePrice;
+  const nextPrice = b.price !== undefined ? +b.price.toFixed(2) : product.price;
+  const nextSale = b.salePrice !== undefined ? (b.salePrice ? +b.salePrice.toFixed(2) : null) : product.salePrice;
   const nextMrp = b.mrp !== undefined ? (b.mrp ?? null) : product.mrp;
 
   if (nextSale != null && nextPrice != null && nextSale > nextPrice) {
@@ -325,8 +323,8 @@ export async function PATCH(
                 size: v.size,
                 color: v.color ?? null,
                 sku: v.sku,
-                price: +(v.price * markup).toFixed(2),
-                salePrice: v.salePrice ? +(v.salePrice * markup).toFixed(2) : null,
+                price: +v.price.toFixed(2),
+                salePrice: v.salePrice ? +v.salePrice.toFixed(2) : null,
                 stock: v.stock,
                 isActive: v.isActive,
               },
@@ -338,8 +336,8 @@ export async function PATCH(
                 size: v.size,
                 color: v.color ?? null,
                 sku: v.sku,
-                price: +(v.price * markup).toFixed(2),
-                salePrice: v.salePrice ? +(v.salePrice * markup).toFixed(2) : null,
+                price: +v.price.toFixed(2),
+                salePrice: v.salePrice ? +v.salePrice.toFixed(2) : null,
                 stock: v.stock,
                 isActive: v.isActive,
               },

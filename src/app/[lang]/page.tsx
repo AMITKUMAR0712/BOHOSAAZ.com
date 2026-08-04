@@ -1549,37 +1549,42 @@ export default async function Home({
             </section>
           ) : null}
 
-          {/* Brands */}
-          <section className="mx-auto max-w-6xl px-4 py-14">
-            <SectionHeader
-              eyebrow="Brands"
-              title="The BohoSaaz Collection"
-              eyebrowClassName={theme.sectionEyebrow}
-              titleClassName={theme.sectionTitle}
-              actionClassName={theme.sectionAction}
-            />
-
-            <p className="mt-2 max-w-xl text-xs leading-relaxed text-muted-foreground md:text-sm">
-              Discover our distinctive collections from celebrated makers and premium brands, curated to inspire thoughtful gifting.
-            </p>
-
-            <div className="mt-5 grid gap-8 sm:mt-7">
-              <BrandMarquee
-                title="Popular Collection"
-                eyebrow="Top Sellers"
-                href={`/${lang}/brands/popular`}
-                brands={popularBrands}
-                duration="28s"
+          {brands.length > 0 ? (
+            <section className="mx-auto max-w-6xl px-4 py-14">
+              <SectionHeader
+                eyebrow="Brands"
+                title="The BohoSaaz Collection"
+                eyebrowClassName={theme.sectionEyebrow}
+                titleClassName={theme.sectionTitle}
+                actionClassName={theme.sectionAction}
               />
-              <BrandMarquee
-                title="Luxury Collection"
-                eyebrow="Premium Picks"
-                href={`/${lang}/brands/luxury`}
-                brands={luxuryBrands}
-                duration="34s"
-              />
-            </div>
-          </section>
+
+              <p className="mt-2 max-w-xl text-xs leading-relaxed text-muted-foreground md:text-sm">
+                Discover our distinctive collections from celebrated makers and premium brands, curated to inspire thoughtful gifting.
+              </p>
+
+              <div className="mt-5 grid gap-8 sm:mt-7">
+                {popularBrands.length > 0 ? (
+                  <BrandMarquee
+                    title="Popular Collection"
+                    eyebrow="Top Sellers"
+                    href={`/${lang}/brands/popular`}
+                    brands={popularBrands}
+                    duration="28s"
+                  />
+                ) : null}
+                {luxuryBrands.length > 0 ? (
+                  <BrandMarquee
+                    title="Luxury Collection"
+                    eyebrow="Premium Picks"
+                    href={`/${lang}/brands/luxury`}
+                    brands={luxuryBrands}
+                    duration="34s"
+                  />
+                ) : null}
+              </div>
+            </section>
+          ) : null}
 
         </>
       ) : null}

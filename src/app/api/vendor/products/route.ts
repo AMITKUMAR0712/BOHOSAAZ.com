@@ -347,16 +347,13 @@ export async function POST(req: NextRequest) {
 
     const hasVariants = normalizedVariants.length > 0;
 
-    // Add 10% markup for display as requested by admin
-    const markup = 1.1;
-
-    const basePrice = price ? +(price * markup).toFixed(2) : 0;
+    const basePrice = price ? +price.toFixed(2) : 0;
     const computedStock = hasVariants
       ? normalizedVariants.filter((v) => v.isActive).reduce((sum, v) => sum + v.stock, 0)
       : stock;
 
     const computedBasePrice = hasVariants
-      ? Math.min(...normalizedVariants.map((v) => +(v.price * markup).toFixed(2)))
+      ? Math.min(...normalizedVariants.map((v) => +v.price.toFixed(2)))
       : basePrice;
 
     const computedBaseSale = hasVariants
@@ -364,10 +361,10 @@ export async function POST(req: NextRequest) {
           const sales = normalizedVariants
             .map((v) => v.salePrice)
             .filter((p): p is number => typeof p === "number" && Number.isFinite(p));
-          return sales.length ? Math.min(...sales.map((p) => +(p * markup).toFixed(2))) : null;
+          return sales.length ? Math.min(...sales.map((p) => +p.toFixed(2))) : null;
         })()
       : salePrice
-        ? +(salePrice * markup).toFixed(2)
+        ? +salePrice.toFixed(2)
         : null;
 
     const product = await prisma.$transaction(async (tx) => {
@@ -422,8 +419,8 @@ export async function POST(req: NextRequest) {
             size: v.size,
             color: v.color ?? null,
             sku: v.sku,
-            price: +(v.price * markup).toFixed(2),
-            salePrice: v.salePrice ? +(v.salePrice * markup).toFixed(2) : null,
+            price: +v.price.toFixed(2),
+            salePrice: v.salePrice ? +v.salePrice.toFixed(2) : null,
             stock: v.stock,
             isActive: v.isActive,
           })),

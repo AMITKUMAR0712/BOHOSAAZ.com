@@ -465,7 +465,7 @@ export default async function ShopPage({
         <div className="mb-4 flex flex-col gap-3 rounded-[24px] border border-border/70 bg-card/70 p-4 shadow-sm backdrop-blur md:mb-5 md:flex-row md:items-end md:justify-between md:rounded-[30px] md:p-5">
           <div>
             <div className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Results</div>
-            <h2 className="mt-1 font-heading text-2xl tracking-tight text-foreground md:mt-2 md:text-3xl">{products.length} gifts found</h2>
+            <h2 className="mt-1 font-heading text-2xl tracking-tight text-foreground md:mt-2 md:text-3xl">{products.length} Gifts Found</h2>
           </div>
           {activeFilters.length ? (
             <div className="flex flex-wrap gap-2">

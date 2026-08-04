@@ -228,6 +228,9 @@ export default async function ProductDetailPage({
     return parts.length ? parts.join(" × ") : "—";
   };
   const dimsText = formatDimensions();
+  const materialFilled = Boolean(p?.material && String(p.material).trim());
+  const dimensionsFilled = dimsText !== "—";
+  const hasAtAGlance = materialFilled || dimensionsFilled;
 
   const images = (() => {
     const list = Array.isArray(p?.images) ? p.images : [];
@@ -447,24 +450,30 @@ export default async function ProductDetailPage({
                 <h2 className="mt-2 font-heading text-2xl tracking-tight text-foreground">Everything about this product</h2>
               </div>
               <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-                Quick facts, specifications, delivery notes and care guidance in one clean section.
+                
               </p>
             </div>
 
-            <div className="grid gap-5 p-4 md:p-6 lg:grid-cols-[0.9fr_1.35fr]">
-              <div className="rounded-[26px] border border-primary/15 bg-linear-to-br from-primary/10 via-background/80 to-amber-500/10 p-5 shadow-inner">
-                <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">At a glance</div>
-                <div className="mt-4 grid gap-3">
-                  <div className="rounded-2xl border border-border/70 bg-card/70 p-4">
-                    <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Material</div>
-                    <div className="mt-1 font-medium text-foreground">{text(p.material)}</div>
-                  </div>
-                  <div className="rounded-2xl border border-border/70 bg-card/70 p-4">
-                    <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Dimensions</div>
-                    <div className="mt-1 font-medium text-foreground">{dimsText}</div>
+            <div className={`grid gap-5 p-4 md:p-6 ${hasAtAGlance ? "lg:grid-cols-[0.9fr_1.35fr]" : ""}`}>
+              {hasAtAGlance ? (
+                <div className="rounded-[26px] border border-primary/15 bg-linear-to-br from-primary/10 via-background/80 to-amber-500/10 p-5 shadow-inner">
+                  <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">At a glance</div>
+                  <div className="mt-4 grid gap-3">
+                    {materialFilled ? (
+                      <div className="rounded-2xl border border-border/70 bg-card/70 p-4">
+                        <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Material</div>
+                        <div className="mt-1 font-medium text-foreground">{text(p.material)}</div>
+                      </div>
+                    ) : null}
+                    {dimensionsFilled ? (
+                      <div className="rounded-2xl border border-border/70 bg-card/70 p-4">
+                        <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Dimensions</div>
+                        <div className="mt-1 font-medium text-foreground">{dimsText}</div>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
-              </div>
+              ) : null}
 
               <Accordion className="overflow-hidden rounded-[26px] border-border/70 bg-background/75 shadow-[0_18px_55px_rgba(47,38,34,0.08)]">
                 <AccordionItem title="Description" defaultOpen>
