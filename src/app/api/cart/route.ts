@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { JwtPayload, verifyToken } from "@/lib/auth";
 import { z } from "zod";
@@ -33,38 +34,71 @@ function getAuthPayload(req: NextRequest): JwtPayload | null {
   }
 }
 
+const cartOrderInclude = {
+  items: {
+    include: {
+      variant: true,
+      product: {
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          stock: true,
+          price: true,
+          salePrice: true,
+          currency: true,
+          vendorId: true,
+          forceCodOnly: true,
+          images: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], select: { url: true, isPrimary: true } },
+          vendor: { select: { shopName: true } },
+          category: { select: { name: true } },
+        },
+      },
+    },
+  },
+} satisfies Prisma.OrderInclude;
+
 export async function GET(req: NextRequest) {
   const payload = getAuthPayload(req);
   if (!payload) return Response.json({ order: null });
 
   try {
     const orderId = req.nextUrl.searchParams.get("orderId")?.trim();
-    const order = await prisma.order.findFirst({
+    const currentCurrency = getCurrencyFromCookie(req.cookies.get("bohosaaz_currency")?.value);
+    let order = await prisma.order.findFirst({
       where: orderId
         ? { id: orderId, userId: payload.sub, status: "PENDING" }
         : { userId: payload.sub, status: "PENDING" },
       orderBy: { updatedAt: "desc" },
-      include: {
-        items: {
-          include: {
-            variant: true,
-            product: {
-              select: {
-                id: true,
-                title: true,
-                slug: true,
-                stock: true,
-                currency: true,
-                forceCodOnly: true,
-                images: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], select: { url: true, isPrimary: true } },
-                vendor: { select: { shopName: true } },
-                category: { select: { name: true } },
-              },
-            },
-          },
-        },
-      },
+      include: cartOrderInclude,
     });
+
+    // Keep the cart priced in whatever currency is currently selected, so the
+    // amount shown at checkout always matches what Razorpay will charge.
+    if (order && order.items.length > 0 && order.currency !== currentCurrency) {
+      await prisma.$transaction(async (tx) => {
+        for (const item of order!.items) {
+          const baseUnitPrice = item.variant
+            ? Number(item.variant.salePrice ?? item.variant.price)
+            : Number(item.product.salePrice ?? item.product.price);
+          const productCurrency = item.product.currency === "USD" ? "USD" : "INR";
+          const unitPrice = getCustomerUnitPrice({
+            basePrice: baseUnitPrice,
+            productCurrency,
+            displayCurrency: currentCurrency,
+            isVendorProduct: Boolean(item.product.vendorId),
+          });
+          await tx.orderItem.update({ where: { id: item.id }, data: { price: unitPrice } });
+        }
+        await tx.order.update({ where: { id: order!.id }, data: { currency: currentCurrency } });
+        await recomputePendingOrderTotals(tx, order!.id);
+      });
+
+      order = await prisma.order.findFirst({
+        where: { id: order.id },
+        include: cartOrderInclude,
+      });
+    }
 
     if (order && order.items.length === 0) {
       if (Number(order.total || 0) !== 0 || Number(order.subtotal || 0) !== 0 || order.couponId || order.couponCode) {
