@@ -1191,7 +1191,7 @@ export default async function Home({
                   "mt-6 font-heading text-4xl md:text-6xl tracking-tight text-foreground leading-[1.02]"
                 }
               >
-                BohoSaazEditions
+                BohoSaaz Editions
               </h1>
 
               <p
@@ -1553,7 +1553,7 @@ export default async function Home({
           <section className="mx-auto max-w-6xl px-4 py-14">
             <SectionHeader
               eyebrow="Brands"
-              title="The BohoSaazCollection"
+              title="The BohoSaaz Collection"
               eyebrowClassName={theme.sectionEyebrow}
               titleClassName={theme.sectionTitle}
               actionClassName={theme.sectionAction}

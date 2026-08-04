@@ -161,7 +161,7 @@ export default function SiteFooter() {
               <div className="grid h-11 w-11 place-items-center overflow-hidden rounded-full border-2 border-primary/25 bg-card shadow-[0_8px_24px_rgba(135,56,20,0.16)] transition duration-300 ease-out group-hover:scale-105 group-hover:border-primary/45 sm:h-12 sm:w-12">
                 <Image
                   src="/logo-copy.jpeg"
-                  alt="Bohosaaz"
+                  alt="BohoSaaz"
                   width={112}
                   height={112}
                   sizes="48px"
@@ -170,7 +170,7 @@ export default function SiteFooter() {
               </div>
               <div>
                 <div className="font-heading text-xl tracking-tight text-foreground drop-shadow-sm group-hover:text-primary transition">
-                  Bohosaaz
+                  BohoSaaz
                 </div>
                 <div className="text-xs uppercase tracking-[0.18em] text-primary/80">
                   Art of meaningful gifting
