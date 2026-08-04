@@ -80,7 +80,7 @@ export async function GET(req: Request) {
         { rowHeight: 20 }
       );
     },
-    { title: "Bohosaaz — Vendor Returns Export", subtitle: me.vendor?.shopName || "" }
+    { title: "BohoSaaz— Vendor Returns Export", subtitle: me.vendor?.shopName || "" }
   );
 
   const filename = `Bohosaaz_VendorReturns_${todayIsoDate()}.pdf`;

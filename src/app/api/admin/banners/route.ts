@@ -55,7 +55,7 @@ function normalizeBannerInput(data: z.infer<typeof createSchema>) {
   }
 
   return {
-    title: data.title?.trim() || (videoUrl ? "Bohosaaz video banner" : "Bohosaaz banner"),
+    title: data.title?.trim() || (videoUrl ? "BohoSaazvideo banner" : "BohoSaazbanner"),
     imageUrl: imageUrl || "/logo-copy.jpeg",
     videoUrl,
   };

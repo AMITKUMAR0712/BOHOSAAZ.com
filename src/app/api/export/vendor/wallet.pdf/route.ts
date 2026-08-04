@@ -72,7 +72,7 @@ export async function GET(req: Request) {
         { rowHeight: 20 }
       );
     },
-    { title: "Bohosaaz — Vendor Wallet Export", subtitle: me.vendor?.shopName || "" }
+    { title: "BohoSaaz— Vendor Wallet Export", subtitle: me.vendor?.shopName || "" }
   );
 
   const filename = `Bohosaaz_VendorWallet_${todayIsoDate()}.pdf`;

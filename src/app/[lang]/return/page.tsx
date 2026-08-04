@@ -5,7 +5,7 @@ import { buildMetadata } from "@/lib/seo/metadata";
 export const metadata: Metadata = buildMetadata({
   title: "Returns & Refunds",
   description:
-    "Read Bohosaaz return, exchange, credit note and refund policy details for gift orders across Noida and Delhi NCR.",
+    "Read BohoSaazreturn, exchange, credit note and refund policy details for gift orders across Noida and Delhi NCR.",
   path: "/en/return",
 });
 

@@ -1,4 +1,4 @@
-# Bohosaaz Help & Policies
+# BohoSaazHelp & Policies
 
 ## Orders & Tracking
 - You can track your orders from **Account → Orders** after logging in.

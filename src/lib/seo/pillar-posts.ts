@@ -32,9 +32,9 @@ Choose gifts that look premium without being overly personal. Festival hampers, 
 
 ## How should I choose budget bands?
 
-For most Delhi NCR teams, start with clear bands (for example under ₹1,000, ₹1,000–₹2,500, and premium). Then filter on Bohosaaz Shop by budget and occasion so shortlisting stays fast.
+For most Delhi NCR teams, start with clear bands (for example under ₹1,000, ₹1,000–₹2,500, and premium). Then filter on BohoSaazShop by budget and occasion so shortlisting stays fast.
 
-## Can Bohosaaz help with bulk corporate gifting?
+## Can BohoSaazhelp with bulk corporate gifting?
 
 Yes. Browse corporate-friendly categories online, or email care@bohosaaz.com for bulk or custom requirements across Delhi NCR.
 
@@ -43,8 +43,8 @@ Yes. Browse corporate-friendly categories online, or email care@bohosaaz.com for
 ### What are good corporate gifts for Gurugram offices?
 Festival hampers, premium barware and curated desk-friendly gifts work well for Gurugram teams and clients.
 
-### Does Bohosaaz deliver corporate gifts in Noida and New Delhi?
-Yes. Bohosaaz serves Noida, Greater Noida, New Delhi, Ghaziabad and Gurugram. Delivery depends on product, seller and pincode.
+### Does BohoSaazdeliver corporate gifts in Noida and New Delhi?
+Yes. BohoSaazserves Noida, Greater Noida, New Delhi, Ghaziabad and Gurugram. Delivery depends on product, seller and pincode.
 
 ### How early should I order festival corporate gifts?
 Order early in the festival season so packing and delivery windows stay comfortable across Delhi NCR.`,
@@ -59,7 +59,7 @@ Order early in the festival season so packing and delivery windows stay comforta
 
 ## How to shortlist birthday gifts under ₹2000
 
-Use Bohosaaz Shop filters for occasion, recipient and budget. Focus on products with clear photos, gift-ready presentation and delivery details for your pincode.
+Use BohoSaazShop filters for occasion, recipient and budget. Focus on products with clear photos, gift-ready presentation and delivery details for your pincode.
 
 ## Gift ideas that work well
 
@@ -78,10 +78,10 @@ Enter the correct recipient pincode at checkout. Delivery timing depends on stoc
 Yes. Use Shop budget filters and browse birthday-friendly categories to stay within ₹2000.
 
 ### Are cheaper gifts still gift-ready?
-Many Bohosaaz products are curated for gifting. Check the product page for packaging and personalization notes.
+Many BohoSaazproducts are curated for gifting. Check the product page for packaging and personalization notes.
 
 ### What if I need something for Greater Noida instead of Noida?
-Bohosaaz serves both. Start on the Greater Noida local page or Shop with the recipient address at checkout.`,
+BohoSaazserves both. Start on the Greater Noida local page or Shop with the recipient address at checkout.`,
   },
   {
     slug: "festival-hamper-guide-delhi-ncr",
@@ -97,7 +97,7 @@ Hampers suit relatives, neighbours, landlords, clients and office teams. Choose 
 
 ## What should a good hamper include?
 
-Look for balanced assortments, sturdy presentation and products that feel intentional — not random fillers. Bohosaaz focuses on curated gifting rather than generic marketplace dumps.
+Look for balanced assortments, sturdy presentation and products that feel intentional — not random fillers. BohoSaazfocuses on curated gifting rather than generic marketplace dumps.
 
 ## Ordering tips for Delhi NCR
 
@@ -112,7 +112,7 @@ Look for balanced assortments, sturdy presentation and products that feel intent
 Yes. They scale well for teams and clients when you keep branding subtle and quality consistent.
 
 ### Can I send hampers from Noida to Gurugram?
-Coverage depends on product and pincode, but Gurugram is part of Bohosaaz Delhi NCR service areas.
+Coverage depends on product and pincode, but Gurugram is part of BohoSaazDelhi NCR service areas.
 
 ### Where do I start on Bohosaaz?
 Open Shop, browse hamper and festival categories, or read related local guides for Noida and Delhi NCR.`,
@@ -131,7 +131,7 @@ Romantic, elegant, useful or celebratory? Mood narrows categories faster than sc
 
 ## Step 2: Set a budget
 
-Pick a band first. Then filter Bohosaaz Shop so you only compare relevant gifts for Noida or Delhi NCR delivery.
+Pick a band first. Then filter BohoSaazShop so you only compare relevant gifts for Noida or Delhi NCR delivery.
 
 ## Step 3: Check gift-ready details
 
@@ -149,7 +149,7 @@ Home decor accents, premium lifestyle pieces and thoughtfully curated sets are s
 ### Can I personalize anniversary gifts on Bohosaaz?
 Some products support personalization. Check each product page for options and timelines.
 
-### Does Bohosaaz help with anniversary gifting in Delhi NCR?
-Yes. Bohosaaz is built for curated online gifting across Noida, Greater Noida, New Delhi and Delhi NCR.`,
+### Does BohoSaazhelp with anniversary gifting in Delhi NCR?
+Yes. BohoSaazis built for curated online gifting across Noida, Greater Noida, New Delhi and Delhi NCR.`,
   },
 ];

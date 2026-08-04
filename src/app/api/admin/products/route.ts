@@ -242,7 +242,7 @@ export async function POST(req: NextRequest) {
     update: {},
     create: {
       userId: admin.id,
-      shopName: admin.name ? `${admin.name} (Admin)` : "Bohosaaz Admin",
+      shopName: admin.name ? `${admin.name} (Admin)` : "BohoSaazAdmin",
       status: "APPROVED",
       commission: 0,
     },

@@ -244,7 +244,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
                       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 pb-4">
                         <div>
                           <div className="text-sm text-muted-foreground">Seller</div>
-                          <div className="font-semibold">{group.title || "Bohosaaz seller"}</div>
+                          <div className="font-semibold">{group.title || "BohoSaazseller"}</div>
                         </div>
                         <div className="text-right">
                           <Badge variant="outline">{String(group.status).replaceAll("_", " ")}</Badge>

@@ -1,6 +1,6 @@
 # Bohosaaz
 
-> Bohosaaz is a premium online gifting marketplace for Noida, Greater Noida, New Delhi and Delhi NCR. Curated birthday gifts, anniversary gifts, corporate gifts, festival hampers, home decor, barware and personalized gift ideas.
+> BohoSaazis a premium online gifting marketplace for Noida, Greater Noida, New Delhi and Delhi NCR. Curated birthday gifts, anniversary gifts, corporate gifts, festival hampers, home decor, barware and personalized gift ideas.
 
 Website: https://www.bohosaaz.com
 Primary locale: en-IN (canonical). `/hi` paths are locale shells and should cite English URLs.

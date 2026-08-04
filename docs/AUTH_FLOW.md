@@ -1,4 +1,4 @@
-# Bohosaaz — Auth & RBAC Flow Diagram
+# BohoSaaz— Auth & RBAC Flow Diagram
 
 This document focuses specifically on authentication, role-based routing, and where enforcement happens.
 

@@ -12,7 +12,7 @@ export const SITE = {
   currency: "INR",
   tagline: "Meaningful gifting",
   description:
-    "Bohosaaz is a premium online gifting marketplace for gift products in Noida, Greater Noida, New Delhi and Delhi NCR. Shop curated birthday gifts, anniversary gifts, corporate gifts, festival gifts, home decor, barware, luxury hampers and personalized gift ideas.",
+    "BohoSaazis a premium online gifting marketplace for gift products in Noida, Greater Noida, New Delhi and Delhi NCR. Shop curated birthday gifts, anniversary gifts, corporate gifts, festival gifts, home decor, barware, luxury hampers and personalized gift ideas.",
   social: {
     instagram: "https://www.instagram.com/bohosaaz_official/",
     facebook: "https://www.facebook.com/bohosaaz",

@@ -65,7 +65,7 @@ export async function GET(req: Request) {
         { rowHeight: 20 }
       );
     },
-    { title: "Bohosaaz — Admin Returns Export", subtitle: "" }
+    { title: "BohoSaaz— Admin Returns Export", subtitle: "" }
   );
 
   const filename = `Bohosaaz_Admin_Returns_${todayIsoDate()}.pdf`;

@@ -24,9 +24,9 @@ const samples: Array<{ title: string; description: string; label: string }> = [
   },
   {
     label: "default",
-    title: "Bohosaaz | Online Gift Shop in Noida & Delhi NCR",
+    title: "BohoSaaz| Online Gift Shop in Noida & Delhi NCR",
     description:
-      "Bohosaaz is a premium online gifting marketplace for gift products in Noida, Greater Noida, New Delhi and Delhi NCR.",
+      "BohoSaazis a premium online gifting marketplace for gift products in Noida, Greater Noida, New Delhi and Delhi NCR.",
   },
 ];
 

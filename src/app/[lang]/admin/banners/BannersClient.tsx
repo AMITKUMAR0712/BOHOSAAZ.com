@@ -173,7 +173,7 @@ export default function BannersClient({
     setMsg(`Uploading ${selected.length} video stories...`);
 
     try {
-      const baseTitle = title.trim() || "Bohosaaz gifting story";
+      const baseTitle = title.trim() || "BohoSaazgifting story";
       const fallbackImage = imageUrl.trim() || "/logo-copy.jpeg";
 
       for (let i = 0; i < selected.length; i++) {
@@ -282,7 +282,7 @@ export default function BannersClient({
         <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
           <label className="flex flex-col gap-1">
             <span className="text-gray-600">Title (optional)</span>
-            <input className="rounded-lg border px-3 py-2" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Auto: Bohosaaz banner" />
+            <input className="rounded-lg border px-3 py-2" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Auto: BohoSaazbanner" />
           </label>
 
           <label className="flex flex-col gap-1">

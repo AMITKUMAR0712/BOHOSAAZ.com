@@ -70,7 +70,7 @@ export async function GET(req: Request) {
         { rowHeight: 20 }
       );
     },
-    { title: "Bohosaaz — Returns Export", subtitle: "" }
+    { title: "BohoSaaz— Returns Export", subtitle: "" }
   );
 
   const filename = `Bohosaaz_Returns_${todayIsoDate()}.pdf`;

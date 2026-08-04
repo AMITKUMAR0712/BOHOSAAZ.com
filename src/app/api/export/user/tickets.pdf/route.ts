@@ -62,7 +62,7 @@ export async function GET(req: Request) {
         { rowHeight: 20 }
       );
     },
-    { title: "Bohosaaz — Tickets Export", subtitle: "" }
+    { title: "BohoSaaz— Tickets Export", subtitle: "" }
   );
 
   const filename = `Bohosaaz_Tickets_${todayIsoDate()}.pdf`;

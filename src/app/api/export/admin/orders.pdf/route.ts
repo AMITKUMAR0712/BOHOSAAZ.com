@@ -81,7 +81,7 @@ export async function GET(req: Request) {
       );
     },
     {
-      title: "Bohosaaz — Admin Orders Export",
+      title: "BohoSaaz— Admin Orders Export",
       subtitle: subtitleParts.join(" • "),
     }
   );

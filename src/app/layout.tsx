@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
 
   title: {
-    default: "Bohosaaz | Online Gift Shop in Noida & Delhi NCR",
+    default: "BohoSaaz| Online Gift Shop in Noida & Delhi NCR",
     template: "%s | Bohosaaz",
   },
 
@@ -74,7 +74,7 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title: "Bohosaaz | Online Gift Shop in Noida & Delhi NCR",
+    title: "BohoSaaz| Online Gift Shop in Noida & Delhi NCR",
     description: SITE.description,
     type: "website",
     url: SITE.url,
@@ -85,13 +85,13 @@ export const metadata: Metadata = {
         url: SITE.defaultOgImage,
         width: SITE.ogImageWidth,
         height: SITE.ogImageHeight,
-        alt: "Bohosaaz online gift shop in Noida and Delhi NCR",
+        alt: "BohoSaazonline gift shop in Noida and Delhi NCR",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bohosaaz | Online Gift Shop in Noida & Delhi NCR",
+    title: "BohoSaaz| Online Gift Shop in Noida & Delhi NCR",
     description: SITE.description,
     images: [SITE.defaultOgImage],
   },

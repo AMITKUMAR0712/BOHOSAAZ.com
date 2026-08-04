@@ -1,4 +1,4 @@
-# BOHOSAAZ Vendor Panel Documentation
+# BohoSaazVendor Panel Documentation
 
 This guide explains how a new vendor can join BOHOSAAZ, complete KYC, upload products, manage orders, handle returns, and use the vendor panel correctly.
 
@@ -39,7 +39,7 @@ Uploaded files should be clear and readable. Very large files may fail, so keep 
 
 ## 3. Create or Log In to Your Account
 
-1. Go to the BOHOSAAZ website.
+1. Go to the BohoSaazwebsite.
 2. Create a new account if you are a new user.
 3. Log in with your registered email/mobile and password.
 4. Open your account area.

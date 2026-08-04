@@ -76,7 +76,7 @@ export default function RegisterClient({
         <div className="order-2 md:order-1">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-muted-foreground shadow-sm">
             <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
-            {vendorFlowActive ? "Create vendor account" : "Join Bohosaaz gifting"}
+            {vendorFlowActive ? "Create vendor account" : "Join BohoSaazgifting"}
           </div>
           <h1 className="mt-2 max-w-xl font-heading text-3xl leading-tight tracking-tight text-foreground md:text-[2.35rem]">
             {vendorFlowActive ? "Create your seller account and start vendor application." : "Create an account for gifts people will remember."}

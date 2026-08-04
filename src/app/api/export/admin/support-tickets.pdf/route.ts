@@ -61,7 +61,7 @@ export async function GET(req: Request) {
         { rowHeight: 20 }
       );
     },
-    { title: "Bohosaaz — Admin Support Tickets Export", subtitle: "" }
+    { title: "BohoSaaz— Admin Support Tickets Export", subtitle: "" }
   );
 
   const filename = `Bohosaaz_Admin_SupportTickets_${todayIsoDate()}.pdf`;

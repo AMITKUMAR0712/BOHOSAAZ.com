@@ -36,7 +36,7 @@ export async function generateMetadata({
     title: brandType?.title ?? "Brands",
     description:
       brandType?.subtitle ??
-      "Explore curated gift brands on Bohosaaz for Noida and Delhi NCR.",
+      "Explore curated gift brands on BohoSaazfor Noida and Delhi NCR.",
     path: `/${locale}/brands/${type}`,
     noindex: !brandType,
   });

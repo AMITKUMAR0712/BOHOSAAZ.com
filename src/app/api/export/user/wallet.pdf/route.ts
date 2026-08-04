@@ -74,7 +74,7 @@ export async function GET(req: Request) {
         { rowHeight: 20 }
       );
     },
-    { title: "Bohosaaz — Wallet Export", subtitle: `Wallet ${wallet.id}` }
+    { title: "BohoSaaz— Wallet Export", subtitle: `Wallet ${wallet.id}` }
   );
 
   const filename = `Bohosaaz_Wallet_${todayIsoDate()}.pdf`;

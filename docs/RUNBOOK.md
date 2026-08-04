@@ -1,4 +1,4 @@
-# Bohosaaz Runbook
+# BohoSaazRunbook
 
 ## Requirements
 - Node.js 18.18+ (recommended: Node.js 20 LTS)

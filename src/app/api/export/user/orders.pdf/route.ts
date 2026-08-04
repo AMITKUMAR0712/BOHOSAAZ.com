@@ -66,7 +66,7 @@ export async function GET(req: Request) {
       );
     },
     {
-      title: "Bohosaaz — Orders Export",
+      title: "BohoSaaz— Orders Export",
       subtitle: subtitleParts.length ? subtitleParts.join(" • ") : "",
     }
   );

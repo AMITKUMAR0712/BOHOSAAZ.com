@@ -134,7 +134,7 @@ export default function SupportClient({ userId: _userId }: { userId: string }) {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Support & Messaging</h1>
-          <p className="text-muted-foreground">Talk to BOHOSAAZ Admin team.</p>
+          <p className="text-muted-foreground">Talk to BohoSaazAdmin team.</p>
         </div>
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="mr-2 h-4 w-4" /> New Ticket
@@ -250,7 +250,7 @@ export default function SupportClient({ userId: _userId }: { userId: string }) {
                           }`}
                       >
                         <div className="mb-1 text-[10px] opacity-70">
-                          {m.senderRole === "ADMIN" ? "BOHOSAAZ Admin" : "You"} • {new Date(m.createdAt).toLocaleTimeString()}
+                          {m.senderRole === "ADMIN" ? "BohoSaazAdmin" : "You"} • {new Date(m.createdAt).toLocaleTimeString()}
                         </div>
                         <p className="whitespace-pre-wrap">{m.message}</p>
                         <SupportAttachmentList attachments={m.attachments} />

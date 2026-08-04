@@ -1,4 +1,4 @@
-# Bohosaaz — Flow Map (End-to-End)
+# BohoSaaz— Flow Map (End-to-End)
 
 This document captures the intended “flow-wise and consistent” journeys across User, Vendor, and Admin roles with i18n routing via `/{lang}`.
 

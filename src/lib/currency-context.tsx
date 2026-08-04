@@ -77,6 +77,12 @@ export function CurrencyProvider({ children, userId }: { children: React.ReactNo
         }
       }
 
+      // The cookie is what server routes (cart, checkout) read. If it's
+      // stale relative to the resolved currency above, requests would price
+      // in the wrong currency while the UI displays the correct one — sync
+      // it here rather than only on manual toggle.
+      setCurrencyPersistence(initialCurrency);
+
       setCurrencyState(initialCurrency);
       setIsLoading(false);
     };

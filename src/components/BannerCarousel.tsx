@@ -205,7 +205,7 @@ export function BannerCarousel({
             isAnimatedSvgStory ? (
               <img
                 src={storyUrl}
-                alt={current?.title || "Bohosaaz gifting story"}
+                alt={current?.title || "BohoSaazgifting story"}
                 className="absolute inset-0 h-full w-full object-cover"
                 loading="lazy"
                 decoding="async"

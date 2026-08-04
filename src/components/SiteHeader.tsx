@@ -618,14 +618,14 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
         <Link
           href={lp}
           className="group flex min-w-0 shrink-0 items-center gap-2.5 rounded-full px-1.5 pr-3 transition-all duration-300 hover:-translate-y-px hover:bg-white/22 hover:shadow-[0_10px_26px_rgba(69,40,24,0.10)]"
-          aria-label="Bohosaaz home"
+          aria-label="BohoSaazhome"
         >
           <span className={`grid shrink-0 place-items-center overflow-hidden rounded-full bg-[#f8ead8] shadow-[0_8px_22px_rgba(69,40,24,0.12)] ring-1 ring-white/55 transition-all duration-500 ${
             !isDashboardRoute && scrolled ? "h-10 w-10" : "h-11 w-11 sm:h-12 sm:w-12"
           }`}>
             <Image
               src="/logo copy.jpeg"
-              alt="Bohosaaz"
+              alt="BohoSaaz"
               width={64}
               height={64}
               className={`rounded-full object-contain transition-all duration-500 ${
@@ -635,7 +635,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
             />
           </span>
           <span className="hidden leading-tight sm:block">
-            <span className="block font-heading text-[15px] font-semibold tracking-tight text-foreground transition group-hover:text-primary">Bohosaaz</span>
+            <span className="block font-heading text-[15px] font-semibold tracking-tight text-foreground transition group-hover:text-primary">BohoSaaz</span>
             <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Art Of Meaningful Gifting</span>
           </span>
         </Link>
@@ -996,7 +996,7 @@ export default function SiteHeader({ lang }: { lang?: Locale } = {}) {
       </div>
 
       {/* ✅ Drawer */}
-      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} title="Bohosaaz Menu" mobileTopOffset>
+      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} title="BohoSaazMenu" mobileTopOffset>
         <div className="grid gap-4">
           <form
             className="flex items-center gap-2 rounded-3xl bg-background/70 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]"

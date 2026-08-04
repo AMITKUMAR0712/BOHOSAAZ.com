@@ -66,7 +66,7 @@ export async function GET(req: Request) {
         { rowHeight: 20 }
       );
     },
-    { title: "Bohosaaz — Payouts Export", subtitle: me.vendor?.shopName || "" }
+    { title: "BohoSaaz— Payouts Export", subtitle: me.vendor?.shopName || "" }
   );
 
   const filename = `Bohosaaz_Payouts_${todayIsoDate()}.pdf`;

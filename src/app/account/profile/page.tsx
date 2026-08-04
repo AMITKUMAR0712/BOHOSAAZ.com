@@ -3,7 +3,7 @@ import { buildMetadata } from "@/lib/seo/metadata";
 
 export const metadata = buildMetadata({
   title: "Profile & Address",
-  description: "Manage your Bohosaaz profile and shipping addresses.",
+  description: "Manage your BohoSaazprofile and shipping addresses.",
   path: "/en/account/profile",
   noindex: true,
   nofollow: true,

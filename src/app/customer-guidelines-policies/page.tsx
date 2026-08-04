@@ -3,7 +3,7 @@ export default function CustomerGuidelinesPoliciesPage() {
     <main className="bg-[#fafafa] px-4 py-14 sm:px-6 lg:px-8">
       <section className="mx-auto max-w-4xl rounded-3xl border bg-white p-6 shadow-sm sm:p-10">
         <h1 className="text-3xl font-semibold text-gray-900 sm:text-4xl">
-          BOHOSAAZ CUSTOMER POLICY HANDBOOK
+          BohoSaazCUSTOMER POLICY HANDBOOK
         </h1>
 
         <p className="mt-6 leading-relaxed text-gray-700">
@@ -19,7 +19,7 @@ export default function CustomerGuidelinesPoliciesPage() {
 
         <h2 className="mt-10 text-xl font-semibold text-gray-900">1.2 Product Information</h2>
         <p className="mt-3 leading-relaxed text-gray-700">
-          BohoSaaz strives to ensure that product descriptions, images, dimensions, and
+          BohoSaazstrives to ensure that product descriptions, images, dimensions, and
           specifications are accurate. However, minor variations in colour, texture, finish, or
           appearance may occur due to handcrafted processes, lighting conditions, or screen
           settings and shall not be treated as defects.
@@ -27,7 +27,7 @@ export default function CustomerGuidelinesPoliciesPage() {
 
         <h2 className="mt-10 text-xl font-semibold text-gray-900">1.3 Personalized & Handmade Products</h2>
         <p className="mt-3 leading-relaxed text-gray-700">
-          Many products available on BohoSaaz are handmade or customized. As a result, slight
+          Many products available on BohoSaazare handmade or customized. As a result, slight
           variations in design, colour, size, or finish are a natural characteristic of
           handcrafted products and add to their uniqueness.
         </p>
@@ -42,7 +42,7 @@ export default function CustomerGuidelinesPoliciesPage() {
           Platform before order processing begins.
         </p>
         <p className="mt-4 leading-relaxed text-gray-700">
-          BohoSaaz reserves the right to cancel any order where payment authorization fails or
+          BohoSaazreserves the right to cancel any order where payment authorization fails or
           fraudulent activity is suspected.
         </p>
 
@@ -60,7 +60,7 @@ export default function CustomerGuidelinesPoliciesPage() {
           other circumstances beyond BohoSaaz&apos;s reasonable control.
         </p>
         <p className="mt-4 leading-relaxed text-gray-700">
-          BohoSaaz will make reasonable efforts to ensure timely delivery but does not guarantee
+          BohoSaazwill make reasonable efforts to ensure timely delivery but does not guarantee
           delivery on a specific date unless expressly agreed.
         </p>
 
@@ -76,7 +76,7 @@ export default function CustomerGuidelinesPoliciesPage() {
         </h2>
         <h3 className="mt-6 text-lg font-semibold text-gray-900">4.1 General Policy</h3>
         <p className="mt-3 leading-relaxed text-gray-700">
-          As BohoSaaz specializes in handmade, handcrafted, personalized, customized, and
+          As BohoSaazspecializes in handmade, handcrafted, personalized, customized, and
           made-to-order gifting products, all sales are final.
         </p>
         <p className="mt-4 leading-relaxed text-gray-700">
@@ -103,12 +103,12 @@ export default function CustomerGuidelinesPoliciesPage() {
           <li>The complete unboxing process without interruption.</li>
           <li>The damaged or defective product.</li>
           <li>
-            The issue is reported to BohoSaaz within 24 hours of delivery, along with the unboxing
+            The issue is reported to BohoSaazwithin 24 hours of delivery, along with the unboxing
             video and supporting photographs.
           </li>
         </ul>
         <p className="mt-4 leading-relaxed text-gray-700">
-          BohoSaaz reserves the right to reject any claim where the required unboxing video is
+          BohoSaazreserves the right to reject any claim where the required unboxing video is
           unavailable, incomplete, edited, or does not clearly establish that the damage existed
           at the time of delivery.
         </p>
@@ -129,7 +129,7 @@ export default function CustomerGuidelinesPoliciesPage() {
           <li>Claims reported after the specified reporting period.</li>
         </ul>
         <p className="mt-4 leading-relaxed text-gray-700">
-          The decision of BohoSaaz regarding the validity of a claim shall be final after reviewing
+          The decision of BohoSaazregarding the validity of a claim shall be final after reviewing
           the evidence provided.
         </p>
 
@@ -139,7 +139,7 @@ export default function CustomerGuidelinesPoliciesPage() {
           customized, and made-to-order products cannot be cancelled once production has commenced.
         </p>
         <p className="mt-4 leading-relaxed text-gray-700">
-          BohoSaaz reserves the right to cancel any order due to stock unavailability, pricing
+          BohoSaazreserves the right to cancel any order due to stock unavailability, pricing
           errors, suspected fraudulent activity, or circumstances beyond its reasonable control. In
           such cases, eligible refunds will be processed through the original payment method.
         </p>
@@ -156,7 +156,7 @@ export default function CustomerGuidelinesPoliciesPage() {
 
         <h2 className="mt-10 text-xl font-semibold text-gray-900">CHAPTER 7 - CUSTOMER SUPPORT</h2>
         <p className="mt-3 leading-relaxed text-gray-700">
-          Customers may contact BohoSaaz through the official customer support channels for
+          Customers may contact BohoSaazthrough the official customer support channels for
           assistance with orders, deliveries, or product-related queries.
         </p>
         <p className="mt-4 leading-relaxed text-gray-700">
@@ -166,7 +166,7 @@ export default function CustomerGuidelinesPoliciesPage() {
 
         <h2 className="mt-10 text-xl font-semibold text-gray-900">CHAPTER 8 - POLICY REVIEW</h2>
         <p className="mt-3 leading-relaxed text-gray-700">
-          BohoSaaz reserves the right to modify these policies at any time to reflect operational,
+          BohoSaazreserves the right to modify these policies at any time to reflect operational,
           legal, or business requirements. Updated policies shall become effective upon publication
           on the Platform.
         </p>
@@ -178,7 +178,7 @@ export default function CustomerGuidelinesPoliciesPage() {
             reason, shipping and handling charges shall be non-refundable.
           </li>
           <li>
-            Force Majeure: BohoSaaz shall not be liable for delays caused by natural disasters,
+            Force Majeure: BohoSaazshall not be liable for delays caused by natural disasters,
             strikes, government restrictions, pandemics, or courier disruptions.
           </li>
           <li>
@@ -190,7 +190,7 @@ export default function CustomerGuidelinesPoliciesPage() {
             misuse is not covered.
           </li>
           <li>
-            Right to Reject Fraudulent Claims: BohoSaaz reserves the right to reject claims that
+            Right to Reject Fraudulent Claims: BohoSaazreserves the right to reject claims that
             appear false, fraudulent, abusive, or unsupported by sufficient evidence.
           </li>
           <li>

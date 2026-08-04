@@ -7,7 +7,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 export const metadata: Metadata = buildMetadata({
   title: "Contact — Gift Support Noida & Delhi NCR",
   description:
-    "Contact Bohosaaz for gift products, online gifting support, seller inquiries and curated gifts in Noida, Greater Noida, New Delhi and Delhi NCR.",
+    "Contact BohoSaazfor gift products, online gifting support, seller inquiries and curated gifts in Noida, Greater Noida, New Delhi and Delhi NCR.",
   path: "/en/contact",
 });
 

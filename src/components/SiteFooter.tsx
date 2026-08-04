@@ -179,7 +179,7 @@ export default function SiteFooter() {
             </Link>
 
             <p className="mt-2 max-w-sm text-[11px] leading-relaxed text-foreground/80">
-              Bohosaaz will take you on this journey elevating your gifting experience, where every gift holds an
+              BohoSaazwill take you on this journey elevating your gifting experience, where every gift holds an
               emotional journey thoughtfully chosen to celebrate your loved ones.
             </p>
           </div>

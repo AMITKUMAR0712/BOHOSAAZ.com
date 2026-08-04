@@ -16,7 +16,7 @@ export async function generateMetadata({
   return buildMetadata({
     title: "Become a Seller",
     description:
-      "Become a Bohosaaz seller and list gift products for Noida, Greater Noida, New Delhi and Delhi NCR customers.",
+      "Become a BohoSaazseller and list gift products for Noida, Greater Noida, New Delhi and Delhi NCR customers.",
     path: `/${locale}/seller`,
     noindex: true,
     nofollow: true,

@@ -12,7 +12,7 @@ function roleHome(role: string | undefined, langPrefix: string, vendorStatus?: s
   if (role === "VENDOR") {
     return vendorStatus === "APPROVED" ? `${langPrefix}/vendor/dashboard` : `${langPrefix}/seller`;
   }
-  // Default customer home; Sell-on-Bohosaaz uses `next` → vendor-apply.
+  // Default customer home; Sell-on-BohoSaazuses `next` → vendor-apply.
   if (role === "USER") return langPrefix;
   return langPrefix;
 }
@@ -38,7 +38,7 @@ function isRoleAllowedNext(role: string | undefined, nextPath: string) {
     );
   }
 
-  // USER — storefront + account (incl. Sell on Bohosaaz → vendor-apply / KYC)
+  // USER — storefront + account (incl. Sell on BohoSaaz→ vendor-apply / KYC)
   if (
     nextPath === "/" ||
     nextPath.startsWith("/p/") ||

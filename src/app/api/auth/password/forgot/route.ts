@@ -72,11 +72,11 @@ export async function POST(req: NextRequest) {
 
   await sendEmail({
     to: user.email,
-    subject: "Your Bohosaaz password reset code",
+    subject: "Your BohoSaazpassword reset code",
     html: `
       <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; line-height: 1.5">
         <h2 style="margin:0 0 12px">Password reset</h2>
-        <p style="margin:0 0 12px">Use this one-time code to reset your Bohosaaz password:</p>
+        <p style="margin:0 0 12px">Use this one-time code to reset your BohoSaazpassword:</p>
         <div style="font-size: 28px; font-weight: 700; letter-spacing: 4px; margin: 12px 0">${otp}</div>
         <p style="margin:0 0 12px">This code expires in 10 minutes.</p>
         <p style="margin:0; color:#666">If you didn’t request this, you can ignore this email.</p>

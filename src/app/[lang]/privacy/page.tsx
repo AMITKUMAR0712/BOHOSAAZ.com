@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 	return buildMetadata({
 		title: (page?.title || "Privacy Policy").replace(/\s*\|\s*Bohosaaz$/i, ""),
-		description: "Read how Bohosaaz collects, uses and protects your personal information.",
+		description: "Read how BohoSaazcollects, uses and protects your personal information.",
 		path: "/en/privacy",
 	});
 }

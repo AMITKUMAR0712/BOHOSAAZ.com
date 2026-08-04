@@ -1122,7 +1122,7 @@ async function main() {
       {
         slug: "about",
         title: "About",
-        body: "# About Bohosaaz\n\nBohosaaz is a multi-vendor marketplace for authentic handcrafted goods — curated for premium taste, crafted to last.",
+        body: "# About Bohosaaz\n\nBohoSaazis a multi-vendor marketplace for authentic handcrafted goods — curated for premium taste, crafted to last.",
       },
       {
         slug: "terms",
@@ -1179,7 +1179,7 @@ async function main() {
         title: "Corporate Gift Ideas for Delhi NCR Offices",
         excerpt:
           "Practical corporate gift ideas for New Delhi, Noida, Gurugram and Ghaziabad teams — from festival hampers to polished desk-worthy presents.",
-        body: "Corporate gifting in Delhi NCR works best when the present feels thoughtful, useful and easy to receive at an office desk.\n\n## What makes a strong corporate gift?\n\nChoose gifts that look premium without being overly personal.\n\n## FAQ\n\n### Does Bohosaaz deliver corporate gifts in Noida and New Delhi?\nYes. Bohosaaz serves Noida, Greater Noida, New Delhi, Ghaziabad and Gurugram.",
+        body: "Corporate gifting in Delhi NCR works best when the present feels thoughtful, useful and easy to receive at an office desk.\n\n## What makes a strong corporate gift?\n\nChoose gifts that look premium without being overly personal.\n\n## FAQ\n\n### Does BohoSaazdeliver corporate gifts in Noida and New Delhi?\nYes. BohoSaazserves Noida, Greater Noida, New Delhi, Ghaziabad and Gurugram.",
         coverImageUrl: null,
         tags: ["corporate", "delhi-ncr", "gift-guide"],
         isPublished: true,
@@ -1212,7 +1212,7 @@ async function main() {
         title: "How to Choose Anniversary Gifts Online",
         excerpt:
           "A simple framework to choose anniversary gifts online in Noida and Delhi NCR.",
-        body: "Anniversary gifts work best when they feel personal without being stressful to choose.\n\n## FAQ\n\n### Does Bohosaaz help with anniversary gifting in Delhi NCR?\nYes. Bohosaaz is built for curated online gifting across Noida and Delhi NCR.",
+        body: "Anniversary gifts work best when they feel personal without being stressful to choose.\n\n## FAQ\n\n### Does BohoSaazhelp with anniversary gifting in Delhi NCR?\nYes. BohoSaazis built for curated online gifting across Noida and Delhi NCR.",
         coverImageUrl: null,
         tags: ["anniversary", "gift-guide"],
         isPublished: true,

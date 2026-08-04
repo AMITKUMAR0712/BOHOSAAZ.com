@@ -8,7 +8,7 @@ export default function TermsPage() {
         </h1>
 
         <p className="mt-6 text-gray-700 leading-relaxed">
-          This website is owned and operated by Bohosaaz (“the Company”), www.bohosaaz.com, having its Registered and Corporate Office at Sector-1, Vikas Nagar, Lucknow-226022.
+          This website is owned and operated by BohoSaaz(“the Company”), www.bohosaaz.com, having its Registered and Corporate Office at Sector-1, Vikas Nagar, Lucknow-226022.
         </p>
 
         <p className="mt-4 text-gray-700 leading-relaxed">
@@ -16,7 +16,7 @@ export default function TermsPage() {
         </p>
 
         <p className="mt-4 text-gray-700 leading-relaxed">
-          Bohosaaz reserves the right to change these Terms & Conditions at any time without prior notice. It is your responsibility to review them periodically. Any use of this website or its contents, including copying or storing it in whole or part, is prohibited without prior written permission from Bohosaaz.
+          BohoSaazreserves the right to change these Terms & Conditions at any time without prior notice. It is your responsibility to review them periodically. Any use of this website or its contents, including copying or storing it in whole or part, is prohibited without prior written permission from Bohosaaz.
         </p>
 
         <h2 className="mt-10 text-xl font-semibold text-gray-900">
@@ -91,7 +91,7 @@ export default function TermsPage() {
 
         <h2 className="mt-8 text-xl font-semibold text-gray-900">FORCE MAJEURE</h2>
         <p className="mt-4 text-gray-700 leading-relaxed">
-          Bohosaaz shall not be responsible for delays caused due to natural calamities, government restrictions, or other unavoidable circumstances beyond our control.
+          BohoSaazshall not be responsible for delays caused due to natural calamities, government restrictions, or other unavoidable circumstances beyond our control.
         </p>
 
         <h2 className="mt-8 text-xl font-semibold text-gray-900">
@@ -108,7 +108,7 @@ export default function TermsPage() {
             No return or exchange will be accepted on sale items. Please refer to our Returns & Exchange Policy for details.
           </li>
           <li>
-            Bohosaaz reserves the right to amend, add, remove, or replace (in whole or in part) any sale or promotional offer at any time. The decision of Bohosaaz shall be final and binding.
+            BohoSaazreserves the right to amend, add, remove, or replace (in whole or in part) any sale or promotional offer at any time. The decision of BohoSaazshall be final and binding.
           </li>
         </ul>
 

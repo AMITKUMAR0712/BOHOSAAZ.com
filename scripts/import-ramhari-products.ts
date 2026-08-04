@@ -162,7 +162,7 @@ async function ensureVendor() {
     update: {
       shopName: VENDOR_NAME,
       displayName: "Bohosaaz",
-      shopDescription: "Bohosaaz curated collection for barware, hospitality, copperware and gifting products.",
+      shopDescription: "BohoSaazcurated collection for barware, hospitality, copperware and gifting products.",
       logoUrl: "/s1.jpg",
       bannerUrl: "/s6.jpg",
       status: "APPROVED",
@@ -175,7 +175,7 @@ async function ensureVendor() {
       shopCity: "Faridabad",
       shopState: "Haryana",
       shopPincode: "121007",
-      pickupName: "Bohosaaz Dispatch",
+      pickupName: "BohoSaazDispatch",
       pickupPhone: "9718223075",
       pickupAddress1: "Mock Warehouse Road",
       pickupAddress2: "Near Trade Centre",
@@ -187,7 +187,7 @@ async function ensureVendor() {
       userId: user.id,
       shopName: VENDOR_NAME,
       displayName: "Bohosaaz",
-      shopDescription: "Bohosaaz curated collection for barware, hospitality, copperware and gifting products.",
+      shopDescription: "BohoSaazcurated collection for barware, hospitality, copperware and gifting products.",
       logoUrl: "/s1.jpg",
       bannerUrl: "/s6.jpg",
       status: "APPROVED",
@@ -199,7 +199,7 @@ async function ensureVendor() {
       shopCity: "Faridabad",
       shopState: "Haryana",
       shopPincode: "121007",
-      pickupName: "Bohosaaz Dispatch",
+      pickupName: "BohoSaazDispatch",
       pickupPhone: "9718223075",
       pickupAddress1: "Mock Warehouse Road",
       pickupAddress2: "Near Trade Centre",
@@ -275,7 +275,7 @@ async function ensureBrands() {
     where: {
       brandType: "POPULAR",
       OR: [
-        { slug: { in: ["bohosaaz", "ramharienterprises", seoSlug("Bohosaaz popular", BRAND_SEO_SUFFIX)] } },
+        { slug: { in: ["bohosaaz", "ramharienterprises", seoSlug("BohoSaazpopular", BRAND_SEO_SUFFIX)] } },
         { name: VENDOR_NAME },
       ],
     },
@@ -287,7 +287,7 @@ async function ensureBrands() {
         where: { id: existingPopular.id },
         data: {
           name: VENDOR_NAME,
-          slug: seoSlug("Bohosaaz popular", BRAND_SEO_SUFFIX),
+          slug: seoSlug("BohoSaazpopular", BRAND_SEO_SUFFIX),
           logoUrl: "/s1.jpg",
           brandType: "POPULAR",
           isActive: true,
@@ -297,7 +297,7 @@ async function ensureBrands() {
     : await prisma.brand.create({
         data: {
           name: VENDOR_NAME,
-          slug: seoSlug("Bohosaaz popular", BRAND_SEO_SUFFIX),
+          slug: seoSlug("BohoSaazpopular", BRAND_SEO_SUFFIX),
           logoUrl: "/s1.jpg",
           brandType: "POPULAR",
           isActive: true,
@@ -309,7 +309,7 @@ async function ensureBrands() {
     where: {
       brandType: "LUXURY",
       OR: [
-        { slug: { in: ["bohosaaz-luxury", "ramharienterprises-luxury", seoSlug("Bohosaaz luxury", BRAND_SEO_SUFFIX)] } },
+        { slug: { in: ["bohosaaz-luxury", "ramharienterprises-luxury", seoSlug("BohoSaazluxury", BRAND_SEO_SUFFIX)] } },
         { name: VENDOR_NAME },
       ],
     },
@@ -321,7 +321,7 @@ async function ensureBrands() {
       where: { id: existingLuxury.id },
       data: {
         name: VENDOR_NAME,
-        slug: seoSlug("Bohosaaz luxury", BRAND_SEO_SUFFIX),
+        slug: seoSlug("BohoSaazluxury", BRAND_SEO_SUFFIX),
         logoUrl: "/s1.jpg",
         brandType: "LUXURY",
         isActive: true,
@@ -332,7 +332,7 @@ async function ensureBrands() {
     await prisma.brand.create({
       data: {
         name: VENDOR_NAME,
-        slug: seoSlug("Bohosaaz luxury", BRAND_SEO_SUFFIX),
+        slug: seoSlug("BohoSaazluxury", BRAND_SEO_SUFFIX),
         logoUrl: "/s1.jpg",
         brandType: "LUXURY",
         isActive: true,
@@ -525,9 +525,9 @@ async function main() {
     await syncProduct(product, vendor.id, brand.id, categories);
   }
 
-  console.log(`Imported ${activeProducts.length} products with Bohosaaz display branding.`);
+  console.log(`Imported ${activeProducts.length} products with BohoSaazdisplay branding.`);
   console.log(`Vendor: ${VENDOR_NAME} (${VENDOR_EMAIL} / ${VENDOR_PASSWORD})`);
-  console.log("Brands: Bohosaaz in POPULAR and LUXURY.");
+  console.log("Brands: BohoSaazin POPULAR and LUXURY.");
 }
 
 main()

@@ -76,7 +76,7 @@ export async function GET(req: Request) {
         { rowHeight: 20 }
       );
     },
-    { title: "Bohosaaz — Vendor Orders Export", subtitle: me.vendor?.shopName || "" }
+    { title: "BohoSaaz— Vendor Orders Export", subtitle: me.vendor?.shopName || "" }
   );
 
   const filename = `Bohosaaz_VendorOrders_${todayIsoDate()}.pdf`;

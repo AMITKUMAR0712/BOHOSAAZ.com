@@ -12,12 +12,12 @@ export const dict: Record<Locale, Dict> = {
     brand: "Bohosaaz",
     nav: { about: "About", contact: "Contact", terms: "Terms", privacy: "Privacy" },
     actions: { login: "Login", account: "My Account", logout: "Logout" },
-    home: { title: "Bohosaaz Store", subtitle: "Art of meaningful gifting" },
+    home: { title: "BohoSaazStore", subtitle: "Art of meaningful gifting" },
   },
   hi: {
     brand: "Bohosaaz",
     nav: { about: "हमारे बारे में", contact: "संपर्क", terms: "नियम", privacy: "गोपनीयता" },
     actions: { login: "लॉगिन", account: "मेरा अकाउंट", logout: "लॉगआउट" },
-    home: { title: "Bohosaaz स्टोर", subtitle: "Art of meaningful gifting" },
+    home: { title: "BohoSaazस्टोर", subtitle: "Art of meaningful gifting" },
   },
 };

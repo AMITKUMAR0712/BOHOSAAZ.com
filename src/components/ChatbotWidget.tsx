@@ -65,7 +65,7 @@ export default function ChatbotWidget({ className }: { className?: string }) {
         id: uid(),
         role: "assistant",
         content:
-          "Hi! I’m the Bohosaaz assistant. Ask me about products, orders, returns, shipping, coupons, or becoming a vendor.",
+          "Hi! I’m the BohoSaazassistant. Ask me about products, orders, returns, shipping, coupons, or becoming a vendor.",
         createdAt: Date.now(),
       },
     ];
@@ -226,11 +226,11 @@ export default function ChatbotWidget({ className }: { className?: string }) {
               "rounded-2xl border border-border bg-card/95 backdrop-blur shadow-premium overflow-hidden",
             )}
             role="dialog"
-            aria-label="Bohosaaz chatbot"
+            aria-label="BohoSaazchatbot"
           >
             <div className="flex items-center justify-between gap-3 border-b border-border px-3 py-2">
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-foreground truncate">Bohosaaz Assistant</div>
+                <div className="text-sm font-semibold text-foreground truncate">BohoSaazAssistant</div>
                 <div className="text-xs text-muted-foreground">Website & order help</div>
               </div>
               <div className="flex items-center gap-2">
@@ -247,7 +247,7 @@ export default function ChatbotWidget({ className }: { className?: string }) {
                         id: uid(),
                         role: "assistant",
                         content:
-                          "Hi! I’m the Bohosaaz assistant. Ask me about products, orders, returns, shipping, coupons, or becoming a vendor.",
+                          "Hi! I’m the BohoSaazassistant. Ask me about products, orders, returns, shipping, coupons, or becoming a vendor.",
                         createdAt: Date.now(),
                       },
                     ];

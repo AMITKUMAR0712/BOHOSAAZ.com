@@ -20,7 +20,7 @@ export default function ReturnsRefundsPage() {
         </h2>
 
         <p className="mt-4 text-gray-700 leading-relaxed">
-          Bohosaaz does not accept returns or refunds on orders once placed. However, we do offer exchanges and credit notes under specific circumstances.
+          BohoSaazdoes not accept returns or refunds on orders once placed. However, we do offer exchanges and credit notes under specific circumstances.
         </p>
 
         <p className="mt-4 text-gray-700 leading-relaxed">
@@ -65,7 +65,7 @@ export default function ReturnsRefundsPage() {
         </ul>
 
         <h2 className="mt-10 text-xl font-semibold text-gray-900">
-          Bohosaaz Accepts Returns If:
+          BohoSaazAccepts Returns If:
         </h2>
 
         <ul className="mt-4 list-disc pl-5 space-y-2 text-gray-700 leading-relaxed">
@@ -147,7 +147,7 @@ export default function ReturnsRefundsPage() {
         </h2>
 
         <ul className="mt-4 list-disc pl-5 space-y-2 text-gray-700 leading-relaxed">
-          <li>Bohosaaz does not allow order cancellations or refunds.</li>
+          <li>BohoSaazdoes not allow order cancellations or refunds.</li>
           <li>Orders containing pre-order or made-to-order items cannot be cancelled.</li>
           <li>Orders cannot be cancelled once shipped.</li>
           <li>

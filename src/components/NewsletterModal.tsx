@@ -87,7 +87,7 @@ export default function NewsletterModal() {
         setOpen(v);
         if (!v) setHideForDays(HIDE_DAYS);
       }}
-      title={done ? "You're in" : "Join the Bohosaaz newsletter"}
+      title={done ? "You're in" : "Join the BohoSaaznewsletter"}
       footer={
         done ? (
           <div className="flex items-center justify-end gap-2">

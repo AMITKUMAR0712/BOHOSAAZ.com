@@ -1,4 +1,4 @@
-# Bohosaaz — Routes & API Checklist
+# BohoSaaz— Routes & API Checklist
 
 This is a concrete checklist of pages and API endpoints (as observed in `next build` output) to validate flow consistency.
 

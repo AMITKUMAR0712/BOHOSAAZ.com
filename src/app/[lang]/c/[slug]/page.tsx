@@ -24,7 +24,7 @@ export async function generateMetadata({
   if (!category || category.isHidden) {
     return buildMetadata({
       title: "Gift Category",
-      description: "Browse gift categories on Bohosaaz for Noida and Delhi NCR.",
+      description: "Browse gift categories on BohoSaazfor Noida and Delhi NCR.",
       path: `/${locale}/c/${slug}`,
       noindex: true,
     });
@@ -135,9 +135,9 @@ export default async function CategoryPage({
             <h1 className="mt-4 font-heading text-4xl tracking-tight text-foreground md:text-6xl">
               {categoryName}
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
+            {/* <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
               Browse thoughtful {categoryName.toLowerCase()} gifts for Noida, Greater Noida and Delhi NCR — curated picks for meaningful moments.
-            </p>
+            </p> */}
           </div>
           <div className="rounded-[30px] border border-primary/10 bg-background/70 p-5 shadow-[0_16px_45px_rgba(47,38,34,0.07)] backdrop-blur">
             <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Available now</div>
