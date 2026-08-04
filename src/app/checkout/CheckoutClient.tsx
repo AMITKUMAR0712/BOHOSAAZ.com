@@ -11,8 +11,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { Price } from "@/components/ui/price";
 import { formatMoney } from "@/lib/money";
-import { useCurrency } from "@/lib/currency-context";
-import { getPriceInCurrency } from "@/lib/currency-utils";
 
 declare global {
   interface Window {
@@ -49,9 +47,6 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
   const [orderCurrency, setOrderCurrency] = useState<"INR" | "USD">("INR");
   const [itemsData, setItemsData] = useState<CartItem[]>([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"COD" | "RAZORPAY">("RAZORPAY");
-  const { currency: selectedCurrency } = useCurrency();
-  const displayCurrency = selectedCurrency;
-  const displayAmount = (value: number) => getPriceInCurrency(Number(value || 0), orderCurrency, displayCurrency);
   const hasCodOnlyProducts = useMemo(
     () => itemsData.some((item) => item?.product?.forceCodOnly === true),
     [itemsData],
@@ -274,7 +269,7 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
       toast({
         variant: "success",
         title: "Order placed",
-        message: `COD order created • Total ${formatMoney(displayCurrency, displayAmount(Number(data.total || 0)))}`,
+        message: `COD order created • Total ${formatMoney(orderCurrency, Number(data.total || 0))}`,
       });
       router.push(`${lp}/order/${data.orderId}` || `/order/${data.orderId}`);
     } catch (e: unknown) {
@@ -607,12 +602,12 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
 
                 <div className="flex items-center justify-between text-sm">
                   <div className="text-muted-foreground">Subtotal</div>
-                  <Price value={displayAmount(subtotal)} currency={displayCurrency} size="sm" className="text-foreground" />
+                  <Price value={subtotal} currency={orderCurrency} size="sm" className="text-foreground" />
                 </div>
 
                 <div className="mt-3 flex items-center justify-between">
                   <div className="text-sm text-muted-foreground">Total</div>
-                  <Price value={displayAmount(total)} currency={displayCurrency} size="lg" />
+                  <Price value={total} currency={orderCurrency} size="lg" />
                 </div>
 
                 <Button
