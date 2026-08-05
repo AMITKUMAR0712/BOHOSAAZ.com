@@ -216,11 +216,7 @@ export function BannerCarousel({
                 key={storyUrl}
                 src={storyUrl}
                 poster={posterUrl || undefined}
-                className={`${
-                  compact
-                    ? "absolute inset-0 h-full w-full object-cover object-center"
-                    : "absolute inset-0 m-auto h-full w-full max-h-full max-w-full object-contain object-center"
-                } transition-opacity duration-300 ${mediaReady ? "opacity-100" : "opacity-0"}`}
+                className={`absolute inset-0 m-auto h-full w-full max-h-full max-w-full object-contain object-center transition-opacity duration-300 ${mediaReady ? "opacity-100" : "opacity-0"}`}
                 autoPlay
                 loop
                 muted
