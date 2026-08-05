@@ -226,7 +226,7 @@ export default function SiteFooter() {
                 </a>
                 <a
                   className="text-muted-foreground hover:text-foreground transition flex items-center gap-2 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  href="https://www.facebook.com/bohosaaz"
+                  href="https://www.facebook.com/profile.php?id=61590597640837"
                   target="_blank"
                   rel="noreferrer"
                 >

@@ -56,25 +56,12 @@ export function ProductCard({
       .map((i) => (typeof i?.url === "string" ? i.url.trim() : ""))
       .filter(Boolean);
 
-    const primaryUrl = imgs.find((x) => x.isPrimary)?.url?.trim() || "";
-
-    const out: string[] = [];
-    const seen = new Set<string>();
-
-    if (primaryUrl) {
-      out.push(primaryUrl);
-      seen.add(primaryUrl);
-    }
-    for (const u of urls) {
-      if (seen.has(u)) continue;
-      out.push(u);
-      seen.add(u);
-    }
-    if (!out.length) out.push(fallback);
-    return out;
+    const primaryUrl = imgs.find((x) => x.isPrimary)?.url?.trim();
+    const selectedUrl = primaryUrl || urls[0] || fallback;
+    return [selectedUrl];
   }, [product.images, fallback]);
 
-  const canSwipe = Boolean(enableImageSwipe && orderedImages.length > 1);
+  const canSwipe = false;
   const [imgIndex, setImgIndex] = React.useState(0);
   const justSwipedAt = React.useRef(0);
   const startX = React.useRef<number | null>(null);

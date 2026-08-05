@@ -44,6 +44,7 @@ export default function CategoriesClient({
   const [editSlug, setEditSlug] = useState("");
   const [editIconName, setEditIconName] = useState("");
   const [editIconUrl, setEditIconUrl] = useState("");
+  const [uploadingIcon, setUploadingIcon] = useState(false);
 
   function selectCategory(c: Category) {
     setSelectedId(c.id);
@@ -78,6 +79,23 @@ export default function CategoriesClient({
     setName("");
     toast.success("Category created");
     reload();
+  }
+
+  async function uploadToServer(file: File) {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("purpose", "products");
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      credentials: "include",
+      body: form,
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok || typeof data.url !== "string") {
+      throw new Error(data?.error || "Upload failed");
+    }
+    return data.url;
   }
 
   async function saveSelected() {
@@ -164,6 +182,35 @@ export default function CategoriesClient({
                   onChange={(e) => setEditIconUrl(e.target.value)}
                   placeholder="Icon URL (optional)"
                 />
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div className="rounded-[18px] border border-border/70 bg-background/70 p-3">
+                  <div className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Upload Category Image</div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={uploadingIcon}
+                    onChange={async (event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      setUploadingIcon(true);
+                      try {
+                        const url = await uploadToServer(file);
+                        setEditIconUrl(url);
+                        toast.success("Image uploaded");
+                      } catch (error) {
+                        toast.error(error instanceof Error ? error.message : "Upload failed");
+                      } finally {
+                        setUploadingIcon(false);
+                      }
+                    }}
+                    className="mt-2 block w-full rounded-2xl border border-border/70 bg-background/80 px-3 py-2 text-sm text-foreground shadow-sm"
+                  />
+                  <p className="mt-2 text-xs text-muted-foreground">Upload a category banner image and save to store it.</p>
+                </div>
+                <div className="flex items-end">
+                  <div className="text-sm text-muted-foreground">The uploaded URL will be saved to the icon URL field above.</div>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button onClick={saveSelected} variant="primary" disabled={editName.trim().length < 2}>

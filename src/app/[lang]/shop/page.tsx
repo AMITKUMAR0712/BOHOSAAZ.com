@@ -457,6 +457,21 @@ export default async function ShopPage({
                 </div>
               </div>
             ) : null}
+
+            <div className="mt-3 flex flex-wrap gap-3">
+              <button
+                type="submit"
+                className="h-11 rounded-2xl bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-[0_18px_45px_rgba(0,0,0,0.10)] transition hover:-translate-y-px hover:shadow-[0_24px_60px_rgba(0,0,0,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Find Gifts
+              </button>
+              <a
+                href={`/${lang}/shop`}
+                className="inline-flex h-11 items-center justify-center rounded-2xl border border-border bg-background/65 px-6 text-sm font-semibold transition hover:-translate-y-px hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Reset
+              </a>
+            </div>
           </form>
         </details>
       </section>

@@ -1354,7 +1354,6 @@ export default async function Home({
       >
         <div className="mx-auto max-w-6xl px-4 py-6">
           <details
-            open
             className="group overflow-hidden rounded-[36px] border border-primary/15 bg-card/80 shadow-[0_24px_80px_rgba(47,38,34,0.10)] backdrop-blur-2xl"
           >
             <summary className="relative cursor-pointer list-none px-6 py-5 flex items-center justify-between">
