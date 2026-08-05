@@ -114,12 +114,14 @@ export function CategoriesGrid({
             </div>
 
             <div className="absolute inset-x-0 bottom-0 p-3 text-primary-foreground sm:p-5">
-              <div className="rounded-[22px] bg-background/88 p-3 text-foreground shadow-[0_16px_50px_rgba(0,0,0,0.16)] ring-1 ring-white/35 backdrop-blur-2xl sm:rounded-[28px] sm:p-4">
-                <div className="font-heading text-base tracking-tight transition group-hover:text-primary sm:text-xl">
-                  {category.name}
-                </div>
-                <div className="mt-2 hidden text-sm leading-relaxed text-muted-foreground sm:block">
-                  Explore curated gifts selected for celebrations, memories and premium moments.
+              <div className="flex min-h-[12rem] flex-col justify-between rounded-[22px] bg-background/88 p-3 text-foreground shadow-[0_16px_50px_rgba(0,0,0,0.16)] ring-1 ring-white/35 backdrop-blur-2xl sm:rounded-[28px] sm:p-4">
+                <div>
+                  <div className="font-heading text-base tracking-tight transition group-hover:text-primary sm:text-xl">
+                    {category.name}
+                  </div>
+                  <div className="mt-2 hidden text-sm leading-relaxed text-muted-foreground sm:block">
+                    Explore curated gifts selected for celebrations, memories and premium moments.
+                  </div>
                 </div>
                 <div className="mt-3 inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-primary sm:px-3 sm:text-[11px] sm:tracking-[0.18em]">
                   Shop collection
@@ -133,7 +135,19 @@ export function CategoriesGrid({
   );
 }
 
-export function CategoriesPageHero() {
+export function CategoriesPageHero({ imageUrls }: { imageUrls?: string[] }) {
+  const defaults = [
+    "/category-art/festive-diya.webp",
+    "/category-art/gift-hampers.webp",
+    "/category-art/home-decor.webp",
+  ];
+
+  const filledUrls = [
+    imageUrls?.[0]?.trim() || defaults[0],
+    imageUrls?.[1]?.trim() || defaults[1],
+    imageUrls?.[2]?.trim() || defaults[2],
+  ];
+
   return (
     <section className="relative overflow-hidden rounded-[42px] border border-border/80 bg-linear-to-br from-primary/10 via-card to-muted/25 p-6 shadow-premium md:p-12">
       <div className="absolute -left-16 top-0 h-56 w-56 rounded-full bg-primary/15 blur-3xl" />
@@ -166,7 +180,7 @@ export function CategoriesPageHero() {
             <div className="relative grid h-full grid-cols-[0.82fr_1fr] gap-3">
               <div className="relative mt-10 overflow-hidden rounded-[28px] shadow-premium ring-1 ring-white/50">
                 <Image
-                  src="/category-art/festive-diya.webp"
+                  src={filledUrls[0]}
                   alt="Festive gifting collection"
                   fill
                   sizes="280px"
@@ -176,7 +190,7 @@ export function CategoriesPageHero() {
               <div className="grid gap-3">
                 <div className="relative min-h-40 overflow-hidden rounded-[28px] shadow-premium ring-1 ring-white/50">
                   <Image
-                    src="/category-art/gift-hampers.webp"
+                    src={filledUrls[1]}
                     alt="Premium gift hamper collection"
                     fill
                     sizes="360px"
@@ -185,7 +199,7 @@ export function CategoriesPageHero() {
                 </div>
                 <div className="relative min-h-36 overflow-hidden rounded-[28px] shadow-premium ring-1 ring-white/50">
                   <Image
-                    src="/category-art/home-decor.webp"
+                    src={filledUrls[2]}
                     alt="Home decor gift collection"
                     fill
                     sizes="360px"

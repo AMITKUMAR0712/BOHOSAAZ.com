@@ -29,10 +29,25 @@ export default async function AdminSiteSettingsPage() {
   const admin = await requireAdmin();
   if (!admin) return null;
 
-  const setting = await prisma.setting.findUnique({
-    where: { key: "homeTheme" },
-    select: { value: true },
-  });
+  const [themeSetting, imageSetting] = await Promise.all([
+    prisma.setting.findUnique({
+      where: { key: "homeTheme" },
+      select: { value: true },
+    }),
+    prisma.setting.findUnique({
+      where: { key: "categorySectionImages" },
+      select: { value: true },
+    }),
+  ]);
 
-  return <SiteSettingsClient initialHomeTheme={normalizeHomeTheme(setting?.value)} />;
+  const categorySectionImages = Array.isArray(imageSetting?.value)
+    ? imageSetting.value.filter((item): item is string => typeof item === "string").slice(0, 3)
+    : [];
+
+  return (
+    <SiteSettingsClient
+      initialHomeTheme={normalizeHomeTheme(themeSetting?.value)}
+      initialCategorySectionImages={categorySectionImages}
+    />
+  );
 }

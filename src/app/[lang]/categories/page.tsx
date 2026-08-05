@@ -29,17 +29,27 @@ export default async function AllCategoriesPage({
 
   const lp = `/${lang}`;
 
-  const categories = await prisma.category.findMany({
-    where: { isHidden: false },
-    orderBy: [{ position: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, slug: true, iconName: true, iconUrl: true },
-  });
+  const [categorySectionImages, categories] = await Promise.all([
+    prisma.setting.findUnique({
+      where: { key: "categorySectionImages" },
+      select: { value: true },
+    }),
+    prisma.category.findMany({
+      where: { isHidden: false },
+      orderBy: [{ position: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, slug: true, iconName: true, iconUrl: true },
+    }),
+  ]);
+
+  const categorySectionImageUrls = Array.isArray(categorySectionImages?.value)
+    ? categorySectionImages.value.filter((image): image is string => typeof image === "string").slice(0, 3)
+    : [];
 
   return (
     <div className="relative mx-auto max-w-6xl px-4 py-8 md:py-12">
       <div className="pointer-events-none absolute -left-24 top-20 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 bottom-20 h-80 w-80 rounded-full bg-amber-500/10 blur-3xl" />
-      <CategoriesPageHero />
+      <CategoriesPageHero imageUrls={categorySectionImageUrls} />
 
       <div className="relative mt-10 flex flex-col gap-2 rounded-[30px] border border-border/70 bg-card/75 p-5 shadow-sm backdrop-blur sm:flex-row sm:items-end sm:justify-between">
         <div>
