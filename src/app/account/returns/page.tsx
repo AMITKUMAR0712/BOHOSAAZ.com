@@ -103,7 +103,9 @@ export default function AccountReturnsPage() {
         <div>
           <div className="text-xl font-semibold">Return / Refund</div>
           <div className="mt-1 text-sm text-gray-600">
-            Request returns for delivered items and track refund status per item.
+           For any refund, return, or exchange queries, please email us at care@bohosaaz.com or call +91 9870210896.
+
+          Please Note: Before reaching out to us, kindly read our Customer Guidelines & Policies section on the website to understand the applicable Refund, Return, and Exchange policies.
           </div>
           {msg ? <div className="mt-2 text-sm">{msg}</div> : null}
         </div>

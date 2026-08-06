@@ -102,7 +102,7 @@ export default function AccountReturnsPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="text-xl font-semibold">Return / Refund</div>
-          <div className="mt-1 text-sm text-gray-600">Request returns for delivered items and track refund status per item.</div>
+          <div className="mt-1 text-sm text-gray-600"></div>
           {msg ? <div className="mt-2 text-sm">{msg}</div> : null}
         </div>
         <ExportDropdown
