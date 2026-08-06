@@ -104,6 +104,7 @@ export default function AccountReturnsPage() {
           <div className="text-xl font-semibold">Return / Refund</div>
           <div className="mt-1 text-sm text-gray-600">
            For any refund, return, or exchange queries, please email us at care@bohosaaz.com or call +91 9870210896.
+           <hr></hr>
 
           Please Note: Before reaching out to us, kindly read our Customer Guidelines & Policies section on the website to understand the applicable Refund, Return, and Exchange policies.
           </div>
