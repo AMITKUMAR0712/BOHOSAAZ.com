@@ -5,6 +5,7 @@ import "./globals.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import DeferredClientChrome from "@/components/DeferredClientChrome";
+import MetaPixel from "@/components/MetaPixel";
 import { ToastProvider } from "@/components/ui/toast";
 import { CurrencyProvider } from "@/lib/currency-context";
 import { requireUser } from "@/lib/auth";
@@ -174,6 +175,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="min-h-screen text-foreground antialiased">
+        <MetaPixel />
         <CurrencyProvider userId={user?.id}>
           <ToastProvider>
             <DeferredClientChrome />
