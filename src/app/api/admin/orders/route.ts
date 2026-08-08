@@ -89,24 +89,34 @@ export async function GET(req: Request) {
       },
     });
 
+    // Fetch users for the returned orders in a single batch. We avoid
+    // selecting the `user` relation directly in the orders query because
+    // some orders have orphaned `userId` values (user row missing) which
+    // causes Prisma to throw. Fetching users separately lets us show real
+    // user data when available and fall back safely when not.
+    const userIds = [...new Set(orders.map((o) => o.userId).filter(Boolean))];
+    const users = userIds.length
+      ? await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, email: true, name: true } })
+      : [];
+    const usersById = new Map(users.map((u) => [u.id, u]));
+
     return jsonOk({
-      orders: orders.map((order) => ({
-        id: order.id,
-        status: order.status,
-        total: Number(order.total ?? 0),
-        city: order.city,
-        state: order.state,
-        createdAt: order.createdAt.toISOString(),
-        isDemo: isDemoOrder(order),
-        // We didn't select the `user` relation to avoid Prisma errors when
-        // the related user row is missing. Provide a safe fallback instead.
-        user: {
-          id: order.userId,
-          email: "Unknown user",
-          name: null,
-        },
-        _count: { items: order._count.items },
-      })),
+      orders: orders.map((order) => {
+        const user = usersById.get(order.userId) ?? null;
+        return {
+          id: order.id,
+          status: order.status,
+          total: Number(order.total ?? 0),
+          city: order.city,
+          state: order.state,
+          createdAt: order.createdAt.toISOString(),
+          isDemo: isDemoOrder({ address1: order.address1, address2: order.address2, user }),
+          user: user
+            ? { id: user.id, email: user.email, name: user.name }
+            : { id: order.userId, email: "Unknown user", name: null },
+          _count: { items: order._count.items },
+        };
+      }),
       page: safePage,
       pageSize,
       total,
