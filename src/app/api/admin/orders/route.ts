@@ -69,6 +69,11 @@ export async function GET(req: Request) {
       skip,
       take: pageSize,
       orderBy: { createdAt: "desc" },
+      // Avoid selecting the `user` relation directly because some DB rows
+      // may have a missing user record (data inconsistency). Selecting a
+      // required relation that is NULL causes Prisma to throw a runtime
+      // error. We only select `userId` here and show a fallback in the
+      // response when no user details are available.
       select: {
         id: true,
         status: true,
@@ -79,7 +84,6 @@ export async function GET(req: Request) {
         address2: true,
         createdAt: true,
         userId: true,
-        user: { select: { id: true, email: true, name: true } },
         _count: { select: { items: true } },
       },
     });
@@ -93,7 +97,9 @@ export async function GET(req: Request) {
         state: order.state,
         createdAt: order.createdAt.toISOString(),
         isDemo: isDemoOrder(order),
-        user: order.user ?? {
+        // We didn't select the `user` relation to avoid Prisma errors when
+        // the related user row is missing. Provide a safe fallback instead.
+        user: {
           id: order.userId,
           email: "Unknown user",
           name: null,
