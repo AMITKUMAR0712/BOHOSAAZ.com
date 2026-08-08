@@ -16,7 +16,8 @@ const demoOrderWhere: Prisma.OrderWhereInput = {
 function isDemoOrder(order: {
   address1: string | null;
   address2?: string | null;
-  user: { email: string } | null;
+  // `user` may be missing because we don't always select the relation.
+  user?: { email?: string } | null;
 }) {
   const addr1 = (order.address1 || "").toLowerCase();
   const addr2 = (order.address2 || "").toLowerCase();
