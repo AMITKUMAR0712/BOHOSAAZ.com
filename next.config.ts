@@ -4,8 +4,8 @@ const nextConfig: NextConfig = {
   output: "standalone",
   serverExternalPackages: ["@prisma/client", "prisma"],
   outputFileTracingIncludes: {
-    "/*": ["./node_modules/.prisma/client/**/*"],
-    "/api/**/*": ["./node_modules/.prisma/client/**/*"],
+    "/*": ["./node_modules/.prisma/client/**/*", "./node_modules/pdfkit/js/data/**/*"],
+    "/api/**/*": ["./node_modules/.prisma/client/**/*", "./node_modules/pdfkit/js/data/**/*"],
   },
   experimental: {
     optimizePackageImports: ["lucide-react"],
