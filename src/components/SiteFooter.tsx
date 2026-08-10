@@ -254,6 +254,9 @@ export default function SiteFooter() {
             <span className="font-semibold text-foreground">Bohosaaz</span>. All
             rights reserved.
           </div>
+          <div className="leading-relaxed text-muted-foreground/70">
+            Developed by <span className="font-semibold text-foreground/80">TradeOrbit Global</span>
+          </div>
         </div>
       </div>
       </div>
