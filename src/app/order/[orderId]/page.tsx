@@ -74,11 +74,13 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
   const placedAt = new Intl.DateTimeFormat("en-IN", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "Asia/Kolkata",
   }).format(order.createdAt);
   const eta = new Intl.DateTimeFormat("en-IN", {
     weekday: "short",
     day: "numeric",
     month: "short",
+    timeZone: "Asia/Kolkata",
   }).format(new Date(order.createdAt.getTime() + 5 * 24 * 60 * 60 * 1000));
   const statusLabel = String(order.status).replaceAll("_", " ");
   const paymentLabel =

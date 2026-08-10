@@ -186,7 +186,7 @@ export default function SiteFooter() {
 
           {/* Right */}
           <div className="lg:col-span-8">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {/* Pages */}
               <FooterCol title="Pages">
                 <FooterLink currentPathname={pathname} href={lp} label="Home" />
@@ -242,22 +242,6 @@ export default function SiteFooter() {
                   <span className="h-2 w-2 rounded-full bg-primary" />
                   YouTube
                 </a>
-              </FooterCol>
-
-              {/* FAQ */}
-              <FooterCol title="FAQ">
-                <Link
-                  href={`${lp}/faq`}
-                  className="group block rounded-2xl border border-primary/15 bg-linear-to-br from-primary/8 via-card/75 to-background/70 p-2.5 transition hover:-translate-y-1 hover:border-primary/30 hover:bg-card/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <div className="font-heading text-sm text-foreground">
-                    Need help <span className="text-primary">choosing</span> or tracking a gift?
-                  </div>
-                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-                    Open our FAQ for shipping, returns, gifting and order support.
-                  </p>
-                  <div className="mt-2 text-xs font-semibold text-primary">View FAQ →</div>
-                </Link>
               </FooterCol>
             </div>
           </div>

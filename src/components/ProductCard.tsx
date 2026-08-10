@@ -254,7 +254,12 @@ export function ProductCard({
           </div>
 
           {isNew ? (
-            <div className="absolute left-2 top-2 rounded-full border border-primary/20 bg-card/90 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-primary shadow-sm backdrop-blur sm:left-3 sm:top-3 sm:px-2.5 sm:py-1 sm:text-[11px]">
+            <div
+              className={cn(
+                "absolute left-2 rounded-full border border-primary/20 bg-card/90 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-primary shadow-sm backdrop-blur sm:left-3 sm:px-2.5 sm:py-1 sm:text-[11px]",
+                isOutOfStock ? "top-9 sm:top-11" : "top-2 sm:top-3",
+              )}
+            >
               New
             </div>
           ) : null}

@@ -321,6 +321,35 @@ export default function CartClient({ langPrefix }: { langPrefix?: string }) {
           </div>
         </div>
       )}
+
+      <Card className="mt-6 overflow-hidden bg-card/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] lg:mt-8">
+        <div className="p-5 sm:p-7">
+          <div className="font-heading text-lg text-foreground sm:text-xl">
+            🔒 Shop with Confidence — Your Payment is Secure
+          </div>
+          <div className="mt-3 grid gap-2.5 text-sm leading-relaxed text-muted-foreground">
+            <p>
+              At BohoSaaz, your trust and security are important to us. To ensure genuine and secure transactions for
+              both our customers and our platform, we currently accept prepaid orders only.
+            </p>
+            <p>
+              All online payments are securely processed through Razorpay, our trusted payment partner, providing a
+              safe and protected checkout experience.
+            </p>
+            <p>
+              BohoSaaz is operated by a registered company, and we believe in complete transparency with our
+              customers. If you would like to verify our business details or need any assistance before placing
+              your order, we&rsquo;ll be happy to help.
+            </p>
+            <p className="text-foreground">
+              📧 Email: <a href="mailto:care@bohosaaz.com" className="font-semibold text-primary hover:underline">care@bohosaaz.com</a>
+              <br />
+              📞 Call/WhatsApp: <a href="tel:+919870210896" className="font-semibold text-primary hover:underline">9870210896</a>
+            </p>
+            <p className="font-semibold text-foreground">Shop confidently. Pay securely. Gift meaningfully. ❤️</p>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }
