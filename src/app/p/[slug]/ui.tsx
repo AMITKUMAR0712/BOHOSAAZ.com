@@ -8,6 +8,7 @@ import { PriceBlock } from "@/components/PriceBlock";
 import { WishlistButton } from "@/components/WishlistButton";
 import { useCurrency } from "@/lib/currency-context";
 import { getCustomerUnitPrice } from "@/lib/customer-pricing";
+import { trackPixel } from "@/lib/metaPixel";
 
 type Variant = {
   id: string;
@@ -22,6 +23,8 @@ type Variant = {
 
 export default function PurchasePanel({
   productId,
+  productName,
+  productCategory,
   currency,
   mrp,
   price,
@@ -34,6 +37,8 @@ export default function PurchasePanel({
   isVendorProduct = false,
 }: {
   productId: string;
+  productName?: string;
+  productCategory?: string;
   currency: "INR" | "USD";
   mrp?: number | null;
   price: number;
@@ -194,6 +199,18 @@ export default function PurchasePanel({
     };
   }, [productId]);
 
+  useEffect(() => {
+    trackPixel("ViewContent", {
+      content_ids: [productId],
+      content_name: productName,
+      content_type: "product",
+      content_category: productCategory,
+      value: Number(baseSale ?? basePrice),
+      currency: displayCurrency,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId]);
+
   const unitPrice = hasVariants
     ? selectedVariant
       ? Number(selectedVariant.salePrice ?? selectedVariant.price)
@@ -327,6 +344,13 @@ export default function PurchasePanel({
                 if (!res.ok) throw new Error(data?.error || "Add to cart failed");
                  setInCart(true);
                  setMsg("Added to cart.");
+                 trackPixel("AddToCart", {
+                   content_ids: [productId],
+                   content_name: productName,
+                   content_type: "product",
+                   value: Number(unitPrice ?? basePrice) * qty,
+                   currency: displayCurrency,
+                 });
                  window.dispatchEvent(new Event("bohosaaz-cart"));
                  localStorage.setItem("bohosaaz_cart_ts", String(Date.now()));
                } catch (e: unknown) {

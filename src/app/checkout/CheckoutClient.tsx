@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Script from "next/script";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { Price } from "@/components/ui/price";
 import { formatMoney } from "@/lib/money";
+import { trackPixel, getFbCookies } from "@/lib/metaPixel";
 
 declare global {
   interface Window {
@@ -18,7 +19,23 @@ declare global {
   }
 }
 
-type CartItem = { product?: { currency?: string | null; forceCodOnly?: boolean | null } | null };
+type CartItem = {
+  id?: string;
+  quantity?: number;
+  productId?: string;
+  product?: { id?: string; currency?: string | null; forceCodOnly?: boolean | null } | null;
+};
+
+function cartItemsForPixel(items: CartItem[]) {
+  const ids = items.map((it) => String(it.product?.id ?? it.productId ?? "")).filter(Boolean);
+  return {
+    content_ids: ids,
+    contents: items
+      .map((it) => ({ id: String(it.product?.id ?? it.productId ?? ""), quantity: it.quantity ?? 1 }))
+      .filter((c) => c.id),
+    num_items: items.reduce((n, it) => n + (it.quantity ?? 0), 0),
+  };
+}
 type SavedAddress = {
   id: string;
   label: string | null;
@@ -66,6 +83,7 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
   const [pincode, setPincode] = useState("");
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState("");
+  const initiateCheckoutFired = useRef<string | null>(null);
 
   function validateShipping(): string | null {
     if (fullName.trim().length < 2) return "Enter your full name";
@@ -115,6 +133,16 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
       setSubtotal(Number(order.subtotal ?? order.total ?? 0));
       setTotal(Number(order.total || 0));
       setMsg(null);
+
+      const fireKey = checkoutOrderId || "cart";
+      if (nextItems.length && initiateCheckoutFired.current !== fireKey) {
+        initiateCheckoutFired.current = fireKey;
+        trackPixel("InitiateCheckout", {
+          ...cartItemsForPixel(nextItems),
+          value: Number(order.total || 0),
+          currency: inferredCurrency,
+        });
+      }
     }
     setLoading(false);
   }, [checkoutOrderId]);
@@ -247,6 +275,7 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
     setPlacing(true);
     try {
       await persistShippingAddress();
+      const { fbp, fbc } = getFbCookies();
       const res = await fetch("/api/checkout/create", {
         method: "POST",
         credentials: "include",
@@ -261,6 +290,8 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
           city,
           state,
           pincode,
+          fbp,
+          fbc,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -271,6 +302,23 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
         title: "Order placed",
         message: `COD order created • Total ${formatMoney(orderCurrency, Number(data.total || 0))}`,
       });
+
+      const codOrderId = String(data.orderId || "");
+      const purchaseKey = `fb_purchase_${codOrderId}`;
+      if (codOrderId && !sessionStorage.getItem(purchaseKey)) {
+        trackPixel(
+          "Purchase",
+          {
+            ...cartItemsForPixel(itemsData),
+            content_type: "product",
+            value: Number(data.total || 0),
+            currency: orderCurrency,
+          },
+          codOrderId,
+        );
+        sessionStorage.setItem(purchaseKey, "1");
+      }
+
       router.push(`${lp}/order/${data.orderId}` || `/order/${data.orderId}`);
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Checkout failed";
@@ -294,6 +342,7 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
     setPlacing(true);
     try {
       await persistShippingAddress();
+      const { fbp, fbc } = getFbCookies();
       const payload: Record<string, unknown> = {
         paymentMethod: "RAZORPAY",
         ...(checkoutOrderId ? { orderId: checkoutOrderId } : {}),
@@ -304,6 +353,8 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
         city,
         state,
         pincode,
+        fbp,
+        fbc,
       };
       payload.currency = orderCurrency;
 
@@ -386,6 +437,22 @@ export default function CheckoutClient({ langPrefix, orderId }: { langPrefix?: s
           }
 
           toast({ variant: "success", title: "Payment successful", message: "Order marked as PAID" });
+
+          const purchaseKey = `fb_purchase_${orderId}`;
+          if (!sessionStorage.getItem(purchaseKey)) {
+            trackPixel(
+              "Purchase",
+              {
+                ...cartItemsForPixel(itemsData),
+                content_type: "product",
+                value: total,
+                currency: orderCurrency,
+              },
+              orderId,
+            );
+            sessionStorage.setItem(purchaseKey, "1");
+          }
+
           router.push(`${lp}/order/${orderId}` || `/order/${orderId}`);
           setPlacing(false);
         },

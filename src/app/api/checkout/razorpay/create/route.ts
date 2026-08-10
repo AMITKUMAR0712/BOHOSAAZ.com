@@ -19,6 +19,8 @@ const bodySchema = z.object({
   state: z.string().trim().min(2),
   pincode: z.string().trim().min(4),
   currency: z.enum(["INR", "USD"]).optional(),
+  fbp: z.string().trim().optional().nullable(),
+  fbc: z.string().trim().optional().nullable(),
 });
 
 export async function POST(req: NextRequest) {
@@ -75,7 +77,7 @@ export async function POST(req: NextRequest) {
 
   const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
 
-  const { orderId, fullName, phone, address1, address2, city, state, pincode, currency: requestedCurrency } = parsed.data;
+  const { orderId, fullName, phone, address1, address2, city, state, pincode, currency: requestedCurrency, fbp, fbc } = parsed.data;
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -140,7 +142,7 @@ export async function POST(req: NextRequest) {
         currency: rpCurrency,
         receipt: `order_${order.id}`,
         payment_capture: true,
-        notes: { orderId: order.id, userId: payload.sub },
+        notes: { orderId: order.id, userId: payload.sub, fbp: fbp || "", fbc: fbc || "" },
       })) as unknown as { id: string };
 
       await tx.orderPayment.update({
@@ -233,7 +235,7 @@ export async function POST(req: NextRequest) {
       currency: rpCurrency,
       receipt: `order_${order.id}`,
       payment_capture: true,
-      notes: { orderId: order.id, userId: payload.sub },
+      notes: { orderId: order.id, userId: payload.sub, fbp: fbp || "", fbc: fbc || "" },
     })) as unknown as { id: string };
 
     // Keep the order as cart/pending until Razorpay verifies payment.

@@ -426,6 +426,8 @@ export default async function ProductDetailPage({
               <PurchasePanel
                 langPrefix={lp}
                 productId={p.id}
+                productName={p.title}
+                productCategory={p?.category?.name ?? undefined}
                 currency={p.currency === "USD" ? "USD" : "INR"}
                 mrp={p.mrp ?? null}
                 price={Number(p.price ?? 0)}

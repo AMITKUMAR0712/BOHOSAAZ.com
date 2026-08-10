@@ -6,6 +6,7 @@ import { rateLimit } from "@/lib/rateLimit";
 import { recomputePendingOrderTotals } from "@/lib/orderTotals";
 import { reserveOrderStock } from "@/lib/stock";
 import { bumpDashboardScopes } from "@/lib/bumpDashboard";
+import { sendCapiEvent, splitName } from "@/lib/metaCapi";
 
 const bodySchema = z.object({
   orderId: z.string().trim().min(1).optional(),
@@ -16,6 +17,8 @@ const bodySchema = z.object({
   city: z.string().trim().min(2),
   state: z.string().trim().min(2),
   pincode: z.string().trim().min(4),
+  fbp: z.string().trim().optional().nullable(),
+  fbc: z.string().trim().optional().nullable(),
 });
 
 export async function POST(req: NextRequest) {
@@ -35,7 +38,7 @@ export async function POST(req: NextRequest) {
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) return Response.json({ error: "Invalid payload" }, { status: 400 });
 
-  const { orderId, fullName, phone, address1, address2, city, state, pincode } = parsed.data;
+  const { orderId, fullName, phone, address1, address2, city, state, pincode, fbp, fbc } = parsed.data;
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -169,7 +172,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-      return { orderId: finalized.id, total: finalized.total, vendorIds: Object.keys(perVendor) };
+      return {
+        orderId: finalized.id,
+        total: finalized.total,
+        vendorIds: Object.keys(perVendor),
+        email: finalized.user.email,
+        items: refreshed.map((it) => ({ productId: it.productId, quantity: it.quantity })),
+      };
     });
 
     await bumpDashboardScopes([
@@ -178,7 +187,32 @@ export async function POST(req: NextRequest) {
       ...result.vendorIds.map((vendorId) => ({ kind: "vendor" as const, vendorId })),
     ]);
 
-    return Response.json({ ok: true, ...result });
+    const { firstName, lastName } = splitName(fullName);
+    await sendCapiEvent({
+      eventName: "Purchase",
+      eventId: result.orderId,
+      eventSourceUrl: `${process.env.NEXT_PUBLIC_APP_URL || ""}/order/${result.orderId}`,
+      user: {
+        email: result.email,
+        phone,
+        firstName,
+        lastName,
+        city,
+        ip: req.headers.get("x-forwarded-for") || undefined,
+        userAgent: req.headers.get("user-agent") || undefined,
+        fbp,
+        fbc,
+      },
+      customData: {
+        value: result.total,
+        currency: "INR",
+        content_type: "product",
+        content_ids: result.items.map((it) => it.productId),
+        num_items: result.items.reduce((n, it) => n + it.quantity, 0),
+      },
+    });
+
+    return Response.json({ ok: true, orderId: result.orderId, total: result.total });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Checkout failed";
     // Return 4xx for expected user-facing errors; keep Prisma/unknown issues obvious.

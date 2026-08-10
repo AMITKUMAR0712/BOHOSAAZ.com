@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { restoreOrderStock } from "@/lib/stock";
 import { bumpDashboardScopes } from "@/lib/bumpDashboard";
+import { sendCapiEvent, splitName } from "@/lib/metaCapi";
+import { env } from "@/lib/env";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === "object" ? (value as Record<string, unknown>) : null;
@@ -76,8 +78,16 @@ export async function POST(req: Request) {
       const razorpayOrderId: string | null = typeof payment?.order_id === "string" ? payment.order_id : null;
       const razorpayPaymentId: string | null = typeof payment?.id === "string" ? payment.id : null;
 
+      type CapiPurchase = {
+        eventId: string;
+        eventSourceUrl: string;
+        user: Parameters<typeof sendCapiEvent>[0]["user"];
+        customData: Record<string, unknown>;
+      };
+
       if (orderId && razorpayOrderId) {
-        const bumpScopes = await prisma.$transaction(async (tx) => {
+        const { bumpScopes, capiPurchase } = await prisma.$transaction(async (tx) => {
+          let capiPurchase: CapiPurchase | null = null;
           const op = await tx.orderPayment.findUnique({
             where: { orderId },
             select: { id: true, status: true, razorpayOrderId: true },
@@ -89,12 +99,20 @@ export async function POST(req: Request) {
               id: true,
               userId: true,
               status: true,
-              items: { select: { product: { select: { vendorId: true } } } },
+              fullName: true,
+              phone: true,
+              city: true,
+              total: true,
+              currency: true,
+              user: { select: { email: true } },
+              items: { select: { productId: true, quantity: true, product: { select: { vendorId: true } } } },
             },
           });
 
           if (op && op.razorpayOrderId === razorpayOrderId) {
             if (eventName === "payment.captured") {
+              const wasAlreadyPaid = op.status === "PAID";
+
               await tx.orderPayment.update({
                 where: { id: op.id },
                 data: {
@@ -110,6 +128,30 @@ export async function POST(req: Request) {
                 where: { id: orderId },
                 data: { status: "PAID", paymentMethod: "RAZORPAY" },
               });
+
+              if (!wasAlreadyPaid && order) {
+                const { firstName, lastName } = splitName(order.fullName);
+                capiPurchase = {
+                  eventId: order.id,
+                  eventSourceUrl: `${env.NEXT_PUBLIC_APP_URL || ""}/order/${order.id}`,
+                  user: {
+                    email: order.user.email,
+                    phone: order.phone,
+                    firstName,
+                    lastName,
+                    city: order.city,
+                    fbp: typeof notes?.fbp === "string" ? notes.fbp : undefined,
+                    fbc: typeof notes?.fbc === "string" ? notes.fbc : undefined,
+                  },
+                  customData: {
+                    value: order.total,
+                    currency: order.currency,
+                    content_type: "product",
+                    content_ids: order.items.map((it) => it.productId),
+                    num_items: order.items.reduce((n, it) => n + it.quantity, 0),
+                  },
+                };
+              }
             } else {
               if (op.status !== "FAILED" && order?.status === "PENDING") {
                 await restoreOrderStock(tx, orderId);
@@ -129,15 +171,26 @@ export async function POST(req: Request) {
           const vendorIds = Array.from(
             new Set((order?.items ?? []).map((item) => item.product.vendorId).filter((vendorId): vendorId is string => Boolean(vendorId))),
           );
-          return order
+          const bumpScopes = order
             ? [
                 { kind: "user" as const, userId: order.userId },
                 { kind: "admin" as const },
                 ...vendorIds.map((vendorId) => ({ kind: "vendor" as const, vendorId })),
               ]
             : [];
+          return { bumpScopes, capiPurchase };
         });
         await bumpDashboardScopes(bumpScopes);
+
+        if (capiPurchase) {
+          await sendCapiEvent({
+            eventName: "Purchase",
+            eventId: capiPurchase.eventId,
+            eventSourceUrl: capiPurchase.eventSourceUrl,
+            user: capiPurchase.user,
+            customData: capiPurchase.customData,
+          });
+        }
       }
     }
 

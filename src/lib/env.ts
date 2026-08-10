@@ -37,6 +37,10 @@ const EnvSchema = z
     NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().optional(),
     RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
 
+    // Meta (Facebook) Conversions API
+    META_CAPI_TOKEN: z.string().optional(),
+    META_TEST_EVENT_CODE: z.string().optional(),
+
     // Courier / logistics
     DELHIVERY_AUTH_TOKEN: z.string().optional(),
     DELHIVERY_API_USERNAME: z.string().optional(),
@@ -94,6 +98,10 @@ const EnvSchema = z
       {
         check: () => nonEmpty(v.RAZORPAY_KEY_ID) && nonEmpty(v.RAZORPAY_KEY_SECRET) && nonEmpty(v.NEXT_PUBLIC_RAZORPAY_KEY_ID),
         message: "⚠️ [env] Razorpay is not configured. Payments will be disabled.",
+      },
+      {
+        check: () => nonEmpty(v.META_CAPI_TOKEN),
+        message: "⚠️ [env] META_CAPI_TOKEN is not configured. Meta Conversions API (server-side Purchase tracking) is disabled.",
       },
     ];
 
