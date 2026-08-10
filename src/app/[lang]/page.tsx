@@ -270,6 +270,7 @@ type MarqueeProduct = {
   mrp?: number | null;
   price: number;
   salePrice?: number | null;
+  stock?: number;
   createdAt?: string | Date;
   images?: ProductImage[];
   vendorId?: string | null;
