@@ -255,7 +255,15 @@ export default function SiteFooter() {
             rights reserved.
           </div>
           <div className="leading-relaxed text-muted-foreground/70">
-            Developed by <span className="font-semibold text-foreground/80">TradeOrbit Global</span>
+            Developed by{" "}
+            <a
+              href="https://www.bestdigitalmarket.in"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-foreground/80 hover:text-primary transition underline-offset-4 hover:underline"
+            >
+              TradeOrbit Global
+            </a>
           </div>
         </div>
       </div>
