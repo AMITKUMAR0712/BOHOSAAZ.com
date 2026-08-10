@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  serverExternalPackages: ["@prisma/client", "prisma"],
+  serverExternalPackages: ["@prisma/client", "prisma", "pdfkit"],
   outputFileTracingIncludes: {
     "/*": ["./node_modules/.prisma/client/**/*", "./node_modules/pdfkit/js/data/**/*"],
     "/api/**/*": ["./node_modules/.prisma/client/**/*", "./node_modules/pdfkit/js/data/**/*"],
