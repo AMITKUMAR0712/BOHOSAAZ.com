@@ -49,6 +49,7 @@ type Product = {
   salePrice?: number | null;
   createdAt?: string;
   images?: ProductImage[];
+  stock?: number;
   vendorId?: string | null;
   vendor?: { id?: string | null } | null;
 };
@@ -286,6 +287,7 @@ function normalizeProductForCard(product: MarqueeProduct) {
     salePrice: product.salePrice == null ? null : Number(product.salePrice),
     createdAt: product.createdAt instanceof Date ? product.createdAt.toISOString() : product.createdAt,
     images: Array.isArray(product.images) ? product.images : [],
+    stock: Number(product.stock ?? 0),
     vendorId: product.vendorId ?? product.vendor?.id ?? null,
   };
 }

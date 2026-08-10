@@ -82,8 +82,15 @@ export default function MyOrdersPage() {
       <div className="mt-6 grid gap-4">
         {orders.map((o) => (
           <div key={o.id} className="rounded-2xl border overflow-hidden">
-            <div className="bg-gray-50 p-4 text-sm font-semibold">
-              Order #{o.id} • {new Date(o.createdAt).toLocaleDateString()}
+            <div className="bg-gray-50 p-4 text-sm font-semibold flex flex-wrap items-center justify-between gap-3">
+              <span>Order #{o.id} • {new Date(o.createdAt).toLocaleDateString()}</span>
+              <a
+                className="inline-flex rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 hover:bg-slate-100"
+                href={`/api/export/user/orders/${o.id}/invoice.pdf`}
+                download={`Bohosaaz_Order_${o.id}_Invoice.pdf`}
+              >
+                Download invoice
+              </a>
             </div>
 
             <div className="p-4 grid gap-3">

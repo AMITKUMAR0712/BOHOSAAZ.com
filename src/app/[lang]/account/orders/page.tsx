@@ -77,13 +77,20 @@ export default async function AccountOrdersPage({
 								</div>
 							</div>
 
-							<div className="mt-3">
+							<div className="mt-3 flex flex-wrap gap-2">
 								<Link
 									className="inline-block rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
 									href={`/${lang}/account/orders/${o.id}`}
 								>
 									View details
 								</Link>
+								<a
+									className="inline-block rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 hover:bg-slate-100"
+									href={`/api/export/user/orders/${o.id}/invoice.pdf`}
+									download={`Bohosaaz_Order_${o.id}_Invoice.pdf`}
+								>
+									Download invoice
+								</a>
 							</div>
 						</div>
 					))}

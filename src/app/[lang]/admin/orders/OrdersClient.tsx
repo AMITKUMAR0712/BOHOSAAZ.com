@@ -364,7 +364,14 @@ export default function OrdersClient({ lang }: { lang: string }) {
               </div>
             </div>
 
-            <div className="mt-4 flex lg:mt-0 lg:justify-end">
+            <div className="mt-4 flex flex-wrap justify-end gap-2 lg:mt-0">
+              <a
+                className="inline-flex rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-100"
+                href={`/api/export/user/orders/${o.id}/invoice.pdf`}
+                download={`Bohosaaz_Order_${o.id}_Invoice.pdf`}
+              >
+                Download invoice
+              </a>
               <button
                 className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
                 onClick={() => deleteOrder(o.id)}

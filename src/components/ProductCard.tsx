@@ -19,6 +19,7 @@ export type ProductCardProduct = {
   salePrice?: number | null;
   createdAt?: string;
   images?: Array<{ url: string; isPrimary?: boolean }>; // from API
+  stock?: number;
   vendorId?: string | null;
   vendor?: { id?: string | null } | null;
 };
@@ -49,6 +50,9 @@ export function ProductCard({
   const { currency: userCurrency } = useCurrency();
   const fallback = pickStockImage(product.slug || product.id);
   const [isHovering, setIsHovering] = React.useState(false);
+
+  const stock = product.stock != null ? Number(product.stock) : 0;
+  const isOutOfStock = product.stock != null ? stock <= 0 : false;
 
   const orderedImages = React.useMemo(() => {
     const imgs = Array.isArray(product.images) ? product.images : [];
@@ -241,6 +245,12 @@ export function ProductCard({
                 </div>
               </>
             ) : null}
+
+            {isOutOfStock ? (
+              <div className="absolute left-3 top-3 rounded-full bg-rose-700/95 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-white shadow-sm">
+                Sold out
+              </div>
+            ) : null}
           </div>
 
           {isNew ? (
@@ -290,8 +300,9 @@ export function ProductCard({
             variant={inCart ? "outline" : "soft"}
             size="sm"
             className="min-w-0 overflow-hidden rounded-xl h-9! min-h-9! px-1.5 text-[10px] font-semibold normal-case tracking-wide transition-transform duration-300 hover:-translate-y-px sm:h-10! sm:min-h-10! sm:rounded-2xl sm:px-3 sm:text-xs"
-            disabled={busy || inCart}
+            disabled={busy || inCart || isOutOfStock}
             onClick={async () => {
+              if (isOutOfStock) return;
               setBusy(true);
               try {
                 const res = await fetch("/api/cart/add", {
@@ -315,7 +326,7 @@ export function ProductCard({
               }
             }}
           >
-            {busy ? "Adding..." : inCart ? "Added" : "Add to cart"}
+            {busy ? "Adding..." : isOutOfStock ? "Sold out" : inCart ? "Added" : "Add to cart"}
           </Button>
 
           <WishlistButton productId={product.id} langPrefix={langPrefix} className="h-9 w-9 shrink-0 rounded-xl sm:h-10 sm:w-10 sm:rounded-(--radius)" />
