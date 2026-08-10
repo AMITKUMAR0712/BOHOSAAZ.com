@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Compression is handled by the reverse proxy in front of this app. Next's
+  // own gzip/brotli layer has a known Node zlib native crash when a large
+  // response (e.g. a PDF download) is aborted/retried mid-stream.
+  compress: false,
   serverExternalPackages: ["@prisma/client", "prisma", "pdfkit"],
   outputFileTracingIncludes: {
     "/*": ["./node_modules/.prisma/client/**/*", "./node_modules/pdfkit/js/data/**/*"],
